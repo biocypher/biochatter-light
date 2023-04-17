@@ -1,18 +1,15 @@
 # app.py: streamlit chat app for contextualisation of biomedical results
 import streamlit as st
-
-TOPIC = ""
-USER_NAME = "User"
+from _llm_connect import generate_response
 
 
-# dummy
-def generate_prompt(input_text):
-    prompt = USER_NAME + ": " + input_text
+def _render_prompt(input_text: str, user_name: str):
+    prompt = user_name + ": " + input_text
     return prompt
 
 
-def generate_response(prompt):
-    response = "Bot: " + prompt
+def _render_response(input_text: str, context: str):
+    response = "ChatGSE: " + generate_response(input_text, context)
     return response
 
 
@@ -43,6 +40,12 @@ if "input" not in st.session_state:
 if "mode" not in st.session_state:
     st.session_state.mode = "name"
 
+if "user_name" not in st.session_state:
+    st.session_state.user_name = "User"
+
+if "context" not in st.session_state:
+    st.session_state.context = "biomedical research"
+
 
 def submit():
     st.session_state.input = st.session_state.widget
@@ -51,24 +54,26 @@ def submit():
 
 if st.session_state.input:
     if st.session_state.mode == "name":
-        USER_NAME = st.session_state.input
+        st.session_state.user_name = st.session_state.input
         st.session_state.mode = "topic"
-        msg = f"Hi {USER_NAME}, what is the context of your inquiry?"
+        msg = f"Hi {st.session_state.user_name}, what is the context of your inquiry?"
         st.session_state["history"].append(msg)
         st.write(msg)
 
     elif st.session_state.mode == "topic":
-        TOPIC = st.session_state.input
+        st.session_state.context = st.session_state.input
         st.session_state.mode = "chat"
-        msg = f"You have selected {TOPIC} as your context. You can now ask questions."
+        msg = f"You have selected {st.session_state.context} as your context. You can now ask questions."
         st.session_state["history"].append(msg)
         st.write(msg)
 
     elif st.session_state.mode == "chat":
-        prompt = generate_prompt(st.session_state.input)
+        prompt = _render_prompt(
+            st.session_state.input, st.session_state.user_name
+        )
         st.session_state["history"].append(prompt)
         st.write(prompt)
-        response = generate_response(prompt)
+        response = _render_response(prompt, st.session_state.context)
         st.session_state["history"].append(response)
         st.write(response)
 
