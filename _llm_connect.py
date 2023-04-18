@@ -4,6 +4,11 @@ import openai
 
 class Conversation:
     def __init__(self, user_name: str):
+        """
+        Connect to OpenAI's GPT API and set up a conversation with the user.
+        Also initialise a second conversational agent to provide corrections to
+        the model output, if necessary.
+        """
         self.user_name = user_name
 
         if not os.getenv("OPENAI_API_KEY"):
@@ -14,6 +19,7 @@ class Conversation:
         openai.api_key = os.getenv("OPENAI_API_KEY")
 
         self.model = "gpt-3.5-turbo"
+        self.ca_model = "gpt-3.5-turbo"
 
         self.messages = [
             {
@@ -27,6 +33,21 @@ class Conversation:
             {
                 "role": "system",
                 "content": "You can ask the user to provide explanations and more background at any time, for instance on the treatment a patient has received, or the experimental background. But for now, wait for the user to ask a question.",
+            },
+        ]
+
+        self.ca_messages = [
+            {
+                "role": "system",
+                "content": "You are a biomedical researcher.",
+            },
+            {
+                "role": "system",
+                "content": "Your task is to check for factual correctness and consistency of the statements of another agent.",
+            },
+            {
+                "role": "system",
+                "content": "Please correct the following message. Ignore references to previous statements, only correct the current input. If there is nothing to correct, please respond with just 'OK', and nothing else!",
             },
         ]
 
@@ -65,13 +86,46 @@ class Conversation:
             messages=self.messages,
             temperature=0,
         )
+
+        msg = response["choices"][0]["message"]["content"]
         self.messages.append(
             {
                 "role": "assistant",
-                "content": response["choices"][0]["message"]["content"],
+                "content": msg,
             },
         )
-        self.history.append(
-            {"ChatGSE": response["choices"][0]["message"]["content"]}
+        self.history.append({"ChatGSE": msg})
+
+        correction = self._correct_response(msg)
+
+        if correction == "OK" or "OK.":
+            return (msg, None)
+
+        self.history.append({"Correcting agent": correction})
+
+        return (msg, correction)
+
+    def _correct_response(self, msg: str):
+        ca_messages = self.ca_messages.copy()
+        ca_messages.append(
+            {
+                "role": "user",
+                "content": msg,
+            },
         )
-        return response["choices"][0]["message"]["content"]
+        ca_messages.append(
+            {
+                "role": "system",
+                "content": "If there is nothing to correct, please respond with just 'OK', and nothing else!",
+            },
+        )
+
+        response = openai.ChatCompletion.create(
+            model=self.ca_model,
+            messages=ca_messages,
+            temperature=0,
+        )
+
+        correction = response["choices"][0]["message"]["content"]
+
+        return correction

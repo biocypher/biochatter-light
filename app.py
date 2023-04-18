@@ -57,12 +57,19 @@ def _get_response():
     prompt = _render_msg(
         st.session_state.conversation.user_name, st.session_state.input
     )
-    response = _render_msg(
-        "ChatGSE",
-        st.session_state.conversation.query(st.session_state.input),
+
+    response, correction = st.session_state.conversation.query(
+        st.session_state.input
     )
+
     st.markdown(prompt)
-    st.markdown(response)
+
+    if correction:
+        st.markdown(_render_msg("ChatGSE", response))
+        st.markdown(_render_msg("Correcting agent", correction))
+
+    else:
+        st.markdown(_render_msg("ChatGSE", response))
 
 
 def submit():
