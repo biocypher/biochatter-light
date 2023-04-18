@@ -1,16 +1,10 @@
 # app.py: streamlit chat app for contextualisation of biomedical results
 import streamlit as st
-from _llm_connect import generate_response
+from _llm_connect import Conversation
 
 
-def _render_prompt(input_text: str, user_name: str):
-    prompt = user_name + ": " + input_text
-    return prompt
-
-
-def _render_response(input_text: str, context: str):
-    response = "ChatGSE: " + generate_response(input_text, context)
-    return response
+def _render_msg(role: str, msg: str):
+    return f"`{role}`: {msg}"
 
 
 st.set_page_config(
@@ -23,28 +17,22 @@ st.set_page_config(
 st.title("ChatGSE")
 
 
-if "history" not in st.session_state:
+if "conversation" not in st.session_state:
     st.markdown(
         """
-        Welcome to ChatGSE. What is your name?
+        `Assistant`: Welcome to `ChatGSE`. I am the model's assistant, and we will be performing some initial setup. To get started, could you please tell me your name?
         """
     )
-    st.session_state.history = []
 else:
-    for msg in st.session_state.history:
-        st.write(msg)
+    for item in st.session_state.conversation.history:
+        for role, msg in item.items():
+            st.write(_render_msg(role, msg))
 
 if "input" not in st.session_state:
     st.session_state.input = ""
 
 if "mode" not in st.session_state:
     st.session_state.mode = "name"
-
-if "user_name" not in st.session_state:
-    st.session_state.user_name = "User"
-
-if "context" not in st.session_state:
-    st.session_state.context = "biomedical research"
 
 
 def submit():
@@ -54,28 +42,33 @@ def submit():
 
 if st.session_state.input:
     if st.session_state.mode == "name":
-        st.session_state.user_name = st.session_state.input
         st.session_state.mode = "topic"
-        msg = f"Hi {st.session_state.user_name}, what is the context of your inquiry?"
-        st.session_state["history"].append(msg)
-        st.write(msg)
+        st.session_state["conversation"] = Conversation(
+            user_name=st.session_state.input
+        )
+        msg = f"Thank you, `{st.session_state.conversation.user_name}`! What is the context of your inquiry? For instance, this could be a disease, an experimental design, or a research area."
+        st.markdown(_render_msg("Assistant", msg))
+        st.session_state.conversation.history.append({"Assistant": msg})
 
     elif st.session_state.mode == "topic":
-        st.session_state.context = st.session_state.input
         st.session_state.mode = "chat"
-        msg = f"You have selected {st.session_state.context} as your context. You can now ask questions."
-        st.session_state["history"].append(msg)
-        st.write(msg)
+        st.session_state.conversation.setup(st.session_state.input)
+        context_response = f"You have selected `{st.session_state.conversation.context}` as your context. The model will be with you shortly. Please enter your questions below."
+        st.session_state.conversation.history.append(
+            {"Assistant": context_response}
+        )
+        st.markdown(f"`Assistant`: {context_response}")
 
     elif st.session_state.mode == "chat":
-        prompt = _render_prompt(
-            st.session_state.input, st.session_state.user_name
+        prompt = _render_msg(
+            st.session_state.conversation.user_name, st.session_state.input
         )
-        st.session_state["history"].append(prompt)
-        st.write(prompt)
-        response = _render_response(prompt, st.session_state.context)
-        st.session_state["history"].append(response)
-        st.write(response)
+        response = _render_msg(
+            "ChatGSE",
+            st.session_state.conversation.query(st.session_state.input),
+        )
+        st.markdown(prompt)
+        st.markdown(response)
 
 st.text_input(
     "Input:",
