@@ -54,13 +54,13 @@ st.set_page_config(
 st.title("ChatGSE")
 
 
-if "conversation" not in st.session_state:
-    st.markdown(
-        """
-        `Assistant`: Welcome to `ChatGSE`. I am the model's assistant, and we will be performing some initial setup. To get started, could you please tell me your name?
-        """
-    )
-else:
+st.markdown(
+    """
+    `Assistant`: Welcome to `ChatGSE`. I am the model's assistant, and we will be performing some initial setup. To get started, could you please tell me your name?
+    """
+)
+
+if st.session_state.get("conversation"):
     for item in st.session_state.conversation.history:
         for role, msg in item.items():
             st.write(_render_msg(role, msg))
