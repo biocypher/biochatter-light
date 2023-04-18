@@ -1,8 +1,8 @@
 # app.py: streamlit chat app for contextualisation of biomedical results
+from loguru import logger
 import os
 import pandas as pd
 import streamlit as st
-from chatgse._log import logger
 from chatgse._llm_connect import Conversation
 
 
@@ -14,6 +14,8 @@ def _write_and_history(role: str, msg: str):
     logger.info(f"Writing message from {role}: {msg}")
     st.markdown(_render_msg(role, msg))
     st.session_state.conversation.history.append({role: msg})
+    with open("chatgse-logs.txt", "a") as f:
+        f.write(f"{role}: {msg}\n")
 
 
 def _get_user_name():
@@ -204,6 +206,8 @@ if "mode" not in st.session_state:
 
 if st.session_state.input:
     if st.session_state.mode == "name":
+        with open("chatgse-logs.txt", "a") as f:
+            f.write("--- NEW SESSION ---\n")
         _get_user_name()
 
     elif st.session_state.mode == "context":

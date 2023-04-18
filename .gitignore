@@ -2,3 +2,5 @@
 .vscode
 key.txt
 __pycache__
+chatgse-logs.txt
+.DS_Store
