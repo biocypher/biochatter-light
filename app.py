@@ -11,6 +11,7 @@ def _render_msg(role: str, msg: str):
 
 
 def _write_and_history(role: str, msg: str):
+    logger.info(f"Writing message from {role}: {msg}")
     st.markdown(_render_msg(role, msg))
     st.session_state.conversation.history.append({role: msg})
 
@@ -71,8 +72,15 @@ def _ask_for_perturbation():
             "I have detected input from an analytic tool. Here it is:",
         )
 
-        st.markdown(df.to_markdown())
+        st.markdown(
+            f"""
+            ```
+            {df.to_markdown()}
+            ```
+            """
+        )
         st.session_state.conversation.history.append({"tool": df.to_markdown()})
+        logger.info("<Tool data displayed.>")
 
         _write_and_history(
             "Assistant",
