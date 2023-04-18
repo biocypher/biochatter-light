@@ -2,7 +2,7 @@
 import os
 import pandas as pd
 import streamlit as st
-from _llm_connect import Conversation
+from chatgse._llm_connect import Conversation
 
 
 def _render_msg(role: str, msg: str):
@@ -35,12 +35,12 @@ def _tool_input() -> pd.DataFrame:
     Methods to detect various inputs from analytic tools; decoupler, PROGENy,
     CORNETO, GSEA, etc. Flat files on disk; what else?
     """
-    if not os.path.exists("progeny.csv"):
+    if not os.path.exists("input/progeny.csv"):
         # return empty dataframe
         return pd.DataFrame()
 
-    with open("progeny.csv") as f:
-        df = pd.read_csv(f)
+    with open("input/progeny.csv") as f:
+        df = pd.read_csv(f, index_col=0)
 
     return df
 
