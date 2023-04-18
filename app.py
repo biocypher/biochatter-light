@@ -2,6 +2,7 @@
 import os
 import pandas as pd
 import streamlit as st
+from chatgse._log import logger
 from chatgse._llm_connect import Conversation
 
 
@@ -15,6 +16,7 @@ def _write_and_history(role: str, msg: str):
 
 
 def _get_user_name():
+    logger.info("Getting user name.")
     st.session_state.mode = "context"
     st.session_state["conversation"] = Conversation(
         user_name=st.session_state.input
@@ -24,6 +26,7 @@ def _get_user_name():
 
 
 def _get_context():
+    logger.info("Getting context.")
     st.session_state.mode = "perturbation"
     st.session_state.conversation.setup(st.session_state.input)
     context_response = f"You have selected `{st.session_state.conversation.context}` as your context."
@@ -35,10 +38,13 @@ def _tool_input() -> pd.DataFrame:
     Methods to detect various inputs from analytic tools; decoupler, PROGENy,
     CORNETO, GSEA, etc. Flat files on disk; what else?
     """
+    logger.info("Looking for biomedical data from tool output.")
     if not os.path.exists("input/progeny.csv"):
+        logger.info("No tool data detected.")
         # return empty dataframe
         return pd.DataFrame()
 
+    logger.info("Loading PROGENy output.")
     with open("input/progeny.csv") as f:
         df = pd.read_csv(f)
 
@@ -46,11 +52,14 @@ def _tool_input() -> pd.DataFrame:
 
 
 def _ask_for_perturbation():
+    logger.info(
+        "--- Biomedical data input --- looking for structured and unstructured information."
+    )
     df = _tool_input()
 
     if df.empty:
         st.session_state.mode = "perturbation_manual"
-        msg = "I am not detecting input from an analytic tool. Please provide a list of biological entities (activities of pathways or transcription factors, expression of transcripts or proteins), optionally with directional information and/or a contrast."
+        msg = "I am not detecting input from an analytic tool. Please provide a list of biological data points (activities of pathways or transcription factors, expression of transcripts or proteins), optionally with directional information and/or a contrast."
         _write_and_history("Assistant", msg)
         return
 
@@ -74,13 +83,16 @@ def _ask_for_perturbation():
 
 
 def _get_perturbation_tool():
+    logger.info("Asking for additional perturbation info.")
     st.session_state.mode = "chat"
 
     if str(st.session_state.input).lower() in ["n", "no", "no."]:
+        logger.info("No additional perturbation info provided.")
         msg = "Okay, I will use the information from the tool. Please enter your questions below."
         _write_and_history("Assistant", msg)
         return
 
+    logger.info("Additional perturbation info provided.")
     st.session_state.conversation.messages.append(
         {
             "role": "user",
@@ -96,6 +108,7 @@ def _get_perturbation_tool():
 
 
 def _get_perturbation_manual():
+    logger.info("No tool info provided. Getting manual perturbation info.")
     st.session_state.mode = "chat"
 
     st.session_state.conversation.setup_perturbation_manual(
@@ -110,6 +123,7 @@ def _get_perturbation_manual():
 
 
 def _get_response():
+    logger.info("Getting response from LLM.")
     _write_and_history(
         st.session_state.conversation.user_name, st.session_state.input
     )
