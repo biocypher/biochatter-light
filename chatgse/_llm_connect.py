@@ -78,7 +78,7 @@ class Conversation:
         self.messages.append(
             {
                 "role": "system",
-                "content": f"The user has provided perturbation information in the form of a table. The rows refer to biological entities, and the columns refer to pathways. The values are pathway activities. Here are the data: {df}",
+                "content": f"The user has provided information in the form of a table. The rows refer to biological entities (samples, cell types, or the like), and the columns refer to pathways. The values are pathway activities derived using a bioinformatics method. Here are the data: {df}",
             },
         )
 
@@ -89,7 +89,6 @@ class Conversation:
                 "content": text,
             }
         )
-        self.history.append({self.user_name: text})
 
         response = openai.ChatCompletion.create(
             model=self.model,
@@ -104,14 +103,11 @@ class Conversation:
                 "content": msg,
             },
         )
-        self.history.append({"ChatGSE": msg})
 
         correction = self._correct_response(msg)
 
-        if correction == "OK" or "OK.":
+        if correction in ["OK", "OK."]:
             return (msg, None)
-
-        self.history.append({"Correcting agent": correction})
 
         return (msg, correction)
 

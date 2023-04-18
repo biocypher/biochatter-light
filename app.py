@@ -40,7 +40,7 @@ def _tool_input() -> pd.DataFrame:
         return pd.DataFrame()
 
     with open("input/progeny.csv") as f:
-        df = pd.read_csv(f, index_col=0)
+        df = pd.read_csv(f)
 
     return df
 
