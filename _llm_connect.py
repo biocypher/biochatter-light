@@ -41,6 +41,16 @@ class Conversation:
             },
         )
 
+    def setup_perturbation(self, perturbation: str):
+        self.perturbation = perturbation
+        self.perturbation_unstructured = True
+        self.messages.append(
+            {
+                "role": "system",
+                "content": f"The user has given information on the perturbation: {perturbation}.",
+            },
+        )
+
     def query(self, text: str):
         self.messages.append(
             {

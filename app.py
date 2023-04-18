@@ -18,13 +18,39 @@ def _get_user_name():
 
 
 def _get_context():
-    st.session_state.mode = "chat"
+    st.session_state.mode = "perturbation"
     st.session_state.conversation.setup(st.session_state.input)
-    context_response = f"You have selected `{st.session_state.conversation.context}` as your context. The model will be with you shortly. Please enter your questions below."
+    context_response = f"You have selected `{st.session_state.conversation.context}` as your context."
     st.session_state.conversation.history.append(
         {"Assistant": context_response}
     )
-    st.markdown(f"`Assistant`: {context_response}")
+    st.markdown(_render_msg("Assistant", context_response))
+
+
+def _tool_input():
+    return False
+
+
+def _ask_for_perturbation():
+    st.session_state.mode = "perturbation"
+    if not _tool_input():
+        msg = "I am not detecting input from an analytic tool. Please provide a list of biological entities (activities of pathways or transcription factors, expression of transcripts or proteins), optionally with directional information and/or a contrast."
+        st.markdown(_render_msg("Assistant", msg))
+        st.session_state.conversation.history.append({"Assistant": msg})
+
+
+def _get_perturbation():
+    st.session_state.mode = "chat"
+    st.session_state.conversation.setup_perturbation(st.session_state.input)
+    perturbation_response = (
+        "Thank you! You have provided unstructured perturbation information:\n"
+        f"`{st.session_state.conversation.perturbation}`\n"
+        "The model will be with you shortly. Please enter your questions below."
+    )
+    st.session_state.conversation.history.append(
+        {"Assistant": perturbation_response}
+    )
+    st.markdown(_render_msg("Assistant", perturbation_response))
 
 
 def _get_response():
@@ -77,6 +103,10 @@ if st.session_state.input:
 
     elif st.session_state.mode == "context":
         _get_context()
+        _ask_for_perturbation()
+
+    elif st.session_state.mode == "perturbation":
+        _get_perturbation()
 
     elif st.session_state.mode == "chat":
         _get_response()
