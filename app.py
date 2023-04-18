@@ -28,6 +28,10 @@ def _get_context():
 
 
 def _tool_input():
+    """
+    Methods to detect various inputs from analytic tools; decoupler, PROGENy,
+    CORNETO, GSEA, etc. Flat files on disk; what else?
+    """
     return False
 
 
@@ -37,6 +41,9 @@ def _ask_for_perturbation():
         msg = "I am not detecting input from an analytic tool. Please provide a list of biological entities (activities of pathways or transcription factors, expression of transcripts or proteins), optionally with directional information and/or a contrast."
         st.markdown(_render_msg("Assistant", msg))
         st.session_state.conversation.history.append({"Assistant": msg})
+        return
+
+    msg = "I have detected input from an analytic tool. Would you like to provide additional information, for instance on a contrast or experimental design?"
 
 
 def _get_perturbation():
@@ -89,7 +96,26 @@ st.title("ChatGSE")
 
 st.markdown(
     """
-    `Assistant`: Welcome to `ChatGSE`. I am the model's assistant, and we will be performing some initial setup. To get started, could you please tell me your name?
+
+    `Assistant`: Welcome to `ChatGSE`, a tool to rapidly contextualise common
+    end results of biomedical analyses. It works by setting up a
+    topic-constrained conversation with a pre-trained language model. The agents
+    you will be talking to are an `Assistant` (which is me, a pre-programmed
+    conversational algorithm), a `ChatGSE` model, which is a pre-trained
+    language model with instructions aimed at specifically improving the quality
+    of biomedical answers, and a `Correcting agent`, which is a separate
+    pre-trained language model with the task of catching and correcting false
+    information conveyed by the primary model. You will only see the `Correcting
+    agent` if it detects that the `ChatGSE` model has made a mistake. In
+    general, even though we try our best to avoid mistakes using the
+    correctional agent and internal safeguards, the general limitations of the
+    used language model apply, which means that the statements made can
+    sometimes be incorrect or misleading.
+    
+    `Assistant`: So, as mentioned, I am the model's assistant, and we will be
+    going through some initial setup steps. To get started, could you please
+    tell me your name?
+    
     """
 )
 
