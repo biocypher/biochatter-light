@@ -106,7 +106,7 @@ class Conversation:
 
         correction = self._correct_response(msg)
 
-        if correction in ["OK", "OK."]:
+        if str(correction).lower() in ["ok", "ok."]:
             return (msg, None)
 
         return (msg, correction)
