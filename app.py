@@ -76,9 +76,7 @@ def _ask_for_perturbation():
 
         st.markdown(
             f"""
-            ```
-            {df.to_markdown()}
-            ```
+            ```{df.to_markdown()}
             """
         )
         st.session_state.conversation.history.append({"tool": df.to_markdown()})
