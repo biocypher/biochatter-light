@@ -7,6 +7,43 @@ def _render_msg(role: str, msg: str):
     return f"`{role}`: {msg}"
 
 
+def _get_user_name():
+    st.session_state.mode = "context"
+    st.session_state["conversation"] = Conversation(
+        user_name=st.session_state.input
+    )
+    msg = f"Thank you, `{st.session_state.conversation.user_name}`! What is the context of your inquiry? For instance, this could be a disease, an experimental design, or a research area."
+    st.markdown(_render_msg("Assistant", msg))
+    st.session_state.conversation.history.append({"Assistant": msg})
+
+
+def _get_context():
+    st.session_state.mode = "chat"
+    st.session_state.conversation.setup(st.session_state.input)
+    context_response = f"You have selected `{st.session_state.conversation.context}` as your context. The model will be with you shortly. Please enter your questions below."
+    st.session_state.conversation.history.append(
+        {"Assistant": context_response}
+    )
+    st.markdown(f"`Assistant`: {context_response}")
+
+
+def _get_response():
+    prompt = _render_msg(
+        st.session_state.conversation.user_name, st.session_state.input
+    )
+    response = _render_msg(
+        "ChatGSE",
+        st.session_state.conversation.query(st.session_state.input),
+    )
+    st.markdown(prompt)
+    st.markdown(response)
+
+
+def submit():
+    st.session_state.input = st.session_state.widget
+    st.session_state.widget = ""
+
+
 st.set_page_config(
     page_title="ChatGSE",
     page_icon=":robot_face:",
@@ -34,41 +71,15 @@ if "input" not in st.session_state:
 if "mode" not in st.session_state:
     st.session_state.mode = "name"
 
-
-def submit():
-    st.session_state.input = st.session_state.widget
-    st.session_state.widget = ""
-
-
 if st.session_state.input:
     if st.session_state.mode == "name":
-        st.session_state.mode = "topic"
-        st.session_state["conversation"] = Conversation(
-            user_name=st.session_state.input
-        )
-        msg = f"Thank you, `{st.session_state.conversation.user_name}`! What is the context of your inquiry? For instance, this could be a disease, an experimental design, or a research area."
-        st.markdown(_render_msg("Assistant", msg))
-        st.session_state.conversation.history.append({"Assistant": msg})
+        _get_user_name()
 
-    elif st.session_state.mode == "topic":
-        st.session_state.mode = "chat"
-        st.session_state.conversation.setup(st.session_state.input)
-        context_response = f"You have selected `{st.session_state.conversation.context}` as your context. The model will be with you shortly. Please enter your questions below."
-        st.session_state.conversation.history.append(
-            {"Assistant": context_response}
-        )
-        st.markdown(f"`Assistant`: {context_response}")
+    elif st.session_state.mode == "context":
+        _get_context()
 
     elif st.session_state.mode == "chat":
-        prompt = _render_msg(
-            st.session_state.conversation.user_name, st.session_state.input
-        )
-        response = _render_msg(
-            "ChatGSE",
-            st.session_state.conversation.query(st.session_state.input),
-        )
-        st.markdown(prompt)
-        st.markdown(response)
+        _get_response()
 
 st.text_input(
     "Input:",
