@@ -9,24 +9,25 @@ def _render_msg(role: str, msg: str):
     return f"`{role}`: {msg}"
 
 
+def _write_and_history(role: str, msg: str):
+    st.markdown(_render_msg(role, msg))
+    st.session_state.conversation.history.append({role: msg})
+
+
 def _get_user_name():
     st.session_state.mode = "context"
     st.session_state["conversation"] = Conversation(
         user_name=st.session_state.input
     )
     msg = f"Thank you, `{st.session_state.conversation.user_name}`! What is the context of your inquiry? For instance, this could be a disease, an experimental design, or a research area."
-    st.markdown(_render_msg("Assistant", msg))
-    st.session_state.conversation.history.append({"Assistant": msg})
+    _write_and_history("Assistant", msg)
 
 
 def _get_context():
     st.session_state.mode = "perturbation"
     st.session_state.conversation.setup(st.session_state.input)
     context_response = f"You have selected `{st.session_state.conversation.context}` as your context."
-    st.session_state.conversation.history.append(
-        {"Assistant": context_response}
-    )
-    st.markdown(_render_msg("Assistant", context_response))
+    _write_and_history("Assistant", context_response)
 
 
 def _tool_input() -> pd.DataFrame:
@@ -50,23 +51,24 @@ def _ask_for_perturbation():
     if df.empty:
         st.session_state.mode = "perturbation_manual"
         msg = "I am not detecting input from an analytic tool. Please provide a list of biological entities (activities of pathways or transcription factors, expression of transcripts or proteins), optionally with directional information and/or a contrast."
-        st.markdown(_render_msg("Assistant", msg))
-        st.session_state.conversation.history.append({"Assistant": msg})
+        _write_and_history("Assistant", msg)
         return
 
     else:
         st.session_state.mode = "perturbation_tool"
-        msg = f"""
-        
-        I have detected input from an analytic tool. Here it is:
-         
-        {df.to_json()}
 
-        Would you like to provide additional information, for instance on a contrast or experimental design?
-        """
+        _write_and_history(
+            "Assistant",
+            "I have detected input from an analytic tool. Here it is:",
+        )
 
-        st.session_state.conversation.history.append({"Assistant": msg})
-        st.markdown(_render_msg("Assistant", msg))
+        st.markdown(df.to_markdown())
+        st.session_state.conversation.history.append({"tool": df.to_markdown()})
+
+        _write_and_history(
+            "Assistant",
+            "Would you like to provide additional information, for instance on a contrast or experimental design? If so, please enter it below; if not, please enter 'no'.",
+        )
 
         st.session_state.conversation.setup_perturbation_tool(df.to_json())
 
@@ -76,8 +78,7 @@ def _get_perturbation_tool():
 
     if str(st.session_state.input).lower() in ["n", "no", "no."]:
         msg = "Okay, I will use the information from the tool. Please enter your questions below."
-        st.session_state.conversation.history.append({"Assistant": msg})
-        st.markdown(_render_msg("Assistant", msg))
+        _write_and_history("Assistant", msg)
         return
 
     st.session_state.conversation.messages.append(
@@ -91,10 +92,7 @@ def _get_perturbation_tool():
         f"`{st.session_state.input}`\n"
         "The model will be with you shortly. Please enter your questions below."
     )
-    st.session_state.conversation.history.append(
-        {"Assistant": perturbation_response}
-    )
-    st.markdown(_render_msg("Assistant", perturbation_response))
+    _write_and_history("Assistant", perturbation_response)
 
 
 def _get_perturbation_manual():
@@ -108,14 +106,11 @@ def _get_perturbation_manual():
         f"`{st.session_state.conversation.perturbation}`\n"
         "The model will be with you shortly. Please enter your questions below."
     )
-    st.session_state.conversation.history.append(
-        {"Assistant": perturbation_response}
-    )
-    st.markdown(_render_msg("Assistant", perturbation_response))
+    _write_and_history("Assistant", perturbation_response)
 
 
 def _get_response():
-    prompt = _render_msg(
+    _write_and_history(
         st.session_state.conversation.user_name, st.session_state.input
     )
 
@@ -123,14 +118,12 @@ def _get_response():
         st.session_state.input
     )
 
-    st.markdown(prompt)
-
     if correction:
-        st.markdown(_render_msg("ChatGSE", response))
-        st.markdown(_render_msg("Correcting agent", correction))
+        _write_and_history("ChatGSE", response)
+        _write_and_history("Correcting agent", correction)
 
     else:
-        st.markdown(_render_msg("ChatGSE", response))
+        _write_and_history("ChatGSE", response)
 
 
 def submit():
@@ -166,9 +159,9 @@ st.markdown(
     used language model apply, which means that the statements made can
     sometimes be incorrect or misleading.
     
-    `Assistant`: So, as mentioned, I am the model's assistant, and we will be
-    going through some initial setup steps. To get started, could you please
-    tell me your name?
+    `Assistant`: As mentioned, I am the model's assistant, and we will be going
+    through some initial setup steps. To get started, could you please tell me
+    your name?
     
     """
 )
@@ -176,7 +169,10 @@ st.markdown(
 if st.session_state.get("conversation"):
     for item in st.session_state.conversation.history:
         for role, msg in item.items():
-            st.write(_render_msg(role, msg))
+            if role == "tool":
+                st.markdown(msg)
+            else:
+                st.markdown(_render_msg(role, msg))
 
 if "input" not in st.session_state:
     st.session_state.input = ""
