@@ -76,7 +76,8 @@ def _ask_for_perturbation():
 
         st.markdown(
             f"""
-            ```{df.to_markdown()}
+            ```
+            {df.to_markdown()}
             """
         )
         st.session_state.conversation.history.append({"tool": df.to_markdown()})
@@ -177,8 +178,8 @@ st.markdown(
     information conveyed by the primary model. You will only see the `Correcting
     agent` if it detects that the `ChatGSE` model has made a mistake. In
     general, even though we try our best to avoid mistakes using the
-    correctional agent and internal safeguards, the general limitations of the
-    used language model apply, which means that the statements made can
+    correcting agent and internal safeguards, the general limitations of the
+    used Large Language Model apply, which means that the statements made can
     sometimes be incorrect or misleading.
     
     `Assistant`: As mentioned, I am the model's assistant, and we will be going
@@ -192,7 +193,12 @@ if st.session_state.get("conversation"):
     for item in st.session_state.conversation.history:
         for role, msg in item.items():
             if role == "tool":
-                st.markdown(msg)
+                st.markdown(
+                    f"""
+                    ```
+                    {msg}
+                    """
+                )
             else:
                 st.markdown(_render_msg(role, msg))
 
