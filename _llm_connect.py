@@ -62,13 +62,23 @@ class Conversation:
             },
         )
 
-    def setup_perturbation(self, perturbation: str):
+    def setup_perturbation_manual(self, perturbation: str):
         self.perturbation = perturbation
         self.perturbation_unstructured = True
         self.messages.append(
             {
                 "role": "system",
                 "content": f"The user has given information on the perturbation: {perturbation}.",
+            },
+        )
+
+    def setup_perturbation_tool(self, df):
+        self.perturbation_tool = df
+        self.perturbation_unstructured = False
+        self.messages.append(
+            {
+                "role": "system",
+                "content": f"The user has provided perturbation information in the form of a table. The rows refer to biological entities, and the columns refer to pathways. The values are pathway activities. Here are the data: {df}",
             },
         )
 

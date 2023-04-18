@@ -1,4 +1,6 @@
 # app.py: streamlit chat app for contextualisation of biomedical results
+import os
+import pandas as pd
 import streamlit as st
 from _llm_connect import Conversation
 
@@ -27,28 +29,80 @@ def _get_context():
     st.markdown(_render_msg("Assistant", context_response))
 
 
-def _tool_input():
+def _tool_input() -> pd.DataFrame:
     """
     Methods to detect various inputs from analytic tools; decoupler, PROGENy,
     CORNETO, GSEA, etc. Flat files on disk; what else?
     """
-    return False
+    if not os.path.exists("progeny.csv"):
+        # return empty dataframe
+        return pd.DataFrame()
+
+    with open("progeny.csv") as f:
+        df = pd.read_csv(f)
+
+    return df
 
 
 def _ask_for_perturbation():
-    st.session_state.mode = "perturbation"
-    if not _tool_input():
+    df = _tool_input()
+
+    if df.empty:
+        st.session_state.mode = "perturbation_manual"
         msg = "I am not detecting input from an analytic tool. Please provide a list of biological entities (activities of pathways or transcription factors, expression of transcripts or proteins), optionally with directional information and/or a contrast."
         st.markdown(_render_msg("Assistant", msg))
         st.session_state.conversation.history.append({"Assistant": msg})
         return
 
-    msg = "I have detected input from an analytic tool. Would you like to provide additional information, for instance on a contrast or experimental design?"
+    else:
+        st.session_state.mode = "perturbation_tool"
+        msg = f"""
+        
+        I have detected input from an analytic tool. Here it is:
+         
+        {df.to_json()}
+
+        Would you like to provide additional information, for instance on a contrast or experimental design?
+        """
+
+        st.session_state.conversation.history.append({"Assistant": msg})
+        st.markdown(_render_msg("Assistant", msg))
+
+        st.session_state.conversation.setup_perturbation_tool(df.to_json())
 
 
-def _get_perturbation():
+def _get_perturbation_tool():
     st.session_state.mode = "chat"
-    st.session_state.conversation.setup_perturbation(st.session_state.input)
+
+    if str(st.session_state.input).lower() in ["n", "no", "no."]:
+        msg = "Okay, I will use the information from the tool. Please enter your questions below."
+        st.session_state.conversation.history.append({"Assistant": msg})
+        st.markdown(_render_msg("Assistant", msg))
+        return
+
+    st.session_state.conversation.messages.append(
+        {
+            "role": "user",
+            "content": st.session_state.input,
+        }
+    )
+    perturbation_response = (
+        "Thank you! You have provided additional perturbation information:\n"
+        f"`{st.session_state.input}`\n"
+        "The model will be with you shortly. Please enter your questions below."
+    )
+    st.session_state.conversation.history.append(
+        {"Assistant": perturbation_response}
+    )
+    st.markdown(_render_msg("Assistant", perturbation_response))
+
+
+def _get_perturbation_manual():
+    st.session_state.mode = "chat"
+
+    st.session_state.conversation.setup_perturbation_manual(
+        st.session_state.input
+    )
     perturbation_response = (
         "Thank you! You have provided unstructured perturbation information:\n"
         f"`{st.session_state.conversation.perturbation}`\n"
@@ -138,8 +192,11 @@ if st.session_state.input:
         _get_context()
         _ask_for_perturbation()
 
-    elif st.session_state.mode == "perturbation":
-        _get_perturbation()
+    elif st.session_state.mode == "perturbation_tool":
+        _get_perturbation_tool()
+
+    elif st.session_state.mode == "perturbation_manual":
+        _get_perturbation_manual()
 
     elif st.session_state.mode == "chat":
         _get_response()
