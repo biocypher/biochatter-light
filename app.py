@@ -343,7 +343,9 @@ def submit():
 
 def main():
     # Setup
-    cg = ChatGSE()
+    if not st.session_state.get("cg"):
+        st.session_state.cg = ChatGSE()
+    cg = st.session_state.cg
     cg._display_init()
     cg._display_history()
 
