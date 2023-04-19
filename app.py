@@ -6,6 +6,20 @@ import streamlit as st
 from chatgse._llm_connect import Conversation
 
 PLEASE_ENTER_QUESTIONS = "The model will be with you shortly. Please enter your questions below. These can be general ('explain these results') or specific."
+HIDE_MENU_STYLE = """
+<style>
+#MainMenu {visibility: hidden;}
+footer {visibility: hidden;}
+footer:after {
+    content:'Made with Streamlit by Sebastian Lobentanzer, Copyright 2023, Heidelberg University';
+    visibility: visible;
+    display: block;
+    height: 50px;
+    clear: both;
+    color: darkgrey;
+    }
+</style>
+"""
 
 
 def _render_msg(role: str, msg: str):
@@ -91,13 +105,13 @@ def _get_data_input_tool(files: list) -> dict:
 
     _write_and_history(
         "Assistant",
-        f"I have detected input from {len(dfs)} supported analytic tools.",
+        f"I have detected input from {len(dfs)} supported analytic tool(s).",
     )
 
     for tool, df in dfs.items():
         _write_and_history(
             "Assistant",
-            f"### {tool}:",
+            f"{tool} results",
         )
         st.markdown(
             f"""
@@ -186,12 +200,12 @@ st.set_page_config(
 )
 
 st.title("ChatGSE")
-
+st.markdown(HIDE_MENU_STYLE, unsafe_allow_html=True)
 
 st.markdown(
     """
 
-    `Assistant`: Welcome to `ChatGSE`, a tool to rapidly contextualise common
+    `Assistant`: Welcome to ``ChatGSE``, a tool to rapidly contextualise common
     end results of biomedical analyses. It works by setting up a
     topic-constrained conversation with a pre-trained language model. The agents
     you will be talking to are an `Assistant` (which is me, a pre-programmed
