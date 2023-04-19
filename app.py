@@ -32,9 +32,15 @@ footer:after {
 
 class ChatGSE:
     def __init__(self):
-        self._setup()
+        if "input" not in st.session_state:
+            st.session_state.input = ""
 
-    def _setup(self):
+        if "mode" not in st.session_state:
+            st.session_state.mode = "name"
+            with open("chatgse-logs.txt", "a") as f:
+                f.write("--- NEW SESSION ---\n")
+
+    def _display_init(self):
         st.set_page_config(
             page_title="ChatGSE",
             page_icon=":robot_face:",
@@ -69,6 +75,22 @@ class ChatGSE:
             
             """
         )
+
+    def _display_history(self):
+        if not st.session_state.get("conversation"):
+            return
+
+        for item in st.session_state.conversation.history:
+            for role, msg in item.items():
+                if role == "tool":
+                    st.markdown(
+                        f"""
+                        ```
+                        {msg}
+                        """
+                    )
+                else:
+                    st.markdown(self._render_msg(role, msg))
 
     @staticmethod
     def _render_msg(role: str, msg: str):
@@ -258,31 +280,15 @@ def submit():
 
 
 def main():
-    cg = ChatGSE()
+    if "cg" not in st.session_state:
+        st.session_state.cg = ChatGSE()
 
-    if st.session_state.get("conversation"):
-        for item in st.session_state.conversation.history:
-            for role, msg in item.items():
-                if role == "tool":
-                    st.markdown(
-                        f"""
-                        ```
-                        {msg}
-                        """
-                    )
-                else:
-                    st.markdown(cg._render_msg(role, msg))
-
-    if "input" not in st.session_state:
-        st.session_state.input = ""
-
-    if "mode" not in st.session_state:
-        st.session_state.mode = "name"
+    cg = st.session_state.cg
+    cg._display_init()
+    cg._display_history()
 
     if st.session_state.input:
         if st.session_state.mode == "name":
-            with open("chatgse-logs.txt", "a") as f:
-                f.write("--- NEW SESSION ---\n")
             cg._get_user_name()
 
         elif st.session_state.mode == "context":
