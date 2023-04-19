@@ -220,7 +220,6 @@ class ChatGSE:
 
     def _get_data_input_tool_additional(self):
         logger.info("Asking for additional data input info.")
-        st.session_state.mode = "chat"
 
         if str(st.session_state.input).lower() in ["n", "no", "no."]:
             logger.info("No additional data input provided.")
@@ -229,7 +228,7 @@ class ChatGSE:
                 f"{PLEASE_ENTER_QUESTIONS}"
             )
             self._write_and_history("Assistant", msg)
-            return
+            return "chat"
 
         logger.info("Additional data input provided.")
         st.session_state.conversation.messages.append(
@@ -245,9 +244,10 @@ class ChatGSE:
         )
         self._write_and_history("Assistant", data_input_response)
 
+        return "chat"
+
     def _get_data_input_manual(self):
         logger.info("No tool info provided. Getting manual data input.")
-        st.session_state.mode = "chat"
 
         st.session_state.conversation.setup_data_input_manual(
             st.session_state.input
@@ -258,6 +258,8 @@ class ChatGSE:
             f"{PLEASE_ENTER_QUESTIONS}"
         )
         self._write_and_history("Assistant", data_input_response)
+
+        return "chat"
 
     def _get_response(self):
         logger.info("Getting response from LLM.")
@@ -275,6 +277,29 @@ class ChatGSE:
 
         else:
             self._write_and_history("ChatGSE", response)
+
+    def _text_input(self):
+        st.text_input(
+            "Input:",
+            on_change=submit,
+            key="widget",
+            placeholder="Enter text here.",
+        )
+        if "counter" not in st.session_state:
+            st.session_state["counter"] = 0
+        components.html(
+            f"""
+            <div></div>
+            <p>{st.session_state.counter}</p>
+            <script>
+                var input = window.parent.document.querySelectorAll("input[type=text]");
+                for (var i = 0; i < input.length; ++i) {{
+                    input[i].focus();
+                }}
+            </script>
+            """,
+            height=15,
+        )
 
 
 def submit():
@@ -300,36 +325,16 @@ def main():
             st.session_state.mode = cg._ask_for_data_input()
 
         elif st.session_state.mode == "data_input_tool_additional":
-            cg._get_data_input_tool_additional()
+            st.session_state.mode = cg._get_data_input_tool_additional()
 
         elif st.session_state.mode == "data_input_manual":
-            cg._get_data_input_manual()
+            st.session_state.mode = cg._get_data_input_manual()
 
         elif st.session_state.mode == "chat":
             cg._get_response()
 
     # Chat box
-    st.text_input(
-        "Input:",
-        on_change=submit,
-        key="widget",
-        placeholder="Enter text here.",
-    )
-    if "counter" not in st.session_state:
-        st.session_state["counter"] = 0
-    components.html(
-        f"""
-        <div></div>
-        <p>{st.session_state.counter}</p>
-        <script>
-            var input = window.parent.document.querySelectorAll("input[type=text]");
-            for (var i = 0; i < input.length; ++i) {{
-                input[i].focus();
-            }}
-        </script>
-        """,
-        height=15,
-    )
+    cg._text_input()
 
 
 if __name__ == "__main__":
