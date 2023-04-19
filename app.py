@@ -99,6 +99,15 @@ class ChatGSE:
         key = os.getenv("OPENAI_API_KEY")
 
         if not key:
+            msg = """
+                Please enter your OpenAI API key. You can get one by signing up
+                [here](https://platform.openai.com/). We will not store your
+                key, and only use it for the requests made in this session. To
+                prevent this message, you can set the environment variable
+                `OPENAI_API_KEY` to your key.
+                """
+            self._write_and_history("Assistant", msg)
+
             return "key"
 
         msg = """
@@ -112,7 +121,17 @@ class ChatGSE:
 
     def _get_api_key(self):
         logger.info("Getting API Key.")
-        st.session_state.api_key = st.session_state.input
+        sucess = st.session_state.conversation.set_api_key(
+            st.session_state.input
+        )
+        if not sucess:
+            msg = """
+                The API key you entered is not valid. Please try again.
+                """
+            self._write_and_history("Assistant", msg)
+
+            return "key"
+
         msg = """
             Thank you! As mentioned, I am the model's assistant, and we will be going
             through some initial setup steps. To get started, could you please tell me
@@ -336,9 +355,6 @@ def main():
 
     if st.session_state.input:
         if st.session_state.mode == "key":
-            cg._write_and_history(
-                "Assistant", "Please enter your OpenAI API key."
-            )
             st.session_state.mode = cg._get_api_key()
 
         elif st.session_state.mode == "name":

@@ -11,14 +11,6 @@ class Conversation:
         """
         self.user_name = user_name
 
-        # if not os.getenv("OPENAI_API_KEY"):
-        #     raise ValueError(
-        #         "Please set the OPENAI_API_KEY environment variable to "
-        #         "provide a valid OpenAI API key."
-        #     )
-
-        # openai.api_key = os.getenv("OPENAI_API_KEY")
-
         self.model = "gpt-3.5-turbo"
         self.ca_model = "gpt-3.5-turbo"
 
@@ -70,6 +62,12 @@ class Conversation:
 
     def set_api_key(self, api_key: str):
         openai.api_key = api_key
+
+        try:
+            openai.Model.list()
+            return True
+        except openai.error.AuthenticationError as e:
+            return False
 
     def setup(self, context: str):
         self.context = context
