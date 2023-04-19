@@ -3,6 +3,7 @@ from loguru import logger
 import os
 import pandas as pd
 import streamlit as st
+import streamlit.components.v1 as components
 from chatgse._llm_connect import Conversation
 
 PLEASE_ENTER_QUESTIONS = (
@@ -105,7 +106,6 @@ class ChatGSE:
 
     def _get_user_name(self):
         logger.info("Getting user name.")
-        st.session_state.mode = "context"
         st.session_state["conversation"] = Conversation(
             user_name=st.session_state.input
         )
@@ -116,9 +116,10 @@ class ChatGSE:
         )
         self._write_and_history("Assistant", msg)
 
+        return "context"
+
     def _get_context(self):
         logger.info("Getting context.")
-        st.session_state.mode = "data_input"
         st.session_state.conversation.setup(st.session_state.input)
         context_response = (
             f"You have selected `{st.session_state.conversation.context}` "
@@ -128,6 +129,8 @@ class ChatGSE:
             "text file formats. If not, please enter 'no'."
         )
         self._write_and_history("Assistant", context_response)
+
+        return "data_input"
 
     def _ask_for_data_input(self):
         logger.info(
@@ -139,7 +142,6 @@ class ChatGSE:
         files = [f.strip() for f in files]
         if "no" in files:
             logger.info("No tool data provided.")
-            st.session_state.mode = "data_input_manual"
             msg = (
                 "Please provide a list of biological data points (activities of "
                 "pathways or transcription factors, expression of transcripts or "
@@ -147,11 +149,11 @@ class ChatGSE:
                 "contrast."
             )
             self._write_and_history("Assistant", msg)
-            return
+            return "data_input_manual"
 
         else:
             logger.info("Tool data provided.")
-            self._get_data_input_tool(files)
+            return self._get_data_input_tool(files)
 
     def _get_data_input_tool(self, files: list) -> dict:
         """
@@ -159,7 +161,6 @@ class ChatGSE:
         CORNETO, GSEA, etc. Flat files on disk; what else?
         """
         logger.info("Tool data provided.")
-        st.session_state.mode = "data_input_tool_additional"
         dfs = {}
         for fl in files:
             tool = fl.split(".")[0]
@@ -214,6 +215,8 @@ class ChatGSE:
             "contrast or experimental design? If so, please enter it below; if "
             "not, please enter 'no'.",
         )
+
+        return "data_input_tool_additional"
 
     def _get_data_input_tool_additional(self):
         logger.info("Asking for additional data input info.")
@@ -288,13 +291,13 @@ def main():
     # Logic
     if st.session_state.input:
         if st.session_state.mode == "name":
-            cg._get_user_name()
+            st.session_state.mode = cg._get_user_name()
 
         elif st.session_state.mode == "context":
-            cg._get_context()
+            st.session_state.mode = cg._get_context()
 
         elif st.session_state.mode == "data_input":
-            st.session_state.files = cg._ask_for_data_input()
+            st.session_state.mode = cg._ask_for_data_input()
 
         elif st.session_state.mode == "data_input_tool_additional":
             cg._get_data_input_tool_additional()
@@ -311,6 +314,21 @@ def main():
         on_change=submit,
         key="widget",
         placeholder="Enter text here.",
+    )
+    if "counter" not in st.session_state:
+        st.session_state["counter"] = 0
+    components.html(
+        f"""
+        <div></div>
+        <p>{st.session_state.counter}</p>
+        <script>
+            var input = window.parent.document.querySelectorAll("input[type=text]");
+            for (var i = 0; i < input.length; ++i) {{
+                input[i].focus();
+            }}
+        </script>
+        """,
+        height=15,
     )
 
 
