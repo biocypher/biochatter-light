@@ -13,7 +13,8 @@ class Conversation:
 
         if not os.getenv("OPENAI_API_KEY"):
             raise ValueError(
-                "Please set the OPENAI_API_KEY environment variable to provide a valid OpenAI API key."
+                "Please set the OPENAI_API_KEY environment variable to "
+                "provide a valid OpenAI API key."
             )
 
         openai.api_key = os.getenv("OPENAI_API_KEY")
@@ -28,11 +29,18 @@ class Conversation:
             },
             {
                 "role": "system",
-                "content": "Your role is to contextualise the user's findings with biomedical background knowledge. If provided with a list, please give granular feedback about the individual entities, your knowledge about them, and what they may mean in the context of the research.",
+                "content": "Your role is to contextualise the user's findings "
+                "with biomedical background knowledge. If provided with a "
+                "list, please give granular feedback about the individual "
+                "entities, your knowledge about them, and what they may mean "
+                "in the context of the research.",
             },
             {
                 "role": "system",
-                "content": "You can ask the user to provide explanations and more background at any time, for instance on the treatment a patient has received, or the experimental background. But for now, wait for the user to ask a question.",
+                "content": "You can ask the user to provide explanations and "
+                "more background at any time, for instance on the treatment a "
+                "patient has received, or the experimental background. But "
+                "for now, wait for the user to ask a question.",
             },
         ]
 
@@ -43,11 +51,15 @@ class Conversation:
             },
             {
                 "role": "system",
-                "content": "Your task is to check for factual correctness and consistency of the statements of another agent.",
+                "content": "Your task is to check for factual correctness and "
+                "consistency of the statements of another agent.",
             },
             {
                 "role": "system",
-                "content": "Please correct the following message. Ignore references to previous statements, only correct the current input. If there is nothing to correct, please respond with just 'OK', and nothing else!",
+                "content": "Please correct the following message. Ignore "
+                "references to previous statements, only correct the current "
+                "input. If there is nothing to correct, please respond with "
+                "just 'OK', and nothing else!",
             },
         ]
 
@@ -67,7 +79,8 @@ class Conversation:
         self.messages.append(
             {
                 "role": "system",
-                "content": f"The user has given information on the data input: {data_input}.",
+                "content": "The user has given information on the data "
+                f"input: {data_input}.",
             },
         )
 
@@ -77,14 +90,24 @@ class Conversation:
             self.messages.append(
                 {
                     "role": "system",
-                    "content": f"The user has provided information in the form of a table. The rows refer to biological entities (samples, cell types, or the like), and the columns refer to pathways. The values are pathway activities derived using the bioinformatics method progeny. Here are the data: {df}",
+                    "content": "The user has provided information in the "
+                    "form of a table. The rows refer to biological entities "
+                    "(samples, cell types, or the like), and the columns refer "
+                    "to pathways. The values are pathway activities derived "
+                    "using the bioinformatics method progeny. Here are the "
+                    f"data: {df}",
                 },
             )
         elif tool == "decoupler":
             self.messages.append(
                 {
                     "role": "system",
-                    "content": f"The user has provided information in the form of a table. The `Name` column refers to biological entities (transcription factors, or the like), and the `Activity` column refers to their activity, derived using the bioinformatics method decoupler. Here are the data: {df}",
+                    "content": "The user has provided information in the "
+                    "form of a table. The `Name` column refers to biological "
+                    "entities (transcription factors, or the like), and the "
+                    "`Activity` column refers to their activity, derived using "
+                    "the bioinformatics method decoupler. Here are the "
+                    f"data: {df}",
                 },
             )
 
@@ -128,7 +151,8 @@ class Conversation:
         ca_messages.append(
             {
                 "role": "system",
-                "content": "If there is nothing to correct, please respond with just 'OK', and nothing else!",
+                "content": "If there is nothing to correct, please respond "
+                "with just 'OK', and nothing else!",
             },
         )
 

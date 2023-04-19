@@ -5,7 +5,14 @@ import pandas as pd
 import streamlit as st
 from chatgse._llm_connect import Conversation
 
-PLEASE_ENTER_QUESTIONS = "The model will be with you shortly. Please enter your questions below. These can be general ('explain these results') or specific."
+PLEASE_ENTER_QUESTIONS = (
+    "The model will be with you shortly. "
+    "Please enter your questions below. "
+    "These can be general, such as 'explain these results', or specific. "
+    "General questions will yield more general answers, while specific "
+    "questions go into more detail. You can follow up on the answers with "
+    "more questions."
+)
 HIDE_MENU_STYLE = """
 <style>
 #MainMenu {visibility: hidden;}
@@ -40,7 +47,11 @@ def _get_user_name():
     st.session_state["conversation"] = Conversation(
         user_name=st.session_state.input
     )
-    msg = f"Thank you, `{st.session_state.conversation.user_name}`! What is the context of your inquiry? For instance, this could be a disease, an experimental design, or a research area."
+    msg = (
+        f"Thank you, `{st.session_state.conversation.user_name}`! "
+        "What is the context of your inquiry? For instance, this could be a "
+        "disease, an experimental design, or a research area."
+    )
     _write_and_history("Assistant", msg)
 
 
@@ -48,7 +59,13 @@ def _get_context():
     logger.info("Getting context.")
     st.session_state.mode = "data_input"
     st.session_state.conversation.setup(st.session_state.input)
-    context_response = f"You have selected `{st.session_state.conversation.context}` as your context. Do you want to provide input files from analytic methods? If so, please provide the file names as a comma-separated list. The files should be in the `input/` folder in commonly used text file formats. If not, please enter 'no'."
+    context_response = (
+        f"You have selected `{st.session_state.conversation.context}` "
+        "as your context. Do you want to provide input files from analytic "
+        "methods? If so, please provide the file names as a comma-separated "
+        "list. The files should be in the `input/` folder in commonly used "
+        "text file formats. If not, please enter 'no'."
+    )
     _write_and_history("Assistant", context_response)
 
 
@@ -57,7 +74,8 @@ ALLOWED_TOOLS = ["decoupler", "progeny", "corneto", "gsea"]
 
 def _ask_for_data_input():
     logger.info(
-        "--- Biomedical data input --- looking for structured and unstructured information."
+        "--- Biomedical data input --- "
+        "looking for structured and unstructured information."
     )
 
     files = st.session_state.input.split(",")
@@ -65,7 +83,12 @@ def _ask_for_data_input():
     if "no" in files:
         logger.info("No tool data provided.")
         st.session_state.mode = "data_input_manual"
-        msg = "Please provide a list of biological data points (activities of pathways or transcription factors, expression of transcripts or proteins), optionally with directional information and/or a contrast."
+        msg = (
+            "Please provide a list of biological data points (activities of "
+            "pathways or transcription factors, expression of transcripts or "
+            "proteins), optionally with directional information and/or a "
+            "contrast."
+        )
         _write_and_history("Assistant", msg)
         return
 
@@ -87,14 +110,16 @@ def _get_data_input_tool(files: list) -> dict:
         if not any([tool in fl for tool in ALLOWED_TOOLS]):
             _write_and_history(
                 "Assistant",
-                f"Sorry, `{tool}` is not among the supported tools ({ALLOWED_TOOLS}). Please check the spelling and try again.",
+                f"Sorry, `{tool}` is not among the supported tools "
+                f"({ALLOWED_TOOLS}). Please check the spelling and try again.",
             )
             continue
 
         if not os.path.exists(f"input/{fl}"):
             _write_and_history(
                 "Assistant",
-                f"Sorry, I could not find the file `{fl}` in the `input/` folder. Please check the spelling and try again.",
+                f"Sorry, I could not find the file `{fl}` in the `input/` "
+                "folder. Please check the spelling and try again.",
             )
             continue
 
@@ -125,7 +150,9 @@ def _get_data_input_tool(files: list) -> dict:
 
     _write_and_history(
         "Assistant",
-        "Would you like to provide additional information, for instance on a contrast or experimental design? If so, please enter it below; if not, please enter 'no'.",
+        "Would you like to provide additional information, for instance on a "
+        "contrast or experimental design? If so, please enter it below; if "
+        "not, please enter 'no'.",
     )
 
 
@@ -135,7 +162,10 @@ def _get_data_input_tool_additional():
 
     if str(st.session_state.input).lower() in ["n", "no", "no."]:
         logger.info("No additional data input provided.")
-        msg = f"Okay, I will use the information from the tool. {PLEASE_ENTER_QUESTIONS}"
+        msg = (
+            "Okay, I will use the information from the tool. "
+            f"{PLEASE_ENTER_QUESTIONS}"
+        )
         _write_and_history("Assistant", msg)
         return
 
