@@ -280,13 +280,12 @@ def submit():
 
 
 def main():
-    if "cg" not in st.session_state:
-        st.session_state.cg = ChatGSE()
-
-    cg = st.session_state.cg
+    # Setup
+    cg = ChatGSE()
     cg._display_init()
     cg._display_history()
 
+    # Logic
     if st.session_state.input:
         if st.session_state.mode == "name":
             cg._get_user_name()
@@ -306,6 +305,7 @@ def main():
         elif st.session_state.mode == "chat":
             cg._get_response()
 
+    # Chat box
     st.text_input(
         "Input:",
         on_change=submit,
