@@ -5,6 +5,8 @@ import pandas as pd
 import streamlit as st
 from chatgse._llm_connect import Conversation
 
+PLEASE_ENTER_QUESTIONS = "The model will be with you shortly. Please enter your questions below. These can be general ('explain these results') or specific."
+
 
 def _render_msg(role: str, msg: str):
     return f"`{role}`: {msg}"
@@ -30,50 +32,73 @@ def _get_user_name():
 
 def _get_context():
     logger.info("Getting context.")
-    st.session_state.mode = "perturbation"
+    st.session_state.mode = "data_input"
     st.session_state.conversation.setup(st.session_state.input)
-    context_response = f"You have selected `{st.session_state.conversation.context}` as your context."
+    context_response = f"You have selected `{st.session_state.conversation.context}` as your context. Do you want to provide input files from analytic methods? If so, please provide the file names as a comma-separated list. The files should be in the `input/` folder in commonly used text file formats. If not, please enter 'no'."
     _write_and_history("Assistant", context_response)
 
 
-def _tool_input() -> pd.DataFrame:
-    """
-    Methods to detect various inputs from analytic tools; decoupler, PROGENy,
-    CORNETO, GSEA, etc. Flat files on disk; what else?
-    """
-    logger.info("Looking for biomedical data from tool output.")
-    if not os.path.exists("input/progeny.csv"):
-        logger.info("No tool data detected.")
-        # return empty dataframe
-        return pd.DataFrame()
-
-    logger.info("Loading PROGENy output.")
-    with open("input/progeny.csv") as f:
-        df = pd.read_csv(f)
-
-    return df
+ALLOWED_TOOLS = ["decoupler", "progeny", "corneto", "gsea"]
 
 
-def _ask_for_perturbation():
+def _ask_for_data_input():
     logger.info(
         "--- Biomedical data input --- looking for structured and unstructured information."
     )
-    df = _tool_input()
 
-    if df.empty:
-        st.session_state.mode = "perturbation_manual"
-        msg = "I am not detecting input from an analytic tool. Please provide a list of biological data points (activities of pathways or transcription factors, expression of transcripts or proteins), optionally with directional information and/or a contrast."
+    files = st.session_state.input.split(",")
+    files = [f.strip() for f in files]
+    if "no" in files:
+        logger.info("No tool data provided.")
+        st.session_state.mode = "data_input_manual"
+        msg = "Please provide a list of biological data points (activities of pathways or transcription factors, expression of transcripts or proteins), optionally with directional information and/or a contrast."
         _write_and_history("Assistant", msg)
         return
 
     else:
-        st.session_state.mode = "perturbation_tool"
+        logger.info("Tool data provided.")
+        _get_data_input_tool(files)
 
+
+def _get_data_input_tool(files: list) -> dict:
+    """
+    Methods to detect various inputs from analytic tools; decoupler, PROGENy,
+    CORNETO, GSEA, etc. Flat files on disk; what else?
+    """
+    logger.info("Tool data provided.")
+    st.session_state.mode = "data_input_tool_additional"
+    dfs = {}
+    for fl in files:
+        tool = fl.split(".")[0]
+        if not any([tool in fl for tool in ALLOWED_TOOLS]):
+            _write_and_history(
+                "Assistant",
+                f"Sorry, `{tool}` is not among the supported tools ({ALLOWED_TOOLS}). Please check the spelling and try again.",
+            )
+            continue
+
+        if not os.path.exists(f"input/{fl}"):
+            _write_and_history(
+                "Assistant",
+                f"Sorry, I could not find the file `{fl}` in the `input/` folder. Please check the spelling and try again.",
+            )
+            continue
+
+        logger.info(f"Reading {fl}")
+        with open(f"input/{fl}") as f:
+            df = pd.read_csv(f)
+            dfs[tool] = df
+
+    _write_and_history(
+        "Assistant",
+        f"I have detected input from {len(dfs)} supported analytic tools.",
+    )
+
+    for tool, df in dfs.items():
         _write_and_history(
             "Assistant",
-            "I have detected input from an analytic tool. Here it is:",
+            f"### {tool}:",
         )
-
         st.markdown(
             f"""
             ```
@@ -82,53 +107,52 @@ def _ask_for_perturbation():
         )
         st.session_state.conversation.history.append({"tool": df.to_markdown()})
         logger.info("<Tool data displayed.>")
+        st.session_state.conversation.setup_data_input_tool(df.to_json(), tool)
 
-        _write_and_history(
-            "Assistant",
-            "Would you like to provide additional information, for instance on a contrast or experimental design? If so, please enter it below; if not, please enter 'no'.",
-        )
-
-        st.session_state.conversation.setup_perturbation_tool(df.to_json())
+    _write_and_history(
+        "Assistant",
+        "Would you like to provide additional information, for instance on a contrast or experimental design? If so, please enter it below; if not, please enter 'no'.",
+    )
 
 
-def _get_perturbation_tool():
-    logger.info("Asking for additional perturbation info.")
+def _get_data_input_tool_additional():
+    logger.info("Asking for additional data input info.")
     st.session_state.mode = "chat"
 
     if str(st.session_state.input).lower() in ["n", "no", "no."]:
-        logger.info("No additional perturbation info provided.")
-        msg = "Okay, I will use the information from the tool. Please enter your questions below."
+        logger.info("No additional data input provided.")
+        msg = f"Okay, I will use the information from the tool. {PLEASE_ENTER_QUESTIONS}"
         _write_and_history("Assistant", msg)
         return
 
-    logger.info("Additional perturbation info provided.")
+    logger.info("Additional data input provided.")
     st.session_state.conversation.messages.append(
         {
             "role": "user",
             "content": st.session_state.input,
         }
     )
-    perturbation_response = (
-        "Thank you! You have provided additional perturbation information:\n"
+    data_input_response = (
+        "Thank you! You have provided additional data input:\n"
         f"`{st.session_state.input}`\n"
-        "The model will be with you shortly. Please enter your questions below."
+        f"{PLEASE_ENTER_QUESTIONS}"
     )
-    _write_and_history("Assistant", perturbation_response)
+    _write_and_history("Assistant", data_input_response)
 
 
-def _get_perturbation_manual():
-    logger.info("No tool info provided. Getting manual perturbation info.")
+def _get_data_input_manual():
+    logger.info("No tool info provided. Getting manual data input.")
     st.session_state.mode = "chat"
 
-    st.session_state.conversation.setup_perturbation_manual(
+    st.session_state.conversation.setup_data_input_manual(
         st.session_state.input
     )
-    perturbation_response = (
-        "Thank you! You have provided unstructured perturbation information:\n"
-        f"`{st.session_state.conversation.perturbation}`\n"
-        "The model will be with you shortly. Please enter your questions below."
+    data_input_response = (
+        "Thank you! You have provided unstructured data input:\n"
+        f"`{st.session_state.conversation.data_input}`\n"
+        f"{PLEASE_ENTER_QUESTIONS}"
     )
-    _write_and_history("Assistant", perturbation_response)
+    _write_and_history("Assistant", data_input_response)
 
 
 def _get_response():
@@ -216,13 +240,15 @@ if st.session_state.input:
 
     elif st.session_state.mode == "context":
         _get_context()
-        _ask_for_perturbation()
 
-    elif st.session_state.mode == "perturbation_tool":
-        _get_perturbation_tool()
+    elif st.session_state.mode == "data_input":
+        st.session_state.files = _ask_for_data_input()
 
-    elif st.session_state.mode == "perturbation_manual":
-        _get_perturbation_manual()
+    elif st.session_state.mode == "data_input_tool_additional":
+        _get_data_input_tool_additional()
+
+    elif st.session_state.mode == "data_input_manual":
+        _get_data_input_manual()
 
     elif st.session_state.mode == "chat":
         _get_response()

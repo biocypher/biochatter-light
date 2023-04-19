@@ -62,25 +62,31 @@ class Conversation:
             },
         )
 
-    def setup_perturbation_manual(self, perturbation: str):
-        self.perturbation = perturbation
-        self.perturbation_unstructured = True
+    def setup_data_input_manual(self, data_input: str):
+        self.data_input = data_input
         self.messages.append(
             {
                 "role": "system",
-                "content": f"The user has given information on the perturbation: {perturbation}.",
+                "content": f"The user has given information on the data input: {data_input}.",
             },
         )
 
-    def setup_perturbation_tool(self, df):
-        self.perturbation_tool = df
-        self.perturbation_unstructured = False
-        self.messages.append(
-            {
-                "role": "system",
-                "content": f"The user has provided information in the form of a table. The rows refer to biological entities (samples, cell types, or the like), and the columns refer to pathways. The values are pathway activities derived using a bioinformatics method. Here are the data: {df}",
-            },
-        )
+    def setup_data_input_tool(self, df, tool: str):
+        self.data_input_tool = df
+        if tool == "progeny":
+            self.messages.append(
+                {
+                    "role": "system",
+                    "content": f"The user has provided information in the form of a table. The rows refer to biological entities (samples, cell types, or the like), and the columns refer to pathways. The values are pathway activities derived using the bioinformatics method progeny. Here are the data: {df}",
+                },
+            )
+        elif tool == "decoupler":
+            self.messages.append(
+                {
+                    "role": "system",
+                    "content": f"The user has provided information in the form of a table. The `Name` column refers to biological entities (transcription factors, or the like), and the `Activity` column refers to their activity, derived using the bioinformatics method decoupler. Here are the data: {df}",
+                },
+            )
 
     def query(self, text: str):
         self.messages.append(
