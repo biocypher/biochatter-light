@@ -36,10 +36,8 @@ class ChatGSE:
         if "input" not in st.session_state:
             st.session_state.input = ""
 
-        if "mode" not in st.session_state:
-            st.session_state.mode = "name"
-            with open("chatgse-logs.txt", "a") as f:
-                f.write("--- NEW SESSION ---\n")
+        if "conversation" not in st.session_state:
+            st.session_state.conversation = Conversation()
 
     def _display_init(self):
         st.set_page_config(
@@ -70,17 +68,10 @@ class ChatGSE:
             used Large Language Model apply, which means that the statements made can
             sometimes be incorrect or misleading.
             
-            `Assistant`: As mentioned, I am the model's assistant, and we will be going
-            through some initial setup steps. To get started, could you please tell me
-            your name?
-            
             """
         )
 
     def _display_history(self):
-        if not st.session_state.get("conversation"):
-            return
-
         for item in st.session_state.conversation.history:
             for role, msg in item.items():
                 if role == "tool":
@@ -104,11 +95,35 @@ class ChatGSE:
         with open("chatgse-logs.txt", "a") as f:
             f.write(f"{role}: {msg}\n")
 
+    def _check_for_api_key(self):
+        key = os.getenv("OPENAI_API_KEY")
+
+        if not key:
+            return "key"
+
+        msg = """
+            As mentioned, I am the model's assistant, and we will be going
+            through some initial setup steps. To get started, could you please tell me
+            your name?
+            """
+        self._write_and_history("Assistant", msg)
+
+        return "name"
+
+    def _get_api_key(self):
+        logger.info("Getting API Key.")
+        st.session_state.api_key = st.session_state.input
+        msg = """
+            Thank you! As mentioned, I am the model's assistant, and we will be going
+            through some initial setup steps. To get started, could you please tell me
+            your name?
+            """
+        self._write_and_history("Assistant", msg)
+        return "name"
+
     def _get_user_name(self):
         logger.info("Getting user name.")
-        st.session_state["conversation"] = Conversation(
-            user_name=st.session_state.input
-        )
+        st.session_state.conversation.set_user_name(st.session_state.input)
         msg = (
             f"Thank you, `{st.session_state.conversation.user_name}`! "
             "What is the context of your inquiry? For instance, this could be a "
@@ -314,8 +329,19 @@ def main():
     cg._display_history()
 
     # Logic
+    if not st.session_state.get("mode"):
+        st.session_state.mode = cg._check_for_api_key()
+        with open("chatgse-logs.txt", "a") as f:
+            f.write("--- NEW SESSION ---\n")
+
     if st.session_state.input:
-        if st.session_state.mode == "name":
+        if st.session_state.mode == "key":
+            cg._write_and_history(
+                "Assistant", "Please enter your OpenAI API key."
+            )
+            st.session_state.mode = cg._get_api_key()
+
+        elif st.session_state.mode == "name":
             st.session_state.mode = cg._get_user_name()
 
         elif st.session_state.mode == "context":

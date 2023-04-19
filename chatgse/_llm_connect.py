@@ -3,7 +3,7 @@ import openai
 
 
 class Conversation:
-    def __init__(self, user_name: str):
+    def __init__(self, user_name: str = "User"):
         """
         Connect to OpenAI's GPT API and set up a conversation with the user.
         Also initialise a second conversational agent to provide corrections to
@@ -11,13 +11,13 @@ class Conversation:
         """
         self.user_name = user_name
 
-        if not os.getenv("OPENAI_API_KEY"):
-            raise ValueError(
-                "Please set the OPENAI_API_KEY environment variable to "
-                "provide a valid OpenAI API key."
-            )
+        # if not os.getenv("OPENAI_API_KEY"):
+        #     raise ValueError(
+        #         "Please set the OPENAI_API_KEY environment variable to "
+        #         "provide a valid OpenAI API key."
+        #     )
 
-        openai.api_key = os.getenv("OPENAI_API_KEY")
+        # openai.api_key = os.getenv("OPENAI_API_KEY")
 
         self.model = "gpt-3.5-turbo"
         self.ca_model = "gpt-3.5-turbo"
@@ -64,6 +64,12 @@ class Conversation:
         ]
 
         self.history = []
+
+    def set_user_name(self, user_name: str):
+        self.user_name = user_name
+
+    def set_api_key(self, api_key: str):
+        openai.api_key = api_key
 
     def setup(self, context: str):
         self.context = context
