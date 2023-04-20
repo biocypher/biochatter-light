@@ -1,55 +1,211 @@
 # app.py: streamlit chat app for contextualisation of biomedical results
+app_name = "chatgse"
+__version__ = "0.1.0"
+
+# BOILERPLATE
 import streamlit as st
+import streamlit.components.v1 as components
+
+st.set_page_config(
+    page_title="ChatGSE",
+    page_icon="🤖",
+    layout="wide",
+    initial_sidebar_state="expanded",
+)
+ss = st.session_state
+
+# IMPORTS
 from chatgse._interface import ChatGSE
 
 
+# HANDLERS
+def on_submit():
+    ss.input = ss.widget
+    ss.widget = ""
+
+
+def autofocus():
+    if "counter" not in ss:
+        ss["counter"] = 0
+    components.html(
+        f"""
+        <div></div>
+        <p>{ss.counter}</p>
+        <script>
+            var input = window.parent.document.querySelectorAll("input[type=text]");
+            for (var i = 0; i < input.length; ++i) {{
+                input[i].focus();
+            }}
+        </script>
+        """,
+        height=15,
+    )
+
+
+# COMPONENTS
+def chat_box():
+    st.text_input(
+        "Input:",
+        on_change=on_submit,
+        key="widget",
+        placeholder="Enter text here.",
+    )
+
+
+def key_chat_box():
+    st.text_input(
+        "OpenAI API Key:",
+        on_change=on_submit,
+        key="widget",
+        placeholder="(sk-...)",
+    )
+
+
+def data_input_buttons():
+    c1, c2 = st.columns([1, 1])
+    with c1:
+        st.button(
+            "Yes",
+            on_click=data_input_yes,
+            use_container_width=True,
+        )
+    with c2:
+        st.button(
+            "No",
+            on_click=data_input_no,
+            use_container_width=True,
+        )
+
+
+def data_input_yes():
+    ss.mode = "getting_data_file_input"
+    ss.input = "done"
+
+
+def data_input_no():
+    ss.mode = "asking_for_manual_data_input"
+    ss.input = "no"
+
+
+def app_header():
+    st.markdown(
+        f"""
+        # ChatGSE ({__version__})
+        """
+    )
+
+
+def app_info():
+    st.markdown(
+        """
+        
+        ChatGSE is a tool to rapidly contextualise common end results of
+        biomedical analyses. It works by setting up a topic-constrained
+        conversation with a pre-trained language model. The main benefits of
+        this approach are:
+
+        - Integration with popular bioinformatics tools (e.g. progeny,
+        decoupler)
+
+        - Prompts tuned to biomedical research and your specific queries
+
+        - Integrated safeguards to prevent false information and comparison to
+        curated prior knowledge
+
+        - Confidentiality of the shared data (as opposed to the ChatGPT
+        interface, which allows storage and reuse of the user's prompts by
+        OpenAI)
+        
+        The agents you will be talking to are an `Assistant` (a pre-programmed
+        conversational algorithm), a `ChatGSE` model, which is a pre-trained
+        language model with instructions aimed at specifically improving the
+        quality of biomedical answers, and a `Correcting agent`, which is a
+        separate pre-trained language model with the task of catching and
+        correcting false information conveyed by the primary model. You will
+        only see the `Correcting agent` if it detects that the `ChatGSE` model
+        has made a mistake. In general, even though we try our best to avoid
+        mistakes using the correcting agent and internal safeguards, the general
+        limitations of the used Large Language Model apply, which means that the
+        statements made can sometimes be incorrect or misleading.
+
+        Source code on [GitHub](
+        https://github.com/biocypher/chatgse).
+        """
+    )
+
+
+def spacer(n=2, line=False, next_n=0):
+    for _ in range(n):
+        st.write("")
+    if line:
+        st.tabs([" "])
+    for _ in range(next_n):
+        st.write("")
+
+
 def main():
-    # Setup
-    if not st.session_state.get("cg"):
-        st.session_state.cg = ChatGSE()
-    cg = st.session_state.cg
+    # SETUP
+    if not ss.get("cg"):
+        ss.cg = ChatGSE()
+    cg = ss.cg
     cg._display_init()
     cg._display_history()
 
+    # SIDEBAR
     with st.sidebar:
-        st.file_uploader(
+        app_header()
+        files = st.file_uploader(
             "Upload tool data",
             type=["csv", "tsv", "txt"],
             key="tool_data",
             accept_multiple_files=True,
         )
+        app_info()
 
-    # Logic
-    if not st.session_state.get("mode"):
-        st.session_state.mode = cg._check_for_api_key()
+    # NEW SESSION, GET API KEY
+    if not ss.get("mode"):
+        ss.mode = cg._check_for_api_key()
         with open("chatgse-logs.txt", "a") as f:
             f.write("--- NEW SESSION ---\n")
 
-    if st.session_state.input:
-        if st.session_state.mode == "key":
-            st.session_state.mode = cg._get_api_key()
+    # CHAT BOT LOGIC
+    if ss.input:
+        if ss.mode == "getting_key":
+            ss.mode = cg._get_api_key()
 
-        elif st.session_state.mode == "name":
-            st.session_state.mode = cg._get_user_name()
+        elif ss.mode == "getting_name":
+            ss.mode = cg._get_user_name()
 
-        elif st.session_state.mode == "context":
-            st.session_state.mode = cg._get_context()
-            st.session_state.mode = cg._ask_for_data_input()
+        elif ss.mode == "getting_context":
+            ss.mode = cg._get_context()
+            ss.mode = cg._ask_for_data_input()
 
-        elif st.session_state.mode == "data_input":
-            st.session_state.mode = cg._get_data_input()
+        elif ss.mode == "getting_data_file_input":
+            ss.mode = cg._get_data_input()
 
-        elif st.session_state.mode == "data_input_tool_additional":
-            st.session_state.mode = cg._get_data_input_tool_additional()
+        elif ss.mode == "getting_data_file_description":
+            ss.mode = cg._get_data_file_description()
 
-        elif st.session_state.mode == "data_input_manual":
-            st.session_state.mode = cg._get_data_input_manual()
+        elif ss.mode == "asking_for_manual_data_input":
+            ss.mode = cg._ask_for_manual_data_input()
 
-        elif st.session_state.mode == "chat":
+        elif ss.mode == "getting_manual_data_input":
+            ss.mode = cg._get_data_input_manual()
+
+        elif ss.mode == "chat":
             cg._get_response()
 
-    # Chat box
-    cg._text_input()
+    # RESET INPUT
+    ss.input = ""
+
+    # CHAT BOX
+    if ss.mode == "getting_key":
+        key_chat_box()
+    elif ss.mode == "getting_data_file_input":
+        data_input_buttons()
+    else:
+        chat_box()
+    autofocus()
 
 
 if __name__ == "__main__":

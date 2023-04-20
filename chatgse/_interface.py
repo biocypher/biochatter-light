@@ -3,7 +3,6 @@ from loguru import logger
 import os
 import pandas as pd
 import streamlit as st
-import streamlit.components.v1 as components
 from chatgse._llm_connect import Conversation
 
 
@@ -15,8 +14,8 @@ PLEASE_ENTER_QUESTIONS = (
     "questions go into more detail. You can follow up on the answers with "
     "more questions."
 )
-ALLOWED_TOOLS = ["decoupler", "progeny", "corneto", "gsea"]
-HIDE_MENU_STYLE = """
+KNOWN_TOOLS = ["decoupler", "progeny", "corneto", "gsea"]
+HIDE_MENU_MOD_FOOTER = """
 <style>
 #MainMenu {visibility: hidden;}
 footer {visibility: hidden;}
@@ -41,33 +40,12 @@ class ChatGSE:
             st.session_state.conversation = Conversation()
 
     def _display_init(self):
-        st.set_page_config(
-            page_title="ChatGSE",
-            page_icon="🤖",
-            layout="wide",
-            initial_sidebar_state="expanded",
-        )
-
-        st.title("ChatGSE")
-        st.markdown(HIDE_MENU_STYLE, unsafe_allow_html=True)
+        st.markdown(HIDE_MENU_MOD_FOOTER, unsafe_allow_html=True)
 
         st.markdown(
             """
 
-            `Assistant`: Welcome to ``ChatGSE``, a tool to rapidly contextualise common
-            end results of biomedical analyses. It works by setting up a
-            topic-constrained conversation with a pre-trained language model. The agents
-            you will be talking to are an `Assistant` (which is me, a pre-programmed
-            conversational algorithm), a `ChatGSE` model, which is a pre-trained
-            language model with instructions aimed at specifically improving the quality
-            of biomedical answers, and a `Correcting agent`, which is a separate
-            pre-trained language model with the task of catching and correcting false
-            information conveyed by the primary model. You will only see the `Correcting
-            agent` if it detects that the `ChatGSE` model has made a mistake. In
-            general, even though we try our best to avoid mistakes using the
-            correcting agent and internal safeguards, the general limitations of the
-            used Large Language Model apply, which means that the statements made can
-            sometimes be incorrect or misleading.
+            `Assistant`: Welcome to ``ChatGSE``!
             
             """
         )
@@ -101,24 +79,25 @@ class ChatGSE:
 
         if not key:
             msg = """
-                Please enter your OpenAI API key. You can get one by signing up
-                [here](https://platform.openai.com/). We will not store your
-                key, and only use it for the requests made in this session. To
-                prevent this message, you can set the environment variable
-                `OPENAI_API_KEY` to your key.
+                Please enter your [OpenAI API
+                key](https://platform.openai.com/account/api-keys). You can get
+                one by signing up [here](https://platform.openai.com/). We will
+                not store your key, and only use it for the requests made in
+                this session. To prevent this message, you can set the
+                environment variable `OPENAI_API_KEY` to your key.
                 """
             self._write_and_history("Assistant", msg)
 
-            return "key"
+            return "getting_key"
 
         msg = """
-            As mentioned, I am the model's assistant, and we will be going
-            through some initial setup steps. To get started, could you please tell me
-            your name?
+            I am the model's assistant (for more explanation, see the sidebar
+            text), and we will be going through some initial setup steps. To get
+            started, could you please tell me your name?
             """
         self._write_and_history("Assistant", msg)
 
-        return "name"
+        return "getting_name"
 
     def _get_api_key(self):
         logger.info("Getting API Key.")
@@ -131,7 +110,7 @@ class ChatGSE:
                 """
             self._write_and_history("Assistant", msg)
 
-            return "key"
+            return "getting_key"
 
         msg = """
             Thank you! As mentioned, I am the model's assistant, and we will be going
@@ -139,7 +118,7 @@ class ChatGSE:
             your name?
             """
         self._write_and_history("Assistant", msg)
-        return "name"
+        return "getting_name"
 
     def _get_user_name(self):
         logger.info("Getting user name.")
@@ -151,7 +130,7 @@ class ChatGSE:
         )
         self._write_and_history("Assistant", msg)
 
-        return "context"
+        return "getting_context"
 
     def _get_context(self):
         logger.info("Getting context.")
@@ -163,92 +142,77 @@ class ChatGSE:
                 You have selected `{st.session_state.conversation.context}` as
                 your context. Do you want to provide input files from analytic
                 methods? If so, please provide the files by uploading them in
-                the sidebar and enter 'done' once you are finished. If not, 
-                please enter 'no'. You will still be able to provide free text
+                the sidebar and press 'Yes' once you are finished. If not, 
+                please press 'No'. You will still be able to provide free text
                 information about your results later.
                 """
             self._write_and_history("Assistant", msg)
-            return "data_input"
+            return "getting_data_file_input"
 
-        if not isinstance(st.session_state.tool_data, list):
-            tool_data = [st.session_state.tool_data]
-        else:
-            tool_data = st.session_state.tool_data
-
-        file_names = [f.name for f in tool_data]
+        file_names = [f.name for f in st.session_state.tool_data]
 
         msg = f"""
             You have selected `{st.session_state.conversation.context}` as
             your context. I see you have already uploaded some data files:
             {', '.join(file_names)}. If you wish to add
-            more, please do so now. Once you are done, please enter 'done'.
+            more, please do so now. Once you are done, please press 'Yes'.
             """
         self._write_and_history("Assistant", msg)
 
-        return "data_input"
+        return "getting_data_file_input"
 
     def _get_data_input(self):
-        logger.info(
-            "--- Biomedical data input --- "
-            "looking for structured and unstructured information."
-        )
+        logger.info("--- Biomedical data input ---")
 
-        files = st.session_state.input.split(",")
-        files = [f.strip() for f in files]
-        if "no" in files:
-            logger.info("No tool data provided.")
-            msg = (
-                "Please provide a list of biological data points (activities of "
-                "pathways or transcription factors, expression of transcripts or "
-                "proteins), optionally with directional information and/or a "
-                "contrast."
-            )
+        if not st.session_state.get("tool_data"):
+            msg = """
+                No files detected. Please upload your files in the sidebar, or
+                press 'No' to continue without providing any files.
+                """
             self._write_and_history("Assistant", msg)
-            return "data_input_manual"
+            return "getting_data_file_input"
 
-        else:
+        if not st.session_state.get("started_tool_input"):
+            st.session_state.started_tool_input = True
+
             logger.info("Tool data provided.")
-            return self._get_data_input_tool(files)
 
-    def _get_data_input_tool(self, files: list) -> dict:
-        """
-        Methods to detect various inputs from analytic tools; decoupler, PROGENy,
-        CORNETO, GSEA, etc. Flat files on disk; what else?
-        """
-        logger.info("Tool data provided.")
-        dfs = {}
-        for fl in files:
-            tool = fl.split(".")[0]
-            if not any([tool in fl for tool in ALLOWED_TOOLS]):
-                self._write_and_history(
-                    "Assistant",
-                    f"Sorry, `{tool}` is not among the supported tools "
-                    f"({ALLOWED_TOOLS}). Please check the spelling and try again.",
-                )
+            st.session_state.tool_list = st.session_state.tool_data
+
+            msg = f"""
+                Thank you! I have read the following 
+                {len(st.session_state.tool_list)} files:
+                {', '.join([f.name for f in st.session_state.tool_list])}.
+                """
+            self._write_and_history("Assistant", msg)
+
+        if not st.session_state.get("read_tools"):
+            st.session_state.read_tools = []
+
+        if len(st.session_state.read_tools) == len(st.session_state.tool_list):
+            msg = f"""
+                I have read all the files you provided.
+                {PLEASE_ENTER_QUESTIONS}
+                """
+            self._write_and_history("Assistant", msg)
+            return "chat"
+
+        for fl in st.session_state.tool_list:
+            tool = fl.name.split(".")[0].lower()
+            if tool in st.session_state.read_tools:
                 continue
 
-            if not os.path.exists(f"input/{fl}"):
-                self._write_and_history(
-                    "Assistant",
-                    f"Sorry, I could not find the file `{fl}` in the `input/` "
-                    "folder. Please check the spelling and try again.",
-                )
-                continue
+            if "tsv" in fl.name:
+                df = pd.read_csv(fl, sep="\t")
+            else:
+                df = pd.read_csv(fl)
+            st.session_state.read_tools.append(tool)
 
-            logger.info(f"Reading {fl}")
-            with open(f"input/{fl}") as f:
-                df = pd.read_csv(f)
-                dfs[tool] = df
-
-        self._write_and_history(
-            "Assistant",
-            f"I have detected input from {len(dfs)} supported analytic tool(s).",
-        )
-
-        for tool, df in dfs.items():
             self._write_and_history(
                 "Assistant",
-                f"{tool} results",
+                f"""
+                `{tool}` results
+                """,
             )
             st.markdown(
                 f"""
@@ -256,50 +220,79 @@ class ChatGSE:
                 {df.to_markdown()}
                 """
             )
+
             st.session_state.conversation.history.append(
                 {"tool": df.to_markdown()}
             )
             logger.info("<Tool data displayed.>")
+
+            if not any([tool in fl.name for tool in KNOWN_TOOLS]):
+                self._write_and_history(
+                    "Assistant",
+                    f"""
+                    Sorry, `{tool}` is not among the tools I know 
+                    ({KNOWN_TOOLS}). Please provide information about the data
+                    below (what are rows and columns, what are the values, 
+                    etc.).
+                    """,
+                )
+                return "getting_data_file_description"
+
             st.session_state.conversation.setup_data_input_tool(
                 df.to_json(), tool
             )
 
-        self._write_and_history(
-            "Assistant",
-            "Would you like to provide additional information, for instance on a "
-            "contrast or experimental design? If so, please enter it below; if "
-            "not, please enter 'no'.",
-        )
+            self._write_and_history(
+                "Assistant",
+                """
+                Would you like to provide additional information, for instance
+                on a contrast or experimental design? If so, please enter it
+                below; if not, please enter 'no'.
+                """,
+            )
 
-        return "data_input_tool_additional"
+            return "getting_data_file_description"
 
-    def _get_data_input_tool_additional(self):
+    def _get_data_file_description(self):
         logger.info("Asking for additional data input info.")
 
-        if str(st.session_state.input).lower() in ["n", "no", "no."]:
+        response = str(st.session_state.input)
+        st.session_state.input = ""
+
+        if response.lower() in ["n", "no", "no."]:
             logger.info("No additional data input provided.")
-            msg = (
-                "Okay, I will use the information from the tool. "
-                f"{PLEASE_ENTER_QUESTIONS}"
-            )
+            msg = """
+                Okay, I will use the information from the tool without further
+                specification.
+                """
             self._write_and_history("Assistant", msg)
-            return "chat"
+            return self._get_data_input()
 
         logger.info("Additional data input provided.")
         st.session_state.conversation.messages.append(
             {
                 "role": "user",
-                "content": st.session_state.input,
+                "content": response,
             }
         )
         data_input_response = (
             "Thank you! You have provided additional data input:\n"
-            f"`{st.session_state.input}`\n"
-            f"{PLEASE_ENTER_QUESTIONS}"
+            f"`{response}`\n"
         )
         self._write_and_history("Assistant", data_input_response)
+        return self._get_data_input()
 
-        return "chat"
+    def _ask_for_manual_data_input(self):
+        logger.info("Asking for manual data input.")
+        msg = """
+            Please provide a list of biological data points (activities of
+            pathways or transcription factors, expression of transcripts or
+            proteins), optionally with directional information and/or a
+            contrast. Since you did not provide any tool data, please try to be
+            as specific as possible.
+            """
+        self._write_and_history("Assistant", msg)
+        return "getting_manual_data_input"
 
     def _get_data_input_manual(self):
         logger.info("No tool info provided. Getting manual data input.")
@@ -332,31 +325,3 @@ class ChatGSE:
 
         else:
             self._write_and_history("ChatGSE", response)
-
-    def _text_input(self):
-        st.text_input(
-            "Input:",
-            on_change=submit,
-            key="widget",
-            placeholder="Enter text here.",
-        )
-        if "counter" not in st.session_state:
-            st.session_state["counter"] = 0
-        components.html(
-            f"""
-            <div></div>
-            <p>{st.session_state.counter}</p>
-            <script>
-                var input = window.parent.document.querySelectorAll("input[type=text]");
-                for (var i = 0; i < input.length; ++i) {{
-                    input[i].focus();
-                }}
-            </script>
-            """,
-            height=15,
-        )
-
-
-def submit():
-    st.session_state.input = st.session_state.widget
-    st.session_state.widget = ""
