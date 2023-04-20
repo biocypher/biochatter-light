@@ -61,6 +61,15 @@ def key_chat_box():
     )
 
 
+def file_uploader():
+    st.file_uploader(
+        "Upload tool data",
+        type=["csv", "tsv", "txt"],
+        key="tool_data",
+        accept_multiple_files=True,
+    )
+
+
 def data_input_buttons():
     c1, c2 = st.columns([1, 1])
     with c1:
@@ -90,7 +99,7 @@ def data_input_no():
 def app_header():
     st.markdown(
         f"""
-        # ChatGSE ({__version__})
+        # :red[ChatGSE] (`{__version__}`)
         """
     )
 
@@ -128,8 +137,8 @@ def app_info():
         limitations of the used Large Language Model apply, which means that the
         statements made can sometimes be incorrect or misleading.
 
-        Source code on [GitHub](
-        https://github.com/biocypher/chatgse).
+        ChatGSE is developed by :red[Sebastian Lobentanzer]; you can find the
+        source code on [GitHub](https://github.com/biocypher/chatgse).
         """
     )
 
@@ -154,13 +163,9 @@ def main():
     # SIDEBAR
     with st.sidebar:
         app_header()
-        files = st.file_uploader(
-            "Upload tool data",
-            type=["csv", "tsv", "txt"],
-            key="tool_data",
-            accept_multiple_files=True,
-        )
-        app_info()
+        file_uploader()
+        with st.expander("About"):
+            app_info()
 
     # NEW SESSION, GET API KEY
     if not ss.get("mode"):
