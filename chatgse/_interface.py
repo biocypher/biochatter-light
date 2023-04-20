@@ -14,7 +14,7 @@ PLEASE_ENTER_QUESTIONS = (
     "questions go into more detail. You can follow up on the answers with "
     "more questions."
 )
-KNOWN_TOOLS = ["decoupler", "progeny", "dorothea"]
+KNOWN_TOOLS = ["decoupler", "progeny", "dorothea", "gsea"]
 HIDE_MENU_MOD_FOOTER = """
 <style>
 #MainMenu {visibility: hidden;}

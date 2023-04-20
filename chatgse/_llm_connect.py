@@ -102,19 +102,6 @@ class Conversation:
                     """,
                 },
             )
-        elif "decoupler" in tool:
-            self.messages.append(
-                {
-                    "role": "system",
-                    "content": f"""
-                    The user has provided information in the form of a table.
-                    The first column refers to biological entities
-                    (transcription factors, or the like), and the other columns
-                    refer to their activity, derived using the bioinformatics
-                    method decoupler. Here are the data: {df}
-                    """,
-                },
-            )
         elif "dorothea" in tool:
             self.messages.append(
                 {
@@ -126,6 +113,33 @@ class Conversation:
                     to the activity of individual transcription factors, derived
                     using the bioinformatics method dorothea. Here are the data:
                     {df}
+                    """,
+                },
+            )
+        elif "gsea" in tool:
+            self.messages.append(
+                {
+                    "role": "system",
+                    "content": f"""
+                    The user has provided information in the form of a table.
+                    The first column refers to biological entities (samples,
+                    cell types, or the like), and the individual columns refer
+                    to the enrichment of individual gene sets, such as 
+                    hallmarks, derived using the bioinformatics method gsea. 
+                    Here are the data: {df}
+                    """,
+                },
+            )
+        elif "decoupler" in tool:
+            self.messages.append(
+                {
+                    "role": "system",
+                    "content": f"""
+                    The user has provided information in the form of a table.
+                    The first column refers to biological entities
+                    (transcription factors, or the like), and the other columns
+                    refer to their activity, derived using the bioinformatics
+                    method decoupler. Here are the data: {df}
                     """,
                 },
             )
