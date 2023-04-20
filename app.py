@@ -1,6 +1,6 @@
 # app.py: streamlit chat app for contextualisation of biomedical results
 app_name = "chatgse"
-__version__ = "0.1.0"
+__version__ = "0.2.0"
 
 # BOILERPLATE
 import streamlit as st
@@ -99,7 +99,7 @@ def data_input_no():
 def app_header():
     st.markdown(
         f"""
-        # :red[ChatGSE] `{__version__}`
+        # 💬🧬 :red[ChatGSE] `{__version__}`
         """
     )
 

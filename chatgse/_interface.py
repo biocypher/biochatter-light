@@ -91,8 +91,8 @@ class ChatGSE:
             return "getting_key"
 
         msg = """
-            I am the model's assistant (for more explanation, please see the 
-            :red[About] text in the sidebar), and we will be going through some
+            I am the model's assistant. For more explanation, please see the 
+            :red[About] text in the sidebar. We will now be going through some
             initial setup steps together. To get started, could you please tell
             me your name?
             """
