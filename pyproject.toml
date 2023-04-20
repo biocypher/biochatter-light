@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "chatgse"
-version = "0.2.0"
+version = "0.2.1"
 description = "Gene set interpretation assisted by large language models"
 authors = ["Sebastian Lobentanzer <sebastian.lobentanzer@gmail.com>"]
 license = "MIT"
