@@ -291,7 +291,8 @@ class ChatGSE:
             pathways or transcription factors, expression of transcripts or
             proteins), optionally with directional information and/or a
             contrast. Since you did not provide any tool data, please try to be
-            as specific as possible.
+            as specific as possible. You can also paste `markdown` tables or
+            other structured data here.
             """
         self._write_and_history("Assistant", msg)
         return "getting_manual_data_input"

@@ -43,12 +43,25 @@ def autofocus():
 
 
 # COMPONENTS
-def chat_box():
+def chat_line():
     st.text_input(
         "Input:",
         on_change=on_submit,
         key="widget",
-        placeholder="Enter text here.",
+        placeholder="Write here. Press [Enter] to submit.",
+        label_visibility="collapsed",
+    )
+
+
+def chat_box():
+    st.text_area(
+        "Input:",
+        on_change=on_submit,
+        key="widget",
+        placeholder=(
+            "Write here. Press [Enter] for a new line, and [CTRL+Enter] or "
+            "[⌘+Enter] to submit."
+        ),
         label_visibility="collapsed",
     )
 
@@ -211,6 +224,8 @@ def main():
         key_chat_box()
     elif ss.mode == "getting_data_file_input":
         data_input_buttons()
+    elif ss.mode in ["getting_name", "getting_context"]:
+        chat_line()
     else:
         chat_box()
     autofocus()
