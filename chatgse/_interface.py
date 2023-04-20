@@ -83,8 +83,9 @@ class ChatGSE:
                 key](https://platform.openai.com/account/api-keys). You can get
                 one by signing up [here](https://platform.openai.com/). We will
                 not store your key, and only use it for the requests made in
-                this session. To prevent this message, you can set the
-                environment variable `OPENAI_API_KEY` to your key.
+                this session. If you run the app locally, you can prevent this
+                message by setting the environment variable `OPENAI_API_KEY` to 
+                your key.
                 """
             self._write_and_history("Assistant", msg)
 
