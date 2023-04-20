@@ -115,9 +115,10 @@ class ChatGSE:
             return "getting_key"
 
         msg = """
-            Thank you! As mentioned, I am the model's assistant, and we will be going
-            through some initial setup steps. To get started, could you please tell me
-            your name?
+            Thank you! I am the model's assistant. For more explanation, please
+            see the :red[About] text in the sidebar. We will now be going
+            through some initial setup steps together. To get started, could you
+            please tell me your name?
             """
         self._write_and_history("Assistant", msg)
         return "getting_name"
