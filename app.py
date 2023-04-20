@@ -99,7 +99,7 @@ def data_input_no():
 def app_header():
     st.markdown(
         f"""
-        # :red[ChatGSE] (`{__version__}`)
+        # :red[ChatGSE] `{__version__}`
         """
     )
 
@@ -137,8 +137,10 @@ def app_info():
         limitations of the used Large Language Model apply, which means that the
         statements made can sometimes be incorrect or misleading.
 
-        ChatGSE is developed by :red[Sebastian Lobentanzer]; you can find the
-        source code on [GitHub](https://github.com/biocypher/chatgse).
+        ChatGSE is developed by [Sebastian
+        Lobentanzer](https://slobentanzer.github.io); you can find the source
+        code on [GitHub](https://github.com/biocypher/chatgse).
+
         """
     )
 
