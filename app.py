@@ -49,6 +49,7 @@ def chat_box():
         on_change=on_submit,
         key="widget",
         placeholder="Enter text here.",
+        label_visibility="collapsed",
     )
 
 
