@@ -89,28 +89,44 @@ class Conversation:
 
     def setup_data_input_tool(self, df, tool: str):
         self.data_input_tool = df
-        if tool == "progeny":
+        if "progeny" in tool:
             self.messages.append(
                 {
                     "role": "system",
-                    "content": "The user has provided information in the "
-                    "form of a table. The rows refer to biological entities "
-                    "(samples, cell types, or the like), and the columns refer "
-                    "to pathways. The values are pathway activities derived "
-                    "using the bioinformatics method progeny. Here are the "
-                    f"data: {df}",
+                    "content": f"""
+                    The user has provided information in the form of a table.
+                    The rows refer to biological entities (patients, samples,
+                    cell types, or the like), and the columns refer to pathways.
+                    The values are pathway activities derived using the
+                    bioinformatics method progeny. Here are the fdata: {df}
+                    """,
                 },
             )
-        elif tool == "decoupler":
+        elif "decoupler" in tool:
             self.messages.append(
                 {
                     "role": "system",
-                    "content": "The user has provided information in the "
-                    "form of a table. The `Name` column refers to biological "
-                    "entities (transcription factors, or the like), and the "
-                    "`Activity` column refers to their activity, derived using "
-                    "the bioinformatics method decoupler. Here are the "
-                    f"data: {df}",
+                    "content": f"""
+                    The user has provided information in the form of a table.
+                    The first column refers to biological entities
+                    (transcription factors, or the like), and the other columns
+                    refer to their activity, derived using the bioinformatics
+                    method decoupler. Here are the data: {df}
+                    """,
+                },
+            )
+        elif "dorothea" in tool:
+            self.messages.append(
+                {
+                    "role": "system",
+                    "content": f"""
+                    The user has provided information in the form of a table.
+                    The first column refers to biological entities (samples,
+                    cell types, or the like), and the individual columns refer
+                    to the activity of individual transcription factors, derived
+                    using the bioinformatics method dorothea. Here are the data:
+                    {df}
+                    """,
                 },
             )
 
