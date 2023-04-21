@@ -24,7 +24,7 @@ def on_submit():
     ss.widget = ""
 
 
-def autofocus():
+def autofocus_line():
     if "counter" not in ss:
         ss["counter"] = 0
     components.html(
@@ -33,6 +33,24 @@ def autofocus():
         <p>{ss.counter}</p>
         <script>
             var input = window.parent.document.querySelectorAll("input[type=text]");
+            for (var i = 0; i < input.length; ++i) {{
+                input[i].focus();
+            }}
+        </script>
+        """,
+        height=15,
+    )
+
+
+def autofocus_area():
+    if "counter" not in ss:
+        ss["counter"] = 0
+    components.html(
+        f"""
+        <div></div>
+        <p>{ss.counter}</p>
+        <script>
+            var input = window.parent.document.querySelectorAll("textarea[type=textarea]");
             for (var i = 0; i < input.length; ++i) {{
                 input[i].focus();
             }}
@@ -226,9 +244,10 @@ def main():
         data_input_buttons()
     elif ss.mode in ["getting_name", "getting_context"]:
         chat_line()
+        autofocus_line()
     else:
         chat_box()
-    autofocus()
+        autofocus_area()
 
 
 if __name__ == "__main__":
