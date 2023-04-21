@@ -136,18 +136,19 @@ class Conversation:
     def query(self, text: str):
         self.messages.append(HumanMessage(content=text))
 
-        response = self.chat(self.messages)
+        response = self.chat.generate([self.messages])
 
-        msg = response.content
+        msg = response.generations[0][0].text
+        token_usage = response.llm_output.get("token_usage")
 
         self.messages.append(AIMessage(content=msg))
 
         correction = self._correct_response(msg)
 
         if str(correction).lower() in ["ok", "ok."]:
-            return (msg, None)
+            return (msg, token_usage, None)
 
-        return (msg, correction)
+        return (msg, token_usage, correction)
 
     def _correct_response(self, msg: str):
         ca_messages = self.ca_messages.copy()

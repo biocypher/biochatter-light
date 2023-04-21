@@ -319,7 +319,7 @@ class ChatGSE:
             st.session_state.conversation.user_name, st.session_state.input
         )
 
-        response, correction = st.session_state.conversation.query(
+        response, token_usage, correction = st.session_state.conversation.query(
             st.session_state.input
         )
 
@@ -329,3 +329,5 @@ class ChatGSE:
 
         else:
             self._write_and_history("ChatGSE", response)
+
+        st.write(token_usage)
