@@ -16,9 +16,6 @@ class Conversation:
         self.model = "gpt-3.5-turbo"
         self.ca_model = "gpt-3.5-turbo"
 
-        self.chat = ChatOpenAI(model_name=self.model, temperature=0)
-        self.ca_chat = ChatOpenAI(model_name=self.ca_model, temperature=0)
-
         self.messages = [
             SystemMessage(
                 content="You are an assistant to a biomedical researcher."
@@ -64,6 +61,16 @@ class Conversation:
 
         try:
             openai.Model.list()
+            self.chat = ChatOpenAI(
+                model_name=self.model,
+                temperature=0,
+                openai_api_key=api_key,
+            )
+            self.ca_chat = ChatOpenAI(
+                model_name=self.ca_model,
+                temperature=0,
+                openai_api_key=api_key,
+            )
             return True
         except openai.error.AuthenticationError as e:
             return False
