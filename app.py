@@ -136,6 +136,31 @@ def app_header():
     )
 
 
+def display_token_usage():
+    with st.expander("Token usage", expanded=True):
+        maximum = 4097  # TODO get this programmatically
+        st.markdown(
+            f"""
+            Last query: {ss.token_usage["prompt_tokens"]}
+
+            Last response: {ss.token_usage["completion_tokens"]}
+
+            Total usage: {ss.token_usage["total_tokens"]}
+
+            Model maximum: {maximum}
+            """
+        )
+
+        # display warning within 20% of maximum
+        if ss.token_usage["total_tokens"] > maximum * 0.8:
+            st.warning(
+                "You are approaching the maximum number of tokens allowed by "
+                "the model. Please consider using a different model or "
+                "reducing the number of queries. You can reset the app to "
+                "start over the conversation."
+            )
+
+
 def app_info():
     st.markdown(
         """
@@ -194,18 +219,18 @@ def main():
     cg._display_init()
     cg._display_history()
 
-    # SIDEBAR
-    with st.sidebar:
-        app_header()
-        file_uploader()
-        with st.expander("About"):
-            app_info()
-
     # NEW SESSION, GET API KEY
     if not ss.get("mode"):
         ss.mode = cg._check_for_api_key()
         with open("chatgse-logs.txt", "a") as f:
             f.write("--- NEW SESSION ---\n")
+
+    if not ss.get("token_usage"):
+        ss.token_usage = {
+            "prompt_tokens": 0,
+            "completion_tokens": 0,
+            "total_tokens": 0,
+        }
 
     # CHAT BOT LOGIC
     if ss.input:
@@ -232,10 +257,18 @@ def main():
             ss.mode = cg._get_data_input_manual()
 
         elif ss.mode == "chat":
-            cg._get_response()
+            ss.response, ss.token_usage = cg._get_response()
 
     # RESET INPUT
     ss.input = ""
+
+    # SIDEBAR
+    with st.sidebar:
+        app_header()
+        file_uploader()
+        with st.expander("About"):
+            app_info()
+        display_token_usage()
 
     # CHAT BOX
     if ss.mode == "getting_key":

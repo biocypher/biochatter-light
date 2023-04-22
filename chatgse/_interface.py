@@ -330,4 +330,4 @@ class ChatGSE:
         else:
             self._write_and_history("ChatGSE", response)
 
-        st.write(token_usage)
+        return response, token_usage
