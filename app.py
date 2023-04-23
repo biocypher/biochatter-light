@@ -235,7 +235,7 @@ def main():
     # CHAT BOT LOGIC
     if ss.input:
         if ss.mode == "getting_key":
-            ss.mode = cg._get_api_key()
+            ss.mode = cg._get_api_key(ss.input)
 
         elif ss.mode == "getting_name":
             ss.mode = cg._get_user_name()

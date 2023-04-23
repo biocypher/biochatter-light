@@ -91,6 +91,17 @@ class ChatGSE:
 
             return "getting_key"
 
+        success = st.session_state.conversation.set_api_key(key)
+
+        if not success:
+            msg = """
+                The API key in your environment is not valid. Please enter a
+                valid key.
+                """
+            self._write_and_history("Assistant", msg)
+
+            return "getting_key"
+
         msg = """
             I am the model's assistant. For more explanation, please see the 
             :red[About] text in the sidebar. We will now be going through some
@@ -101,11 +112,15 @@ class ChatGSE:
 
         return "getting_name"
 
-    def _get_api_key(self):
+    def _try_api_key(self, key: str = None):
+        success = st.session_state.conversation.set_api_key(key)
+        if not success:
+            return False
+        return True
+
+    def _get_api_key(self, key: str = None):
         logger.info("Getting API Key.")
-        sucess = st.session_state.conversation.set_api_key(
-            st.session_state.input
-        )
+        sucess = self._try_api_key(key)
         if not sucess:
             msg = """
                 The API key you entered is not valid. Please try again.
