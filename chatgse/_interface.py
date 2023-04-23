@@ -159,15 +159,22 @@ class ChatGSE:
             msg = f"""
                 You have selected `{st.session_state.conversation.context}` as
                 your context. Do you want to provide input files from analytic
-                methods? If so, please provide the files by uploading them in
-                the sidebar and press 'Yes' once you are finished. If not, 
-                please press 'No'. You will still be able to provide free text
-                information about your results later.
+                methods? They will not be stored or analysed beyond your
+                queries. If so, please provide the files by uploading them in
+                the sidebar and press 'Yes' once you are finished. I will
+                recognise methods if their names are mentioned in the file name.
+                These are the tools I am familiar with: {', '.join([f"`{name}`"
+                for name in KNOWN_TOOLS])}
+                
+                If you don't want to provide any files, please press 'No'. You
+                will still be able to provide free text information about your
+                results later. Those, as the files, will not be stored or
+                analysed beyond your queries.
                 """
             self._write_and_history("Assistant", msg)
             return "getting_data_file_input"
 
-        file_names = [f.name for f in st.session_state.tool_data]
+        file_names = [f"`{f.name}`" for f in st.session_state.tool_data]
 
         msg = f"""
             You have selected `{st.session_state.conversation.context}` as
@@ -200,7 +207,7 @@ class ChatGSE:
             msg = f"""
                 Thank you! I have read the following 
                 {len(st.session_state.tool_list)} files:
-                {', '.join([f.name for f in st.session_state.tool_list])}.
+                {', '.join([f"`{f.name}`" for f in st.session_state.tool_list])}.
                 """
             self._write_and_history("Assistant", msg)
 
