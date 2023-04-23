@@ -75,80 +75,92 @@ class Conversation:
         except openai.error.AuthenticationError as e:
             return False
 
-    def setup(self, context: str):
-        self.context = context
-
+    def append_ai_message(self, message: str):
         self.messages.append(
-            SystemMessage(
-                content=f"The topic of the research is {context}.",
+            AIMessage(
+                content=message,
             ),
         )
+
+    def append_system_message(self, message: str):
+        self.messages.append(
+            SystemMessage(
+                content=message,
+            ),
+        )
+
+    def append_user_message(self, message: str):
+        self.messages.append(
+            HumanMessage(
+                content=message,
+            ),
+        )
+
+    def setup(self, context: str):
+        self.context = context
+        msg = f"The topic of the research is {context}."
+        self.append_system_message(msg)
 
     def setup_data_input_manual(self, data_input: str):
         self.data_input = data_input
-
-        self.messages.append(
-            SystemMessage(
-                content=f"The user has given information on the data input: "
-                f"{data_input}.",
-            ),
-        )
+        msg = f"The user has given information on the data input: {data_input}."
+        self.append_system_message(msg)
 
     def setup_data_input_tool(self, df, tool: str):
         self.data_input_tool = df
+
         if "progeny" in tool:
-            self.messages.append(
-                SystemMessage(
-                    content="The user has provided information in the form of "
-                    "a table. The rows refer to biological entities "
-                    "(patients, samples, cell types, or the like), and the "
-                    "columns refer to pathways. The values are pathway "
-                    "activities derived using the bioinformatics method "
-                    f"progeny. Here are the data: {df}",
-                ),
+            msg = (
+                "The user has provided information in the form of a table. "
+                "The rows refer to biological entities (patients, samples, "
+                "cell types, or the like), and the columns refer to pathways. "
+                "The values are pathway activities derived using the "
+                f"bioinformatics method progeny. Here are the data: {df}"
             )
+            self.append_system_message(msg)
+
         elif "dorothea" in tool:
-            self.messages.append(
-                SystemMessage(
-                    content="The user has provided information in the form of "
-                    "a table. The rows refer to biological entities "
-                    "(patients, samples, cell types, or the like), and the "
-                    "columns refer to transcription factors. The values are "
-                    "transcription factor activities derived using the "
-                    f"bioinformatics method dorothea. Here are the data: {df}",
-                ),
+            msg = (
+                "The user has provided information in the form of a table. "
+                "The rows refer to biological entities (patients, samples, "
+                "cell types, or the like), and the columns refer to "
+                "transcription factors. The values are transcription factor "
+                "activities derived using the bioinformatics method dorothea. "
+                f"Here are the data: {df}"
             )
+            self.append_system_message(msg)
+
         elif "gsea" in tool:
-            self.messages.append(
-                SystemMessage(
-                    content="The user has provided information in the form of "
-                    "a table. The first column refers to biological entities "
-                    "(samples, cell types, or the like), and the individual "
-                    "columns refer to the enrichment of individual gene sets, "
-                    "such as hallmarks, derived using the bioinformatics "
-                    f"method gsea. Here are the data: {df}",
-                ),
+            msg = (
+                "The user has provided information in the form of a table. "
+                "The first column refers to biological entities (samples, "
+                "cell types, or the like), and the individual columns refer "
+                "to the enrichment of individual gene sets, such as hallmarks, "
+                "derived using the bioinformatics method gsea. Here are the "
+                f"data: {df}"
             )
+            self.append_system_message(msg)
+
         elif "decoupler" in tool:
-            self.messages.append(
-                SystemMessage(
-                    content="The user has provided information in the form of "
-                    "a table. The first column refers to biological entities "
-                    "(transcription factors, or the like), and the other "
-                    "columns refer to their activity, derived using the "
-                    "bioinformatics method decoupler. Here are the data: {df}",
-                ),
+            msg = (
+                "The user has provided information in the form of a table. "
+                "The first column refers to biological entities "
+                "(transcription factors, or the like), and the other "
+                "columns refer to their activity, derived using the "
+                f"bioinformatics method decoupler. Here are the data: {df}"
             )
 
+        # TODO tool not recognised?
+
     def query(self, text: str):
-        self.messages.append(HumanMessage(content=text))
+        self.append_user_message(text)
 
         response = self.chat.generate([self.messages])
 
         msg = response.generations[0][0].text
         token_usage = response.llm_output.get("token_usage")
 
-        self.messages.append(AIMessage(content=msg))
+        self.append_ai_message(msg)
 
         correction = self._correct_response(msg)
 

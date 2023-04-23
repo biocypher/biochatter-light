@@ -287,12 +287,7 @@ class ChatGSE:
             return self._get_data_input()
 
         logger.info("Additional data input provided.")
-        st.session_state.conversation.messages.append(
-            {
-                "role": "user",
-                "content": response,
-            }
-        )
+        st.session_state.conversation.append_user_message(response)
         data_input_response = (
             "Thank you! You have provided additional data input:\n"
             f"`{response}`\n"
