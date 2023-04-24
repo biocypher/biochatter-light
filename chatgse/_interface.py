@@ -156,7 +156,7 @@ class ChatGSE:
 
     def _ask_for_data_input(self):
         if not st.session_state.tool_data:
-            msg = f"""
+            msg1 = f"""
                 You have selected `{st.session_state.conversation.context}` as
                 your context. Do you want to provide input files from analytic
                 methods? They will not be stored or analysed beyond your
@@ -164,25 +164,27 @@ class ChatGSE:
                 the sidebar and press 'Yes' once you are finished. I will
                 recognise methods if their names are mentioned in the file name.
                 These are the tools I am familiar with: {', '.join([f"`{name}`"
-                for name in KNOWN_TOOLS])}
-                
+                for name in KNOWN_TOOLS])}.
+                """
+            self._write_and_history("Assistant", msg1)
+            msg2 = """
                 If you don't want to provide any files, please press 'No'. You
                 will still be able to provide free text information about your
-                results later. Those, as the files, will not be stored or
-                analysed beyond your queries.
+                results later. Any free text you provide will also not be stored
+                or analysed beyond your queries.
                 """
-            self._write_and_history("Assistant", msg)
+            self._write_and_history("Assistant", msg2)
             return "getting_data_file_input"
 
         file_names = [f"`{f.name}`" for f in st.session_state.tool_data]
 
-        msg = f"""
+        msg1 = f"""
             You have selected `{st.session_state.conversation.context}` as
             your context. I see you have already uploaded some data files:
             {', '.join(file_names)}. If you wish to add
             more, please do so now. Once you are done, please press 'Yes'.
             """
-        self._write_and_history("Assistant", msg)
+        self._write_and_history("Assistant", msg1)
 
         return "getting_data_file_input"
 
