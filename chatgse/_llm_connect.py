@@ -17,8 +17,9 @@ class Conversation(ABC):
     tool-based data inputs, and finally to query the API with prompts made by
     the user.
 
-    The conversation class is also expected to have a history attribute, which
-    is a list of messages.
+    The conversation class is expected to have a `messages` attribute to store
+    the conversation, and a `history` attribute, which is a list of messages in
+    a specific format for logging / printing.
 
     """
 
