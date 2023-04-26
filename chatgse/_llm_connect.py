@@ -1,17 +1,34 @@
 from abc import ABC, abstractmethod
 import openai
+import json
 
 from langchain.chat_models import ChatOpenAI
 from langchain.schema import AIMessage, HumanMessage, SystemMessage
 
+from huggingface_hub import InferenceApi
+
 
 class Conversation(ABC):
     """
+
     Use this class to set up a connection to an LLM API. Can be used to set the
-    API key, append specific messages for system, user, and AI roles (if
-    available), set up the general context as well as manual and tool-based data
-    inputs, and finally to query the API with prompts made by the user.
+    user name and API key, append specific messages for system, user, and AI
+    roles (if available), set up the general context as well as manual and
+    tool-based data inputs, and finally to query the API with prompts made by
+    the user.
+
+    The conversation class is also expected to have a history attribute, which
+    is a list of messages.
+
     """
+
+    def __init__(self):
+        super().__init__()
+        self.history = []
+        self.messages = []
+
+    def set_user_name(self, user_name: str):
+        self.user_name = user_name
 
     @abstractmethod
     def set_api_key(self, api_key: str):
@@ -95,17 +112,18 @@ class GptConversation(Conversation):
         Also initialise a second conversational agent to provide corrections to
         the model output, if necessary.
         """
-        self.user_name = "User"
-        # TODO currently can't be used because text field can't be empty
+        super().__init__()
 
         self.model = "gpt-3.5-turbo"
         self.ca_model = "gpt-3.5-turbo"
         # TODO make accessible by drop-down
 
-        self.messages = [
+        self.messages.append(
             SystemMessage(
                 content="You are an assistant to a biomedical researcher."
-            ),
+            )
+        )
+        self.messages.append(
             SystemMessage(
                 content="Your role is to contextualise the user's findings "
                 "with biomedical background knowledge. If provided with a "
@@ -113,13 +131,15 @@ class GptConversation(Conversation):
                 "entities, your knowledge about them, and what they may mean "
                 "in the context of the research."
             ),
+        )
+        self.messages.append(
             SystemMessage(
                 content="You can ask the user to provide explanations and more "
                 "background at any time, for instance on the treatment a "
                 "patient has received, or the experimental background. But "
                 "for now, wait for the user to ask a question."
             ),
-        ]
+        )
 
         self.ca_messages = [
             SystemMessage(
@@ -136,11 +156,6 @@ class GptConversation(Conversation):
                 "just 'OK', and nothing else!",
             ),
         ]
-
-        self.history = []
-
-    def set_user_name(self, user_name: str):
-        self.user_name = user_name
 
     def set_api_key(self, api_key: str):
         openai.api_key = api_key
@@ -218,3 +233,80 @@ class GptConversation(Conversation):
         correction = response.content
 
         return correction
+
+
+class BloomConversation(Conversation):
+    def __init__(self):
+        super().__init__()
+        self.messages = []
+
+    def set_api_key(self, api_key: str):
+        self.inference = InferenceApi("bigscience/bloom", token=api_key)
+
+        test = self._infer("Hello, I am a biomedical researcher.")
+        response = json.loads(test.text)
+        if response.get("error"):
+            return False
+
+    def append_ai_message(self, message: str):
+        self.messages.append(message)
+
+    def append_system_message(self, message: str):
+        self.messages.append(message)
+
+    def append_user_message(self, message: str):
+        self.messages.append(message)
+
+    def query(self, text: str):
+        self.append_user_message(text)
+
+        prompt = "\n".join(self.messages)
+
+        response = self._infer(prompt)
+
+        msg = response["result"][0]["generated_text"]
+
+        self.append_ai_message(msg)
+
+        return (msg, None, None)
+
+    def _infer(
+        self,
+        prompt,
+        max_length=32,
+        top_k=0,
+        num_beams=0,
+        no_repeat_ngram_size=2,
+        top_p=0.9,
+        seed=42,
+        temperature=0,
+        greedy_decoding=False,
+        return_full_text=False,
+    ):
+        """
+        From huggingface BLOOM example jpynb
+        (https://github.com/Sentdex/BLOOM_Examples/blob/main/BLOOM_api_example.ipynb)
+        """
+        top_k = None if top_k == 0 else top_k
+        do_sample = False if num_beams > 0 else not greedy_decoding
+        num_beams = None if (greedy_decoding or num_beams == 0) else num_beams
+        no_repeat_ngram_size = (
+            None if num_beams is None else no_repeat_ngram_size
+        )
+        top_p = None if num_beams else top_p
+        early_stopping = None if num_beams is None else num_beams > 0
+
+        params = {
+            "max_new_tokens": max_length,
+            "top_k": top_k,
+            "top_p": top_p,
+            "temperature": temperature,
+            "do_sample": do_sample,
+            "seed": seed,
+            "early_stopping": early_stopping,
+            "no_repeat_ngram_size": no_repeat_ngram_size,
+            "num_beams": num_beams,
+            "return_full_text": return_full_text,
+        }
+
+        return self.inference(prompt, params=params, raw_response=True)

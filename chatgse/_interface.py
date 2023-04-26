@@ -3,7 +3,7 @@ from loguru import logger
 import os
 import pandas as pd
 import streamlit as st
-from chatgse._llm_connect import GptConversation
+from chatgse._llm_connect import GptConversation, BloomConversation
 
 
 PLEASE_ENTER_QUESTIONS = (
