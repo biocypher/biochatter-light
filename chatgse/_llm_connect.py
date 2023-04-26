@@ -6,6 +6,13 @@ from langchain.schema import AIMessage, HumanMessage, SystemMessage
 
 
 class Conversation(ABC):
+    """
+    Use this class to set up a connection to an LLM API. Can be used to set the
+    API key, append specific messages for system, user, and AI roles (if
+    available), set up the general context as well as manual and tool-based data
+    inputs, and finally to query the API with prompts made by the user.
+    """
+
     @abstractmethod
     def set_api_key(self, api_key: str):
         pass
@@ -82,16 +89,18 @@ class Conversation(ABC):
 
 
 class GptConversation(Conversation):
-    def __init__(self, user_name: str = "User"):
+    def __init__(self):
         """
         Connect to OpenAI's GPT API and set up a conversation with the user.
         Also initialise a second conversational agent to provide corrections to
         the model output, if necessary.
         """
-        self.user_name = user_name
+        self.user_name = "User"
+        # TODO currently can't be used because text field can't be empty
 
         self.model = "gpt-3.5-turbo"
         self.ca_model = "gpt-3.5-turbo"
+        # TODO make accessible by drop-down
 
         self.messages = [
             SystemMessage(
