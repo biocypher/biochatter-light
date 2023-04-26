@@ -245,6 +245,7 @@ class BloomConversation(Conversation):
 
         test = self._infer("Hello, I am a biomedical researcher.")
         response = json.loads(test.text)
+        # TODO text is not always json format
         if response.get("error"):
             return False
 
