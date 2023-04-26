@@ -1,10 +1,87 @@
+from abc import ABC, abstractmethod
 import openai
 
 from langchain.chat_models import ChatOpenAI
 from langchain.schema import AIMessage, HumanMessage, SystemMessage
 
 
-class Conversation:
+class Conversation(ABC):
+    @abstractmethod
+    def set_api_key(self, api_key: str):
+        pass
+
+    @abstractmethod
+    def append_ai_message(self, message: str):
+        pass
+
+    @abstractmethod
+    def append_system_message(self, message: str):
+        pass
+
+    @abstractmethod
+    def append_user_message(self, message: str):
+        pass
+
+    def setup(self, context: str):
+        self.context = context
+        msg = f"The topic of the research is {context}."
+        self.append_system_message(msg)
+
+    def setup_data_input_manual(self, data_input: str):
+        self.data_input = data_input
+        msg = f"The user has given information on the data input: {data_input}."
+        self.append_system_message(msg)
+
+    def setup_data_input_tool(self, df, tool: str):
+        self.data_input_tool = df
+
+        if "progeny" in tool:
+            msg = (
+                "The user has provided information in the form of a table. "
+                "The rows refer to biological entities (patients, samples, "
+                "cell types, or the like), and the columns refer to pathways. "
+                "The values are pathway activities derived using the "
+                f"bioinformatics method progeny. Here are the data: {df}"
+            )
+            self.append_system_message(msg)
+
+        elif "dorothea" in tool:
+            msg = (
+                "The user has provided information in the form of a table. "
+                "The rows refer to biological entities (patients, samples, "
+                "cell types, or the like), and the columns refer to "
+                "transcription factors. The values are transcription factor "
+                "activities derived using the bioinformatics method dorothea. "
+                f"Here are the data: {df}"
+            )
+            self.append_system_message(msg)
+
+        elif "gsea" in tool:
+            msg = (
+                "The user has provided information in the form of a table. "
+                "The first column refers to biological entities (samples, "
+                "cell types, or the like), and the individual columns refer "
+                "to the enrichment of individual gene sets, such as hallmarks, "
+                "derived using the bioinformatics method gsea. Here are the "
+                f"data: {df}"
+            )
+            self.append_system_message(msg)
+
+        elif "decoupler" in tool:
+            msg = (
+                "The user has provided information in the form of a table. "
+                "The first column refers to biological entities "
+                "(transcription factors, or the like), and the other "
+                "columns refer to their activity, derived using the "
+                f"bioinformatics method decoupler. Here are the data: {df}"
+            )
+
+    @abstractmethod
+    def query(self, text: str):
+        pass
+
+
+class GptConversation(Conversation):
     def __init__(self, user_name: str = "User"):
         """
         Connect to OpenAI's GPT API and set up a conversation with the user.
@@ -95,62 +172,6 @@ class Conversation:
                 content=message,
             ),
         )
-
-    def setup(self, context: str):
-        self.context = context
-        msg = f"The topic of the research is {context}."
-        self.append_system_message(msg)
-
-    def setup_data_input_manual(self, data_input: str):
-        self.data_input = data_input
-        msg = f"The user has given information on the data input: {data_input}."
-        self.append_system_message(msg)
-
-    def setup_data_input_tool(self, df, tool: str):
-        self.data_input_tool = df
-
-        if "progeny" in tool:
-            msg = (
-                "The user has provided information in the form of a table. "
-                "The rows refer to biological entities (patients, samples, "
-                "cell types, or the like), and the columns refer to pathways. "
-                "The values are pathway activities derived using the "
-                f"bioinformatics method progeny. Here are the data: {df}"
-            )
-            self.append_system_message(msg)
-
-        elif "dorothea" in tool:
-            msg = (
-                "The user has provided information in the form of a table. "
-                "The rows refer to biological entities (patients, samples, "
-                "cell types, or the like), and the columns refer to "
-                "transcription factors. The values are transcription factor "
-                "activities derived using the bioinformatics method dorothea. "
-                f"Here are the data: {df}"
-            )
-            self.append_system_message(msg)
-
-        elif "gsea" in tool:
-            msg = (
-                "The user has provided information in the form of a table. "
-                "The first column refers to biological entities (samples, "
-                "cell types, or the like), and the individual columns refer "
-                "to the enrichment of individual gene sets, such as hallmarks, "
-                "derived using the bioinformatics method gsea. Here are the "
-                f"data: {df}"
-            )
-            self.append_system_message(msg)
-
-        elif "decoupler" in tool:
-            msg = (
-                "The user has provided information in the form of a table. "
-                "The first column refers to biological entities "
-                "(transcription factors, or the like), and the other "
-                "columns refer to their activity, derived using the "
-                f"bioinformatics method decoupler. Here are the data: {df}"
-            )
-
-        # TODO tool not recognised?
 
     def query(self, text: str):
         self.append_user_message(text)

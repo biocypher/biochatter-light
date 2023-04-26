@@ -3,7 +3,7 @@ from loguru import logger
 import os
 import pandas as pd
 import streamlit as st
-from chatgse._llm_connect import Conversation
+from chatgse._llm_connect import GptConversation
 
 
 PLEASE_ENTER_QUESTIONS = (
@@ -37,7 +37,7 @@ class ChatGSE:
             st.session_state.input = ""
 
         if "conversation" not in st.session_state:
-            st.session_state.conversation = Conversation()
+            st.session_state.conversation = GptConversation()
 
     def _display_init(self):
         st.markdown(HIDE_MENU_MOD_FOOTER, unsafe_allow_html=True)
