@@ -1,6 +1,6 @@
 # app.py: streamlit chat app for contextualisation of biomedical results
 app_name = "chatgse"
-__version__ = "0.2.7"
+__version__ = "0.2.8"
 
 # BOILERPLATE
 import streamlit as st
