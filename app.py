@@ -301,11 +301,8 @@ def main():
             "total_tokens": 0,
         }
 
-    chat_tab, annot_tab = st.tabs(
-        [
-            "Gene Sets and Pathways",
-            "Cell Type Annotation",
-        ]
+    chat_tab, annot_tab, prompts_tab = st.tabs(
+        ["Gene Sets and Pathways", "Cell Type Annotation", "Prompt Engineering"]
     )
 
     with chat_tab:
@@ -372,6 +369,12 @@ def main():
     with annot_tab:
         st.markdown(
             "`Assistant`: Cell type annotation functionality is currently "
+            "under development. Please check back later."
+        )
+
+    with prompts_tab:
+        st.markdown(
+            "`Assistant`: Prompt engineering functionality is currently "
             "under development. Please check back later."
         )
 
