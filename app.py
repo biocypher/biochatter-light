@@ -303,7 +303,8 @@ def main():
             ss.mode = cg._get_data_input_manual()
 
         elif ss.mode == "chat":
-            ss.response, ss.token_usage = cg._get_response()
+            with st.spinner("Thinking..."):
+                ss.response, ss.token_usage = cg._get_response()
 
     # RESET INPUT
     ss.input = ""

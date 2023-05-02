@@ -355,12 +355,13 @@ class ChatGSE:
 
     def _get_response(self):
         logger.info("Getting response from LLM.")
-        self._write_and_history(
-            st.session_state.conversation.user_name, st.session_state.input
-        )
 
         response, token_usage, correction = st.session_state.conversation.query(
             st.session_state.input
+        )
+
+        self._write_and_history(
+            st.session_state.conversation.user_name, st.session_state.input
         )
 
         if correction:
