@@ -38,7 +38,7 @@ def _check_remaining_tokens():
     """
     Collect usage tokens and estimate the remaining tokens based on prior usage.
     """
-    ss["openai_remaining_tokens"] = "?"
+    pass
 
 
 def on_submit():
@@ -281,6 +281,7 @@ def main():
     if not ss.get("primary_model"):
         # default model
         ss["primary_model"] = "gpt-3.5-turbo"
+        ss["openai_remaining_tokens"] = "?"
         update_api_keys()
 
     # instantiate interface
