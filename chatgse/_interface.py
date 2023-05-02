@@ -36,22 +36,15 @@ class ChatGSE:
         if "input" not in st.session_state:
             st.session_state.input = ""
 
-        if "conversation" not in st.session_state:
-            st.session_state.conversation = GptConversation()
+        if "history" not in st.session_state:
+            st.session_state.history = []
+            self._history_only("Assistant", "Welcome to ``ChatGSE``!")
 
     def _display_init(self):
         st.markdown(HIDE_MENU_MOD_FOOTER, unsafe_allow_html=True)
 
-        st.markdown(
-            """
-
-            `Assistant`: Welcome to ``ChatGSE``!
-            
-            """
-        )
-
     def _display_history(self):
-        for item in st.session_state.conversation.history:
+        for item in st.session_state.history:
             for role, msg in item.items():
                 if role == "tool":
                     st.markdown(
@@ -67,27 +60,57 @@ class ChatGSE:
     def _render_msg(role: str, msg: str):
         return f"`{role}`: {msg}"
 
+    def _history_only(self, role: str, msg: str):
+        st.session_state.history.append({role: msg})
+
     def _write_and_history(self, role: str, msg: str):
         logger.info(f"Writing message from {role}: {msg}")
         st.markdown(self._render_msg(role, msg))
-        st.session_state.conversation.history.append({role: msg})
+        st.session_state.history.append({role: msg})
         with open("chatgse-logs.txt", "a") as f:
             f.write(f"{role}: {msg}\n")
 
+    def set_model(self, model_name: str):
+        """
+        Set the LLM model to use for the conversation.
+        """
+        if st.session_state.get("conversation"):
+            logger.warning("Conversation already exists, overwriting.")
+
+        if model_name == "gpt-3.5-turbo":
+            st.session_state.conversation = GptConversation()
+        elif model_name == "bigscience/bloom":
+            st.session_state.conversation = BloomConversation()
+
     def _check_for_api_key(self):
-        key = os.getenv("OPENAI_API_KEY")
+        if st.session_state.primary_model == "gpt-3.5-turbo":
+            key = st.session_state.get("openai_api_key")
+        elif st.session_state.primary_model == "bigscience/bloom":
+            key = st.session_state.get("huggingfacehub_api_key")
 
         if not key:
-            msg = """
-                Please enter your [OpenAI API
-                key](https://platform.openai.com/account/api-keys). You can get
-                one by signing up [here](https://platform.openai.com/). We will
-                not store your key, and only use it for the requests made in
-                this session. If you run the app locally, you can prevent this
-                message by setting the environment variable `OPENAI_API_KEY` to 
-                your key.
-                """
-            self._write_and_history("Assistant", msg)
+            if st.session_state.primary_model == "gpt-3.5-turbo":
+                msg = """
+                    Please enter your [OpenAI API
+                    key](https://platform.openai.com/account/api-keys). You can get
+                    one by signing up [here](https://platform.openai.com/). We will
+                    not store your key, and only use it for the requests made in
+                    this session. If you run the app locally, you can prevent this
+                    message by setting the environment variable `OPENAI_API_KEY` to 
+                    your key.
+                    """
+                self._history_only("Assistant", msg)
+            elif st.session_state.primary_model == "bigscience/bloom":
+                msg = """
+                    Please enter your [HuggingFace Hub API
+                    key](https://huggingface.co/settings/token). You can get one by
+                    signing up [here](https://huggingface.co/). We will not store
+                    your key, and only use it for the requests made in this session.
+                    If you run the app locally, you can prevent this message by
+                    setting the environment variable `HUGGINGFACEHUB_API_TOKEN` to
+                    your key.
+                    """
+                self._history_only("Assistant", msg)
 
             return "getting_key"
 
@@ -98,7 +121,7 @@ class ChatGSE:
                 The API key in your environment is not valid. Please enter a
                 valid key.
                 """
-            self._write_and_history("Assistant", msg)
+            self._history_only("Assistant", msg)
 
             return "getting_key"
 
@@ -108,7 +131,7 @@ class ChatGSE:
             initial setup steps together. To get started, could you please tell
             me your name?
             """
-        self._write_and_history("Assistant", msg)
+        self._history_only("Assistant", msg)
 
         return "getting_name"
 
@@ -248,9 +271,7 @@ class ChatGSE:
                 """
             )
 
-            st.session_state.conversation.history.append(
-                {"tool": df.to_markdown()}
-            )
+            st.session_state.history.append({"tool": df.to_markdown()})
             logger.info("<Tool data displayed.>")
 
             if not any([tool in fl.name for tool in KNOWN_TOOLS]):
