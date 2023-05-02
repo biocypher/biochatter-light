@@ -1,13 +1,9 @@
 from abc import ABC, abstractmethod
-from typing import Optional
 import openai
-import json
 
 from langchain.chat_models import ChatOpenAI
 from langchain.schema import AIMessage, HumanMessage, SystemMessage
 from langchain.llms import HuggingFaceHub
-
-from huggingface_hub import InferenceApi
 
 
 class Conversation(ABC):

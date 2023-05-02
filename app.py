@@ -30,7 +30,15 @@ def update_api_keys():
     if "HUGGINGFACEHUB_API_TOKEN" in os.environ:
         ss["huggingfacehub_api_key"] = os.environ["HUGGINGFACEHUB_API_TOKEN"]
 
-    # community version: add a check if key is depleted, daily?
+    if ss.get("openai_api_key"):
+        _check_remaining_tokens()
+
+
+def _check_remaining_tokens():
+    """
+    Collect usage tokens and estimate the remaining tokens based on prior usage.
+    """
+    ss["openai_remaining_tokens"] = "?"
 
 
 def on_submit():
@@ -160,6 +168,7 @@ def app_header():
 
 
 def display_token_usage():
+    st.markdown(f"## Community tokens remaining: {ss.openai_remaining_tokens}")
     with st.expander("Token usage", expanded=True):
         maximum = 4097  # TODO get this programmatically
         st.markdown(
