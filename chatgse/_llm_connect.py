@@ -167,6 +167,10 @@ class Conversation(ABC):
     def _primary_query(self, text: str):
         pass
 
+    @abstractmethod
+    def _correct_response(self, msg: str):
+        pass
+
 
 class GptConversation(Conversation):
     def __init__(self):
@@ -250,14 +254,36 @@ class BloomConversation(Conversation):
         except ValueError as e:
             return False
 
-    def _primary_query(self, prompt: Optional[str] = None):
-        if prompt:
-            response = self.chat.generate([prompt])
-        else:
-            response = self.chat.generate([self.messages])
+    def _cast_messages(self, messages):
+        """
+        Render the different roles of the chat-based conversation as plain text.
+        """
+        cast = ""
+        for m in messages:
+            if isinstance(m, SystemMessage):
+                cast += f"System: {m.content}\n"
+            elif isinstance(m, HumanMessage):
+                cast += f"Human: {m.content}\n"
+            elif isinstance(m, AIMessage):
+                cast += f"AI: {m.content}\n"
+            else:
+                raise ValueError(f"Unknown message type: {type(m)}")
+
+        return cast
+
+    def _primary_query(self):
+        response = self.chat.generate([self._cast_messages(self.messages)])
 
         msg = response.generations[0][0].text
+        token_usage = {
+            "prompt_tokens": 0,
+            "completion_tokens": 0,
+            "total_tokens": 0,
+        }
 
         self.append_ai_message(msg)
 
-        return msg, {}
+        return msg, token_usage
+
+    def _correct_response(self, msg: str):
+        return "ok"

@@ -30,6 +30,8 @@ def update_api_keys():
     if "HUGGINGFACEHUB_API_TOKEN" in os.environ:
         ss["huggingfacehub_api_key"] = os.environ["HUGGINGFACEHUB_API_TOKEN"]
 
+    # community version: add a check if key is depleted, daily?
+
 
 def on_submit():
     ss.input = ss.widget
@@ -252,7 +254,7 @@ def main():
     if not ss.get("primary_model"):
         # default model
         ss["primary_model"] = "gpt-3.5-turbo"
-    update_api_keys()
+        update_api_keys()
 
     # instantiate interface
     if not ss.get("cg"):
@@ -262,6 +264,7 @@ def main():
         cg.set_model(ss.primary_model)
         ss.active_model = ss.primary_model
         ss.mode = cg._check_for_api_key()
+        # TODO: warn user that we are resetting?
 
     # instantiate token usage
     if not ss.get("token_usage"):
