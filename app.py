@@ -1,8 +1,9 @@
 # app.py: streamlit chat app for contextualisation of biomedical results
 app_name = "chatgse"
-__version__ = "0.2.8"
+__version__ = "0.2.9"
 
 # BOILERPLATE
+import os
 import streamlit as st
 import streamlit.components.v1 as components
 
@@ -19,6 +20,27 @@ from chatgse._interface import ChatGSE
 
 
 # HANDLERS
+def update_api_keys():
+    """
+    Looks for API keys of supported services in the environment variables and
+    updates the session state accordingly.
+    """
+    if "OPENAI_API_KEY" in os.environ:
+        ss["openai_api_key"] = os.environ["OPENAI_API_KEY"]
+    if "HUGGINGFACEHUB_API_TOKEN" in os.environ:
+        ss["huggingfacehub_api_key"] = os.environ["HUGGINGFACEHUB_API_TOKEN"]
+
+    if ss.get("openai_api_key"):
+        _check_remaining_tokens()
+
+
+def _check_remaining_tokens():
+    """
+    Collect usage tokens and estimate the remaining tokens based on prior usage.
+    """
+    ss["openai_remaining_tokens"] = "?"
+
+
 def on_submit():
     ss.input = ss.widget
     ss.widget = ""
@@ -84,12 +106,21 @@ def chat_box():
     )
 
 
-def key_chat_box():
+def openai_key_chat_box():
     st.text_input(
         "OpenAI API Key:",
         on_change=on_submit,
         key="widget",
         placeholder="(sk-...)",
+    )
+
+
+def huggingface_key_chat_box():
+    st.text_input(
+        "Hugging Face Hub API Token:",
+        on_change=on_submit,
+        key="widget",
+        placeholder="(hf_...)",
     )
 
 
@@ -137,6 +168,7 @@ def app_header():
 
 
 def display_token_usage():
+    st.markdown(f"## Community tokens remaining: {ss.openai_remaining_tokens}")
     with st.expander("Token usage", expanded=True):
         maximum = 4097  # TODO get this programmatically
         st.markdown(
@@ -159,6 +191,15 @@ def display_token_usage():
                 "reducing the number of queries. You can reset the app to "
                 "start over the conversation."
             )
+
+
+def model_select():
+    with st.expander("Model selection", expanded=False):
+        models = [
+            "gpt-3.5-turbo",
+            "bigscience/bloom",
+        ]
+        st.selectbox("Primary model", models, key="primary_model")
 
 
 def app_info():
@@ -212,25 +253,39 @@ def spacer(n=2, line=False, next_n=0):
 
 
 def main():
-    # SETUP
-    if not ss.get("cg"):
-        ss.cg = ChatGSE()
-    cg = ss.cg
-    cg._display_init()
-    cg._display_history()
-
-    # NEW SESSION, GET API KEY
+    # NEW SESSION
     if not ss.get("mode"):
-        ss.mode = cg._check_for_api_key()
         with open("chatgse-logs.txt", "a") as f:
             f.write("--- NEW SESSION ---\n")
 
+    # SETUP
+    # check for API keys
+    if not ss.get("primary_model"):
+        # default model
+        ss["primary_model"] = "gpt-3.5-turbo"
+        update_api_keys()
+
+    # instantiate interface
+    if not ss.get("cg"):
+        ss.cg = ChatGSE()
+    cg = ss.cg
+    if ss.get("active_model") != ss.primary_model:
+        cg.set_model(ss.primary_model)
+        ss.active_model = ss.primary_model
+        ss.mode = cg._check_for_api_key()
+        # TODO: warn user that we are resetting?
+
+    # instantiate token usage
     if not ss.get("token_usage"):
         ss.token_usage = {
             "prompt_tokens": 0,
             "completion_tokens": 0,
             "total_tokens": 0,
         }
+
+    # WELCOME MESSAGE AND CHAT HISTORY
+    cg._display_init()
+    cg._display_history()
 
     # CHAT BOT LOGIC
     if ss.input:
@@ -257,7 +312,8 @@ def main():
             ss.mode = cg._get_data_input_manual()
 
         elif ss.mode == "chat":
-            ss.response, ss.token_usage = cg._get_response()
+            with st.spinner("Thinking..."):
+                ss.response, ss.token_usage = cg._get_response()
 
     # RESET INPUT
     ss.input = ""
@@ -269,10 +325,15 @@ def main():
         with st.expander("About"):
             app_info()
         display_token_usage()
+        model_select()
 
     # CHAT BOX
+
     if ss.mode == "getting_key":
-        key_chat_box()
+        if ss.primary_model == "gpt-3.5-turbo":
+            openai_key_chat_box()
+        elif ss.primary_model == "bigscience/bloom":
+            huggingface_key_chat_box()
     elif ss.mode == "getting_data_file_input":
         data_input_buttons()
     elif ss.mode in ["getting_name", "getting_context"]:

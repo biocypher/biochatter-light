@@ -1,11 +1,9 @@
 from abc import ABC, abstractmethod
 import openai
-import json
 
 from langchain.chat_models import ChatOpenAI
 from langchain.schema import AIMessage, HumanMessage, SystemMessage
-
-from huggingface_hub import InferenceApi
+from langchain.llms import HuggingFaceHub
 
 
 class Conversation(ABC):
@@ -28,6 +26,45 @@ class Conversation(ABC):
         self.history = []
         self.messages = []
 
+        self.messages.append(
+            SystemMessage(
+                content="You are an assistant to a biomedical researcher."
+            )
+        )
+        self.messages.append(
+            SystemMessage(
+                content="Your role is to contextualise the user's findings "
+                "with biomedical background knowledge. If provided with a "
+                "list, please give granular feedback about the individual "
+                "entities, your knowledge about them, and what they may mean "
+                "in the context of the research."
+            ),
+        )
+        self.messages.append(
+            SystemMessage(
+                content="You can ask the user to provide explanations and more "
+                "background at any time, for instance on the treatment a "
+                "patient has received, or the experimental background. But "
+                "for now, wait for the user to ask a question."
+            ),
+        )
+
+        self.ca_messages = [
+            SystemMessage(
+                content="You are a biomedical researcher.",
+            ),
+            SystemMessage(
+                content="Your task is to check for factual correctness and "
+                "consistency of the statements of another agent.",
+            ),
+            SystemMessage(
+                content="Please correct the following message. Ignore "
+                "references to previous statements, only correct the current "
+                "input. If there is nothing to correct, please respond with "
+                "just 'OK', and nothing else!",
+            ),
+        ]
+
     def set_user_name(self, user_name: str):
         self.user_name = user_name
 
@@ -35,17 +72,26 @@ class Conversation(ABC):
     def set_api_key(self, api_key: str):
         pass
 
-    @abstractmethod
     def append_ai_message(self, message: str):
-        pass
+        self.messages.append(
+            AIMessage(
+                content=message,
+            ),
+        )
 
-    @abstractmethod
     def append_system_message(self, message: str):
-        pass
+        self.messages.append(
+            SystemMessage(
+                content=message,
+            ),
+        )
 
-    @abstractmethod
     def append_user_message(self, message: str):
-        pass
+        self.messages.append(
+            HumanMessage(
+                content=message,
+            ),
+        )
 
     def setup(self, context: str):
         self.context = context
@@ -101,8 +147,24 @@ class Conversation(ABC):
                 f"bioinformatics method decoupler. Here are the data: {df}"
             )
 
-    @abstractmethod
     def query(self, text: str):
+        self.append_user_message(text)
+
+        msg, token_usage = self._primary_query()
+
+        correction = self._correct_response(msg)
+
+        if str(correction).lower() in ["ok", "ok."]:
+            return (msg, token_usage, None)
+
+        return (msg, token_usage, correction)
+
+    @abstractmethod
+    def _primary_query(self, text: str):
+        pass
+
+    @abstractmethod
+    def _correct_response(self, msg: str):
         pass
 
 
@@ -118,45 +180,6 @@ class GptConversation(Conversation):
         self.model = "gpt-3.5-turbo"
         self.ca_model = "gpt-3.5-turbo"
         # TODO make accessible by drop-down
-
-        self.messages.append(
-            SystemMessage(
-                content="You are an assistant to a biomedical researcher."
-            )
-        )
-        self.messages.append(
-            SystemMessage(
-                content="Your role is to contextualise the user's findings "
-                "with biomedical background knowledge. If provided with a "
-                "list, please give granular feedback about the individual "
-                "entities, your knowledge about them, and what they may mean "
-                "in the context of the research."
-            ),
-        )
-        self.messages.append(
-            SystemMessage(
-                content="You can ask the user to provide explanations and more "
-                "background at any time, for instance on the treatment a "
-                "patient has received, or the experimental background. But "
-                "for now, wait for the user to ask a question."
-            ),
-        )
-
-        self.ca_messages = [
-            SystemMessage(
-                content="You are a biomedical researcher.",
-            ),
-            SystemMessage(
-                content="Your task is to check for factual correctness and "
-                "consistency of the statements of another agent.",
-            ),
-            SystemMessage(
-                content="Please correct the following message. Ignore "
-                "references to previous statements, only correct the current "
-                "input. If there is nothing to correct, please respond with "
-                "just 'OK', and nothing else!",
-            ),
-        ]
 
     def set_api_key(self, api_key: str):
         openai.api_key = api_key
@@ -177,30 +200,7 @@ class GptConversation(Conversation):
         except openai.error.AuthenticationError as e:
             return False
 
-    def append_ai_message(self, message: str):
-        self.messages.append(
-            AIMessage(
-                content=message,
-            ),
-        )
-
-    def append_system_message(self, message: str):
-        self.messages.append(
-            SystemMessage(
-                content=message,
-            ),
-        )
-
-    def append_user_message(self, message: str):
-        self.messages.append(
-            HumanMessage(
-                content=message,
-            ),
-        )
-
-    def query(self, text: str):
-        self.append_user_message(text)
-
+    def _primary_query(self):
         response = self.chat.generate([self.messages])
 
         msg = response.generations[0][0].text
@@ -208,12 +208,7 @@ class GptConversation(Conversation):
 
         self.append_ai_message(msg)
 
-        correction = self._correct_response(msg)
-
-        if str(correction).lower() in ["ok", "ok."]:
-            return (msg, token_usage, None)
-
-        return (msg, token_usage, correction)
+        return msg, token_usage
 
     def _correct_response(self, msg: str):
         ca_messages = self.ca_messages.copy()
@@ -242,73 +237,49 @@ class BloomConversation(Conversation):
         self.messages = []
 
     def set_api_key(self, api_key: str):
-        self.inference = InferenceApi("bigscience/bloom", token=api_key)
+        self.chat = HuggingFaceHub(
+            repo_id="bigscience/bloom",
+            model_kwargs={"temperature": 1.0},  # "regular sampling"
+            # as per https://huggingface.co/docs/api-inference/detailed_parameters
+            huggingfacehub_api_token=api_key,
+        )
 
-        test = self._infer("Hello, I am a biomedical researcher.")
-        response = json.loads(test.text)
-        # TODO text is not always json format
-        if response.get("error"):
+        try:
+            self.chat.generate(["Hello, I am a biomedical researcher."])
+            return True
+        except ValueError as e:
             return False
 
-    def append_ai_message(self, message: str):
-        self.messages.append(message)
+    def _cast_messages(self, messages):
+        """
+        Render the different roles of the chat-based conversation as plain text.
+        """
+        cast = ""
+        for m in messages:
+            if isinstance(m, SystemMessage):
+                cast += f"System: {m.content}\n"
+            elif isinstance(m, HumanMessage):
+                cast += f"Human: {m.content}\n"
+            elif isinstance(m, AIMessage):
+                cast += f"AI: {m.content}\n"
+            else:
+                raise ValueError(f"Unknown message type: {type(m)}")
 
-    def append_system_message(self, message: str):
-        self.messages.append(message)
+        return cast
 
-    def append_user_message(self, message: str):
-        self.messages.append(message)
+    def _primary_query(self):
+        response = self.chat.generate([self._cast_messages(self.messages)])
 
-    def query(self, text: str):
-        self.append_user_message(text)
-
-        prompt = "\n".join(self.messages)
-
-        response = self._infer(prompt)
-
-        msg = response["result"][0]["generated_text"]
+        msg = response.generations[0][0].text
+        token_usage = {
+            "prompt_tokens": 0,
+            "completion_tokens": 0,
+            "total_tokens": 0,
+        }
 
         self.append_ai_message(msg)
 
-        return (msg, None, None)
+        return msg, token_usage
 
-    def _infer(
-        self,
-        prompt,
-        max_length=32,
-        top_k=0,
-        num_beams=0,
-        no_repeat_ngram_size=2,
-        top_p=0.9,
-        seed=42,
-        temperature=0,
-        greedy_decoding=False,
-        return_full_text=False,
-    ):
-        """
-        From huggingface BLOOM example jpynb
-        (https://github.com/Sentdex/BLOOM_Examples/blob/main/BLOOM_api_example.ipynb)
-        """
-        top_k = None if top_k == 0 else top_k
-        do_sample = False if num_beams > 0 else not greedy_decoding
-        num_beams = None if (greedy_decoding or num_beams == 0) else num_beams
-        no_repeat_ngram_size = (
-            None if num_beams is None else no_repeat_ngram_size
-        )
-        top_p = None if num_beams else top_p
-        early_stopping = None if num_beams is None else num_beams > 0
-
-        params = {
-            "max_new_tokens": max_length,
-            "top_k": top_k,
-            "top_p": top_p,
-            "temperature": temperature,
-            "do_sample": do_sample,
-            "seed": seed,
-            "early_stopping": early_stopping,
-            "no_repeat_ngram_size": no_repeat_ngram_size,
-            "num_beams": num_beams,
-            "return_full_text": return_full_text,
-        }
-
-        return self.inference(prompt, params=params, raw_response=True)
+    def _correct_response(self, msg: str):
+        return "ok"
