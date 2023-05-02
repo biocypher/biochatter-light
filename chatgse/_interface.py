@@ -125,13 +125,15 @@ class ChatGSE:
 
             return "getting_key"
 
-        msg = """
-            I am the model's assistant. For more explanation, please see the 
-            :red[About] text in the sidebar. We will now be going through some
-            initial setup steps together. To get started, could you please tell
-            me your name?
-            """
-        self._history_only("Assistant", msg)
+        if not st.session_state.get("asked_for_name"):
+            st.session_state.asked_for_name = True
+            msg = """
+                I am the model's assistant. For more explanation, please see the 
+                :red[About] text in the sidebar. We will now be going through some
+                initial setup steps together. To get started, could you please tell
+                me your name?
+                """
+            self._history_only("Assistant", msg)
 
         return "getting_name"
 
@@ -152,20 +154,28 @@ class ChatGSE:
 
             return "getting_key"
 
-        msg = """
-            Thank you! I am the model's assistant. For more explanation, please
-            see the :red[About] text in the sidebar. We will now be going
-            through some initial setup steps together. To get started, could you
-            please tell me your name?
-            """
-        self._write_and_history("Assistant", msg)
+        if not st.session_state.get("asked_for_name"):
+            st.session_state.asked_for_name = True
+            msg = """
+                Thank you! I am the model's assistant. For more explanation, please
+                see the :red[About] text in the sidebar. We will now be going
+                through some initial setup steps together. To get started, could you
+                please tell me your name?
+                """
+            self._write_and_history("Assistant", msg)
+
         return "getting_name"
 
     def _get_user_name(self):
         logger.info("Getting user name.")
-        st.session_state.conversation.set_user_name(st.session_state.input)
+        name = st.session_state.input
+        st.session_state.conversation.set_user_name(name)
+        self._write_and_history(
+            name,
+            name,
+        )
         msg = (
-            f"Thank you, `{st.session_state.conversation.user_name}`! "
+            f"Thank you, `{name}`! "
             "What is the context of your inquiry? For instance, this could be a "
             "disease, an experimental design, or a research area."
         )
@@ -175,6 +185,10 @@ class ChatGSE:
 
     def _get_context(self):
         logger.info("Getting context.")
+        self._write_and_history(
+            st.session_state.conversation.user_name,
+            st.session_state.input,
+        )
         st.session_state.conversation.setup(st.session_state.input)
 
     def _ask_for_data_input(self):
@@ -307,6 +321,11 @@ class ChatGSE:
         response = str(st.session_state.input)
         st.session_state.input = ""
 
+        self._write_and_history(
+            st.session_state.conversation.user_name,
+            response,
+        )
+
         if response.lower() in ["n", "no", "no."]:
             logger.info("No additional data input provided.")
             msg = """
@@ -318,10 +337,7 @@ class ChatGSE:
 
         logger.info("Additional data input provided.")
         st.session_state.conversation.append_user_message(response)
-        data_input_response = (
-            "Thank you! You have provided additional data input:\n"
-            f"`{response}`\n"
-        )
+        data_input_response = "Thank you for the input!"
         self._write_and_history("Assistant", data_input_response)
         return self._get_data_input()
 
@@ -344,10 +360,14 @@ class ChatGSE:
         st.session_state.conversation.setup_data_input_manual(
             st.session_state.input
         )
+
+        self._write_and_history(
+            st.session_state.conversation.user_name,
+            st.session_state.input,
+        )
+
         data_input_response = (
-            "Thank you! You have provided unstructured data input:\n"
-            f"`{st.session_state.conversation.data_input}`\n"
-            f"{PLEASE_ENTER_QUESTIONS}"
+            "Thank you for the input. " f"{PLEASE_ENTER_QUESTIONS}"
         )
         self._write_and_history("Assistant", data_input_response)
 

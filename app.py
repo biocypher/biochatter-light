@@ -168,9 +168,13 @@ def app_header():
 
 
 def display_token_usage():
-    st.markdown(f"## Community tokens remaining: {ss.openai_remaining_tokens}")
+    st.markdown(f"Community tokens remaining: {ss.openai_remaining_tokens}")
     with st.expander("Token usage", expanded=True):
-        maximum = 4097  # TODO get this programmatically
+        if ss.primary_model == "gpt-3.5-turbo":
+            maximum = 4097  # TODO get this programmatically
+        elif ss.primary_model == "bigscience/bloom":
+            maximum = 1000
+
         st.markdown(
             f"""
             Last query: {ss.token_usage["prompt_tokens"]}
@@ -199,7 +203,21 @@ def model_select():
             "gpt-3.5-turbo",
             "bigscience/bloom",
         ]
-        st.selectbox("Primary model", models, key="primary_model")
+        st.selectbox(
+            "Primary model",
+            models,
+            key="primary_model",
+            help=(
+                "This is the model you will be talking to. "
+                "Caution: changing the model will reset your conversation."
+            ),
+        )
+
+        if ss.primary_model == "bigscience/bloom":
+            st.warning(
+                "BLOOM support is currently experimental. Queries may return "
+                "unexpected results."
+            )
 
 
 def app_info():
@@ -283,65 +301,79 @@ def main():
             "total_tokens": 0,
         }
 
-    # WELCOME MESSAGE AND CHAT HISTORY
-    cg._display_init()
-    cg._display_history()
+    chat_tab, annot_tab = st.tabs(
+        [
+            "Gene Sets and Pathways",
+            "Cell Type Annotation",
+        ]
+    )
 
-    # CHAT BOT LOGIC
-    if ss.input:
+    with chat_tab:
+        # WELCOME MESSAGE AND CHAT HISTORY
+        cg._display_init()
+        cg._display_history()
+
+        # CHAT BOT LOGIC
+        if ss.input:
+            if ss.mode == "getting_key":
+                ss.mode = cg._get_api_key(ss.input)
+
+            elif ss.mode == "getting_name":
+                ss.mode = cg._get_user_name()
+
+            elif ss.mode == "getting_context":
+                ss.mode = cg._get_context()
+                ss.mode = cg._ask_for_data_input()
+
+            elif ss.mode == "getting_data_file_input":
+                ss.mode = cg._get_data_input()
+
+            elif ss.mode == "getting_data_file_description":
+                ss.mode = cg._get_data_file_description()
+
+            elif ss.mode == "asking_for_manual_data_input":
+                ss.mode = cg._ask_for_manual_data_input()
+
+            elif ss.mode == "getting_manual_data_input":
+                ss.mode = cg._get_data_input_manual()
+
+            elif ss.mode == "chat":
+                with st.spinner("Thinking..."):
+                    ss.response, ss.token_usage = cg._get_response()
+
+        # RESET INPUT
+        ss.input = ""
+
+        # SIDEBAR
+        with st.sidebar:
+            app_header()
+            file_uploader()
+            with st.expander("About"):
+                app_info()
+            display_token_usage()
+            model_select()
+
+        # CHAT BOX
+
         if ss.mode == "getting_key":
-            ss.mode = cg._get_api_key(ss.input)
-
-        elif ss.mode == "getting_name":
-            ss.mode = cg._get_user_name()
-
-        elif ss.mode == "getting_context":
-            ss.mode = cg._get_context()
-            ss.mode = cg._ask_for_data_input()
-
+            if ss.primary_model == "gpt-3.5-turbo":
+                openai_key_chat_box()
+            elif ss.primary_model == "bigscience/bloom":
+                huggingface_key_chat_box()
         elif ss.mode == "getting_data_file_input":
-            ss.mode = cg._get_data_input()
+            data_input_buttons()
+        elif ss.mode in ["getting_name", "getting_context"]:
+            chat_line()
+            autofocus_line()
+        else:
+            chat_box()
+            autofocus_area()
 
-        elif ss.mode == "getting_data_file_description":
-            ss.mode = cg._get_data_file_description()
-
-        elif ss.mode == "asking_for_manual_data_input":
-            ss.mode = cg._ask_for_manual_data_input()
-
-        elif ss.mode == "getting_manual_data_input":
-            ss.mode = cg._get_data_input_manual()
-
-        elif ss.mode == "chat":
-            with st.spinner("Thinking..."):
-                ss.response, ss.token_usage = cg._get_response()
-
-    # RESET INPUT
-    ss.input = ""
-
-    # SIDEBAR
-    with st.sidebar:
-        app_header()
-        file_uploader()
-        with st.expander("About"):
-            app_info()
-        display_token_usage()
-        model_select()
-
-    # CHAT BOX
-
-    if ss.mode == "getting_key":
-        if ss.primary_model == "gpt-3.5-turbo":
-            openai_key_chat_box()
-        elif ss.primary_model == "bigscience/bloom":
-            huggingface_key_chat_box()
-    elif ss.mode == "getting_data_file_input":
-        data_input_buttons()
-    elif ss.mode in ["getting_name", "getting_context"]:
-        chat_line()
-        autofocus_line()
-    else:
-        chat_box()
-        autofocus_area()
+    with annot_tab:
+        st.markdown(
+            "`Assistant`: Cell type annotation functionality is currently "
+            "under development. Please check back later."
+        )
 
 
 if __name__ == "__main__":
