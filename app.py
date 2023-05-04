@@ -228,6 +228,10 @@ def display_token_usage():
 
 def model_select():
     with st.expander("Model selection", expanded=False):
+        if not ss.mode == "getting_key":
+            st.markdown("Please reload the app to change the model.")
+            return
+
         models = [
             "gpt-3.5-turbo",
             "bigscience/bloom",
