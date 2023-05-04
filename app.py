@@ -173,8 +173,11 @@ def app_header():
     )
 
 
-def display_token_usage():
+def remaining_tokens():
     st.markdown(f"Community tokens remaining: {ss.openai_remaining_tokens}")
+
+
+def display_token_usage():
     with st.expander("Token usage", expanded=True):
         if ss.primary_model == "gpt-3.5-turbo":
             maximum = 4097  # TODO get this programmatically
@@ -374,6 +377,12 @@ def main():
             file_uploader()
             with st.expander("About"):
                 app_info()
+            remaining_tokens()
+            if (
+                ss.get("show_community_select", False)
+                and ss.get("primary_model") in OPENAI_MODELS
+            ):
+                community_select()
             display_token_usage()
             model_select()
 
@@ -392,12 +401,6 @@ def main():
         else:
             chat_box()
             autofocus_area()
-
-        if (
-            ss.get("show_community_select", False)
-            and ss.get("primary_model") in OPENAI_MODELS
-        ):
-            community_select()
 
     with annot_tab:
         st.markdown(

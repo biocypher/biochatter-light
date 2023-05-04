@@ -100,9 +100,10 @@ class ChatGSE:
                     made in this session. If you run the app locally, you can
                     prevent this message by setting the environment variable
                     `OPENAI_API_KEY` to your key. If there are community credits
-                    available, you can press the button below to use them, but
-                    please be considerate of other users and only use the
-                    community credits if you need to.
+                    available (see in the sidebar), you can press the
+                    corresponding button to use them, but please be considerate
+                    of other users and only use the community credits if you
+                    need to.
                     """
                 self._history_only("Assistant", msg)
                 st.session_state.show_community_select = True
