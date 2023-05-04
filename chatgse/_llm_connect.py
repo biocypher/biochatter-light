@@ -5,6 +5,8 @@ from langchain.chat_models import ChatOpenAI
 from langchain.schema import AIMessage, HumanMessage, SystemMessage
 from langchain.llms import HuggingFaceHub
 
+from ._stats import get_stats
+
 
 class Conversation(ABC):
     """
@@ -169,7 +171,7 @@ class Conversation(ABC):
 
 
 class GptConversation(Conversation):
-    def __init__(self):
+    def __init__(self, user: str):
         """
         Connect to OpenAI's GPT API and set up a conversation with the user.
         Also initialise a second conversational agent to provide corrections to
@@ -179,6 +181,7 @@ class GptConversation(Conversation):
 
         self.model = "gpt-3.5-turbo"
         self.ca_model = "gpt-3.5-turbo"
+        self.usage_stats = get_stats(user=user)
         # TODO make accessible by drop-down
 
     def set_api_key(self, api_key: str):

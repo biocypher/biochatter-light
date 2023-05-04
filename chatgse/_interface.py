@@ -78,7 +78,9 @@ class ChatGSE:
             logger.warning("Conversation already exists, overwriting.")
 
         if model_name == "gpt-3.5-turbo":
-            st.session_state.conversation = GptConversation()
+            st.session_state.conversation = GptConversation(
+                user=st.session_state.get("user")
+            )
         elif model_name == "bigscience/bloom":
             st.session_state.conversation = BloomConversation()
 
@@ -92,14 +94,18 @@ class ChatGSE:
             if st.session_state.primary_model == "gpt-3.5-turbo":
                 msg = """
                     Please enter your [OpenAI API
-                    key](https://platform.openai.com/account/api-keys). You can get
-                    one by signing up [here](https://platform.openai.com/). We will
-                    not store your key, and only use it for the requests made in
-                    this session. If you run the app locally, you can prevent this
-                    message by setting the environment variable `OPENAI_API_KEY` to 
-                    your key.
+                    key](https://platform.openai.com/account/api-keys). You can
+                    get one by signing up [here](https://platform.openai.com/).
+                    We will not store your key, and only use it for the requests
+                    made in this session. If you run the app locally, you can
+                    prevent this message by setting the environment variable
+                    `OPENAI_API_KEY` to your key. If there are community credits
+                    available, you can press the button below to use them, but
+                    please be considerate of other users and only use the
+                    community credits if you need to.
                     """
                 self._history_only("Assistant", msg)
+                st.session_state.show_community_select = True
             elif st.session_state.primary_model == "bigscience/bloom":
                 msg = """
                     Please enter your [HuggingFace Hub API
@@ -133,7 +139,9 @@ class ChatGSE:
                 initial setup steps together. To get started, could you please tell
                 me your name?
                 """
-            self._history_only("Assistant", msg)
+            self._write_and_history("Assistant", msg)
+
+        st.session_state.show_community_select = False
 
         return "getting_name"
 
@@ -163,6 +171,19 @@ class ChatGSE:
                 please tell me your name?
                 """
             self._write_and_history("Assistant", msg)
+
+        st.session_state.show_community_select = False
+
+        return "getting_name"
+
+    def _ask_for_user_name(self):
+        msg = """
+                Thank you! I am the model's assistant. For more explanation, please
+                see the :red[About] text in the sidebar. We will now be going
+                through some initial setup steps together. To get started, could you
+                please tell me your name?
+                """
+        self._write_and_history("Assistant", msg)
 
         return "getting_name"
 

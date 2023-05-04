@@ -18,6 +18,12 @@ ss = st.session_state
 # IMPORTS
 from chatgse._interface import ChatGSE
 
+OPENAI_MODELS = [
+    "gpt-3.5-turbo",
+    "gpt-4",
+    "davinci",
+]
+
 
 # HANDLERS
 def update_api_keys():
@@ -220,6 +226,20 @@ def model_select():
             )
 
 
+def community_select():
+    st.button("Use Community Key", on_click=use_community_key)
+
+
+def use_community_key():
+    ss.openai_api_key = os.environ["OPENAI_COMMUNITY_KEY"]
+    ss.cg._write_and_history("Assistant", "Using community key!")
+    update_api_keys()
+    ss.user = "community"
+    ss.mode = "using_community_key"
+    ss.show_community_select = False
+    ss.input = "done"  # just to enter main logic; more elegant solution?
+
+
 def app_info():
     st.markdown(
         """
@@ -276,6 +296,8 @@ def main():
         with open("chatgse-logs.txt", "a") as f:
             f.write("--- NEW SESSION ---\n")
 
+        ss.user = "default"
+
     # SETUP
     # check for API keys
     if not ss.get("primary_model"):
@@ -315,6 +337,10 @@ def main():
         if ss.input:
             if ss.mode == "getting_key":
                 ss.mode = cg._get_api_key(ss.input)
+
+            elif ss.mode == "using_community_key":
+                ss.input = ""  # ugly
+                ss.mode = cg._check_for_api_key()
 
             elif ss.mode == "getting_name":
                 ss.mode = cg._get_user_name()
@@ -366,6 +392,12 @@ def main():
         else:
             chat_box()
             autofocus_area()
+
+        if (
+            ss.get("show_community_select", False)
+            and ss.get("primary_model") in OPENAI_MODELS
+        ):
+            community_select()
 
     with annot_tab:
         st.markdown(
