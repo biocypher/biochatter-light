@@ -1,11 +1,14 @@
 # app.py: streamlit chat app for contextualisation of biomedical results
 app_name = "chatgse"
-__version__ = "0.2.10"
+__version__ = "0.2.11"
 
 # BOILERPLATE
 import os
+import datetime
 import streamlit as st
 import streamlit.components.v1 as components
+
+from chatgse._stats import get_community_usage_cost
 
 st.set_page_config(
     page_title="ChatGSE",
@@ -17,6 +20,12 @@ ss = st.session_state
 
 # IMPORTS
 from chatgse._interface import ChatGSE
+
+OPENAI_MODELS = [
+    "gpt-3.5-turbo",
+    "gpt-4",
+    "davinci",
+]
 
 
 # HANDLERS
@@ -167,8 +176,37 @@ def app_header():
     )
 
 
+def get_remaining_tokens():
+    """
+    Fetch the percentage of remaining tokens for the day from the _stats module.
+    """
+    used = get_community_usage_cost()
+    limit = float(99 / 30)
+    pct = (100.0 * (limit - used) / limit) if limit else 0
+    pct = max(0, pct)
+    pct = min(100, pct)
+    return pct
+
+
+def community_tokens_refresh_in():
+    x = datetime.datetime.now()
+    dt = (x.replace(hour=23, minute=59, second=59) - x).seconds
+    h = dt // 3600
+    m = dt % 3600 // 60
+    return f"{h} h {m} min"
+
+
+def remaining_tokens():
+    """
+    Display remaining community tokens for the day coloured by percentage.
+    """
+    rt = get_remaining_tokens()
+    col = ":green" if rt > 25 else ":orange" if rt > 0 else ":red"
+    rt = f"{rt:.1f}"
+    st.markdown(f"Daily community tokens remaining: {col}[{rt}%]")
+
+
 def display_token_usage():
-    st.markdown(f"Community tokens remaining: {ss.openai_remaining_tokens}")
     with st.expander("Token usage", expanded=True):
         if ss.primary_model == "gpt-3.5-turbo":
             maximum = 4097  # TODO get this programmatically
@@ -199,6 +237,10 @@ def display_token_usage():
 
 def model_select():
     with st.expander("Model selection", expanded=False):
+        if not ss.mode == "getting_key":
+            st.markdown("Please reload the app to change the model.")
+            return
+
         models = [
             "gpt-3.5-turbo",
             "bigscience/bloom",
@@ -218,6 +260,27 @@ def model_select():
                 "BLOOM support is currently experimental. Queries may return "
                 "unexpected results."
             )
+
+
+def community_select():
+    if not get_remaining_tokens() > 0:
+        st.warning(
+            "No community tokens remaining for the day. "
+            f"Refreshes in {community_tokens_refresh_in()}."
+        )
+        return
+
+    st.button("Use Community Key", on_click=use_community_key)
+
+
+def use_community_key():
+    ss.openai_api_key = os.environ["OPENAI_COMMUNITY_KEY"]
+    ss.cg._write_and_history("Assistant", "Using community key!")
+    update_api_keys()
+    ss.user = "community"
+    ss.mode = "using_community_key"
+    ss.show_community_select = False
+    ss.input = "done"  # just to enter main logic; more elegant solution?
 
 
 def app_info():
@@ -276,12 +339,13 @@ def main():
         with open("chatgse-logs.txt", "a") as f:
             f.write("--- NEW SESSION ---\n")
 
+        ss.user = "default"
+
     # SETUP
     # check for API keys
     if not ss.get("primary_model"):
         # default model
         ss["primary_model"] = "gpt-3.5-turbo"
-        ss["openai_remaining_tokens"] = "?"
         update_api_keys()
 
     # instantiate interface
@@ -316,6 +380,10 @@ def main():
             if ss.mode == "getting_key":
                 ss.mode = cg._get_api_key(ss.input)
 
+            elif ss.mode == "using_community_key":
+                ss.input = ""  # ugly
+                ss.mode = cg._check_for_api_key()
+
             elif ss.mode == "getting_name":
                 ss.mode = cg._get_user_name()
 
@@ -348,6 +416,12 @@ def main():
             file_uploader()
             with st.expander("About"):
                 app_info()
+            remaining_tokens()
+            if (
+                ss.get("show_community_select", False)
+                and ss.get("primary_model") in OPENAI_MODELS
+            ):
+                community_select()
             display_token_usage()
             model_select()
 
