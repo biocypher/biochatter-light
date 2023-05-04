@@ -275,7 +275,7 @@ def community_select():
 
 def use_community_key():
     ss.openai_api_key = os.environ["OPENAI_COMMUNITY_KEY"]
-    ss.cg._write_and_history("Assistant", "Using community key!")
+    ss.cg._history_only("Assistant", "Using community key!")
     update_api_keys()
     ss.user = "community"
     ss.mode = "using_community_key"
