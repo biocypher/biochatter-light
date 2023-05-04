@@ -7,6 +7,8 @@ import os
 import streamlit as st
 import streamlit.components.v1 as components
 
+from chatgse._stats import get_community_usage_cost
+
 st.set_page_config(
     page_title="ChatGSE",
     page_icon="💬",
@@ -173,8 +175,26 @@ def app_header():
     )
 
 
+def get_remaining_tokens():
+    """
+    Fetch the percentage of remaining tokens for the day from the _stats module.
+    """
+    used = get_community_usage_cost()
+    limit = float(99 / 30)
+    pct = (100.0 * (limit - used) / limit) if limit else 0
+    pct = max(0, pct)
+    pct = min(100, pct)
+    return pct
+
+
 def remaining_tokens():
-    st.markdown(f"Community tokens remaining: {ss.openai_remaining_tokens}")
+    """
+    Display remaining community tokens for the day coloured by percentage.
+    """
+    rt = get_remaining_tokens()
+    col = ":green" if rt > 25 else ":orange" if rt > 0 else ":red"
+    rt = f"{rt:.1f}"
+    st.markdown(f"Daily community tokens remaining: {col}[{rt}%]")
 
 
 def display_token_usage():
@@ -306,7 +326,6 @@ def main():
     if not ss.get("primary_model"):
         # default model
         ss["primary_model"] = "gpt-3.5-turbo"
-        ss["openai_remaining_tokens"] = "?"
         update_api_keys()
 
     # instantiate interface
