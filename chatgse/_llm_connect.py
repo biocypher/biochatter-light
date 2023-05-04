@@ -258,7 +258,7 @@ class BloomConversation(Conversation):
         super().__init__()
         self.messages = []
 
-    def set_api_key(self, api_key: str):
+    def set_api_key(self, api_key: str, user: str):
         self.chat = HuggingFaceHub(
             repo_id="bigscience/bloom",
             model_kwargs={"temperature": 1.0},  # "regular sampling"

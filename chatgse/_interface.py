@@ -82,7 +82,7 @@ class ChatGSE:
         elif model_name == "bigscience/bloom":
             st.session_state.conversation = BloomConversation()
 
-    def _check_for_api_key(self):
+    def _check_for_api_key(self, write: bool = True):
         if st.session_state.primary_model == "gpt-3.5-turbo":
             key = st.session_state.get("openai_api_key")
         elif st.session_state.primary_model == "bigscience/bloom":
@@ -138,7 +138,10 @@ class ChatGSE:
                 initial setup steps together. To get started, could you please tell
                 me your name?
                 """
-            self._history_only("Assistant", msg)
+            if write:
+                self._write_and_history("Assistant", msg)
+            else:
+                self._history_only("Assistant", msg)
 
         st.session_state.show_community_select = False
 
@@ -251,7 +254,9 @@ class ChatGSE:
     def _get_data_input(self):
         logger.info("--- Biomedical data input ---")
 
-        if not st.session_state.get("tool_data"):
+        if not st.session_state.get(
+            "tool_data"
+        ) and not "demo" in st.session_state.get("mode"):
             msg = """
                 No files detected. Please upload your files in the sidebar, or
                 press 'No' to continue without providing any files.
@@ -264,7 +269,11 @@ class ChatGSE:
 
             logger.info("Tool data provided.")
 
-            st.session_state.tool_list = st.session_state.tool_data
+            # mock for demo mode
+            if "demo" in st.session_state.get("mode"):
+                st.session_state.tool_list = st.session_state.demo_tool_data
+            else:
+                st.session_state.tool_list = st.session_state.tool_data
 
             msg = f"""
                 Thank you! I have read the following 

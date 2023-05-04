@@ -5,7 +5,10 @@ __version__ = "0.2.11"
 # BOILERPLATE
 import streamlit as st
 import streamlit.components.v1 as components
-
+from streamlit.runtime.uploaded_file_manager import (
+    UploadedFile,
+    UploadedFileRec,
+)
 
 st.set_page_config(
     page_title="ChatGSE",
@@ -39,16 +42,6 @@ def update_api_keys():
         ss["openai_api_key"] = os.environ["OPENAI_API_KEY"]
     if "HUGGINGFACEHUB_API_TOKEN" in os.environ:
         ss["huggingfacehub_api_key"] = os.environ["HUGGINGFACEHUB_API_TOKEN"]
-
-    if ss.get("openai_api_key"):
-        _check_remaining_tokens()
-
-
-def _check_remaining_tokens():
-    """
-    Collect usage tokens and estimate the remaining tokens based on prior usage.
-    """
-    pass
 
 
 def on_submit():
@@ -173,6 +166,7 @@ def app_header():
     st.markdown(
         f"""
         # 💬🧬 :red[ChatGSE] `{__version__}`
+        For a new session, please refresh the page.
         """
     )
 
@@ -282,7 +276,6 @@ def community_select():
 def use_community_key():
     ss.openai_api_key = os.environ["OPENAI_COMMUNITY_KEY"]
     ss.cg._history_only("Assistant", "Using community key!")
-    update_api_keys()
     ss.user = "community"
     ss.mode = "using_community_key"
     ss.show_community_select = False
@@ -290,7 +283,53 @@ def use_community_key():
 
 
 def demo_mode():
-    pass
+    ss.openai_api_key = os.environ["OPENAI_COMMUNITY_KEY"]
+    ss.cg._history_only("Assistant", "Using community key!")
+    ss.user = "community"
+    ss.show_community_select = False
+    ss.input = "Demo User"
+    ss.mode = "demo_key"
+
+
+def demo_next_button():
+    st.button("Next Step", on_click=demo_next)
+
+
+def demo_next():
+    if ss.mode == "demo_key":
+        ss.input = "Demo User"
+        ss.mode = "demo_start"
+
+    elif ss.mode == "demo_start":
+        ss.input = (
+            "Immunity; single-cell sequencing of PBMCs of a healthy donor, "
+            "3000 cells; followed by pathway activity analysis."
+        )
+        ss.mode = "demo_context"
+
+    elif ss.mode == "demo_context":
+        # create UploadedFile from "input/progeny.csv"
+        with open("input/progeny.csv", "rb") as f:
+            data = f.read()
+
+        uploaded_file = UploadedFileRec(
+            id=1,
+            name="progeny.csv",
+            type="text/csv",
+            data=data,
+        )
+
+        ss.demo_tool_data = [UploadedFile(record=uploaded_file)]
+        ss.mode = "demo_tool"
+        ss.input = "done"
+
+    elif ss.mode == "demo_tool":
+        ss.input = "no"
+        ss.mode = "demo_manual"
+
+    elif ss.mode == "demo_manual":
+        ss.input = "Please explain my findings."
+        ss.mode = "demo_chat"
 
 
 def app_info():
@@ -365,7 +404,7 @@ def main():
     if ss.get("active_model") != ss.primary_model:
         cg.set_model(ss.primary_model)
         ss.active_model = ss.primary_model
-        ss.mode = cg._check_for_api_key()
+        ss.mode = cg._check_for_api_key(write=False)
         # TODO: warn user that we are resetting?
 
     # instantiate token usage
@@ -417,6 +456,43 @@ def main():
                 with st.spinner("Thinking..."):
                     ss.response, ss.token_usage = cg._get_response()
 
+            # DEMO LOGIC
+            elif ss.mode == "demo_key":
+                ss.input = ""  # ugly
+                cg._check_for_api_key()
+
+            elif ss.mode == "demo_start":
+                cg._get_user_name()
+
+            elif ss.mode == "demo_context":
+                cg._get_context()
+                cg._ask_for_data_input()
+
+            elif ss.mode == "demo_tool":
+                cg._get_data_input()
+
+            elif ss.mode == "demo_manual":
+                cg._get_data_input_manual()
+
+            elif ss.mode == "demo_chat":
+                with st.spinner("Thinking..."):
+                    ss.response, ss.token_usage = cg._get_response()
+                cg._write_and_history(
+                    "Assistant",
+                    "🎉 This concludes the demonstration. You can chat with the "
+                    "model now, or start your own inquiry! Please always keep "
+                    "in mind that Large Language Models can sometimes be "
+                    "incorrect or misleading, and depending on the complexity "
+                    "of the task may not yield the desired results. They are "
+                    "however very good at synthesising information from their "
+                    "training set, and thus can be useful to explain the "
+                    "biological context of a particular gene set or cell "
+                    "type. For instance, you could ask what a particular "
+                    "pathway does in a particular cell type, or which drugs "
+                    "could be used to target it.",
+                )
+                ss.mode = "chat"
+
         # RESET INPUT
         ss.input = ""
 
@@ -447,6 +523,8 @@ def main():
         elif ss.mode in ["getting_name", "getting_context"]:
             chat_line()
             autofocus_line()
+        elif "demo" in ss.mode:
+            demo_next_button()
         else:
             chat_box()
             autofocus_area()
