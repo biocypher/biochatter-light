@@ -3,12 +3,9 @@ app_name = "chatgse"
 __version__ = "0.2.11"
 
 # BOILERPLATE
-import os
-import datetime
 import streamlit as st
 import streamlit.components.v1 as components
 
-from chatgse._stats import get_community_usage_cost
 
 st.set_page_config(
     page_title="ChatGSE",
@@ -18,8 +15,12 @@ st.set_page_config(
 )
 ss = st.session_state
 
+
 # IMPORTS
+import os
+import datetime
 from chatgse._interface import ChatGSE
+from chatgse._stats import get_community_usage_cost
 
 OPENAI_MODELS = [
     "gpt-3.5-turbo",
@@ -202,8 +203,9 @@ def remaining_tokens():
     """
     rt = get_remaining_tokens()
     col = ":green" if rt > 25 else ":orange" if rt > 0 else ":red"
-    rt = f"{rt:.1f}"
-    st.markdown(f"Daily community tokens remaining: {col}[{rt}%]")
+    pct = f"{rt:.1f}"
+    st.markdown(f"Daily community tokens remaining: {col}[{pct}%]")
+    st.progress(rt / 100)
 
 
 def display_token_usage():
@@ -270,7 +272,11 @@ def community_select():
         )
         return
 
-    st.button("Use Community Key", on_click=use_community_key)
+    b1, b2 = st.columns([1, 1])
+    with b1:
+        st.button("Use Community Key", on_click=use_community_key)
+    with b2:
+        st.button("Show Demonstration", on_click=demo_mode)
 
 
 def use_community_key():
@@ -281,6 +287,10 @@ def use_community_key():
     ss.mode = "using_community_key"
     ss.show_community_select = False
     ss.input = "done"  # just to enter main logic; more elegant solution?
+
+
+def demo_mode():
+    pass
 
 
 def app_info():
