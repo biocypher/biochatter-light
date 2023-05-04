@@ -171,7 +171,7 @@ class Conversation(ABC):
 
 
 class GptConversation(Conversation):
-    def __init__(self, user: str):
+    def __init__(self):
         """
         Connect to OpenAI's GPT API and set up a conversation with the user.
         Also initialise a second conversational agent to provide corrections to
@@ -181,10 +181,13 @@ class GptConversation(Conversation):
 
         self.model = "gpt-3.5-turbo"
         self.ca_model = "gpt-3.5-turbo"
-        self.usage_stats = get_stats(user=user)
         # TODO make accessible by drop-down
 
-    def set_api_key(self, api_key: str):
+    def set_api_key(self, api_key: str, user: str):
+        """
+        Set the API key for the OpenAI API. If the key is valid, initialise the
+        conversational agent. Set the user for usage statistics.
+        """
         openai.api_key = api_key
 
         try:
@@ -199,6 +202,7 @@ class GptConversation(Conversation):
                 temperature=0,
                 openai_api_key=api_key,
             )
+            self.usage_stats = get_stats(user=user)
             return True
         except openai.error.AuthenticationError as e:
             return False
@@ -208,6 +212,8 @@ class GptConversation(Conversation):
 
         msg = response.generations[0][0].text
         token_usage = response.llm_output.get("token_usage")
+
+        self._update_usage_stats(self.model, token_usage)
 
         self.append_ai_message(msg)
 
@@ -227,11 +233,24 @@ class GptConversation(Conversation):
             ),
         )
 
-        response = self.ca_chat(ca_messages)
+        response = self.ca_chat.generate([ca_messages])
 
-        correction = response.content
+        correction = response.generations[0][0].text
+        token_usage = response.llm_output.get("token_usage")
+
+        self._update_usage_stats(self.ca_model, token_usage)
 
         return correction
+
+    def _update_usage_stats(self, model: str, token_usage: dict):
+        """
+        Update redis database with token usage statistics using the usage_stats
+        object with the increment method.
+        """
+        self.usage_stats.increment(
+            f"usage:v4:[date]:[user]",
+            {f"{k}:{model}": v for k, v in token_usage.items()},
+        )
 
 
 class BloomConversation(Conversation):
