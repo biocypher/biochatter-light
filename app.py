@@ -4,6 +4,7 @@ __version__ = "0.2.11"
 
 # BOILERPLATE
 import os
+import datetime
 import streamlit as st
 import streamlit.components.v1 as components
 
@@ -187,6 +188,14 @@ def get_remaining_tokens():
     return pct
 
 
+def community_tokens_refresh_in():
+    x = datetime.datetime.now()
+    dt = (x.replace(hour=23, minute=59, second=59) - x).seconds
+    h = dt // 3600
+    m = dt % 3600 // 60
+    return f"{h} h {m} min"
+
+
 def remaining_tokens():
     """
     Display remaining community tokens for the day coloured by percentage.
@@ -254,6 +263,13 @@ def model_select():
 
 
 def community_select():
+    if not get_remaining_tokens() > 0:
+        st.warning(
+            "No community tokens remaining for the day. "
+            f"Refreshes in {community_tokens_refresh_in()}."
+        )
+        return
+
     st.button("Use Community Key", on_click=use_community_key)
 
 
