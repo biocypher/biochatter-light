@@ -78,9 +78,7 @@ class ChatGSE:
             logger.warning("Conversation already exists, overwriting.")
 
         if model_name == "gpt-3.5-turbo":
-            st.session_state.conversation = GptConversation(
-                user=st.session_state.get("user")
-            )
+            st.session_state.conversation = GptConversation()
         elif model_name == "bigscience/bloom":
             st.session_state.conversation = BloomConversation()
 
@@ -121,7 +119,7 @@ class ChatGSE:
 
             return "getting_key"
 
-        success = st.session_state.conversation.set_api_key(key)
+        success = self._try_api_key(key)
 
         if not success:
             msg = """
@@ -147,7 +145,10 @@ class ChatGSE:
         return "getting_name"
 
     def _try_api_key(self, key: str = None):
-        success = st.session_state.conversation.set_api_key(key)
+        success = st.session_state.conversation.set_api_key(
+            key,
+            st.session_state.user,
+        )
         if not success:
             return False
         return True
