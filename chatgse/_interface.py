@@ -138,7 +138,7 @@ class ChatGSE:
                 initial setup steps together. To get started, could you please tell
                 me your name?
                 """
-            self._write_and_history("Assistant", msg)
+            self._history_only("Assistant", msg)
 
         st.session_state.show_community_select = False
 
