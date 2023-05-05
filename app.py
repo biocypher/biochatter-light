@@ -166,7 +166,12 @@ def app_header():
     st.markdown(
         f"""
         # 💬🧬 :red[ChatGSE] `{__version__}`
-        For a new session, please refresh the page.
+        For a new session, please refresh the page. Please note that on
+        streamlit cloud, the app may reload automatically after a period of
+        inactivity, which may lead to inconsistencies in the app state or
+        uploaded files. For this reason, it is recommended to go through an
+        individual conversation without interruptions. We are looking into more
+        persistent solutions for hosting the app.
         """
     )
 
@@ -341,8 +346,8 @@ def app_info():
         conversation with a pre-trained language model. The main benefits of
         this approach are:
 
-        - Integration with popular bioinformatics tools (e.g. progeny,
-        decoupler)
+        - Integration with the low-dimensional outputs of popular bioinformatics
+        tools (e.g. gsea, progeny, decoupler)
 
         - Prompts tuned to biomedical research and your specific queries
 
@@ -362,8 +367,12 @@ def app_info():
         only see the `Correcting agent` if it detects that the `ChatGSE` model
         has made a mistake. In general, even though we try our best to avoid
         mistakes using the correcting agent and internal safeguards, the general
-        limitations of the used Large Language Model apply, which means that the
-        statements made can sometimes be incorrect or misleading.
+        limitations of the used Large Language Model apply: their statements can
+        sometimes be incorrect or misleading, and depending on the complexity of
+        the task may not yield the desired results. They are however very good
+        at synthesising information from their training set, and thus can be
+        useful to explain the biological context of, for instance, a particular
+        gene set or cell type.
 
         ChatGSE is developed by [Sebastian
         Lobentanzer](https://slobentanzer.github.io); you can find the source
