@@ -140,15 +140,6 @@ class Conversation(ABC):
             )
             self.append_system_message(msg)
 
-        elif "decoupler" in tool:
-            msg = (
-                "The user has provided information in the form of a table. "
-                "The first column refers to biological entities "
-                "(transcription factors, or the like), and the other "
-                "columns refer to their activity, derived using the "
-                f"bioinformatics method decoupler. Here are the data: {df}"
-            )
-
     def query(self, text: str):
         self.append_user_message(text)
 
