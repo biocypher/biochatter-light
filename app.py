@@ -166,7 +166,12 @@ def app_header():
     st.markdown(
         f"""
         # 💬🧬 :red[ChatGSE] `{__version__}`
-        For a new session, please refresh the page. Please note that on
+        For a new session, please refresh the page.
+        """
+    )
+    st.warning(
+        """
+        Please note that on
         streamlit cloud, the app may reload automatically after a period of
         inactivity, which may lead to inconsistencies in the app state or
         uploaded files. For this reason, it is recommended to go through an

@@ -205,7 +205,6 @@ class GptConversation(Conversation):
     def _primary_query(self):
         try:
             response = self.chat.generate([self.messages])
-        # catch multiple errors at once
         except (
             openai.error.InvalidRequestError,
             openai.error.APIConnectionError,
