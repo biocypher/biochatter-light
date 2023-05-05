@@ -154,6 +154,10 @@ class Conversation(ABC):
 
         msg, token_usage = self._primary_query()
 
+        if not token_usage:
+            # indicates error
+            return (msg, token_usage, None)
+
         correction = self._correct_response(msg)
 
         if str(correction).lower() in ["ok", "ok."]:
@@ -208,7 +212,10 @@ class GptConversation(Conversation):
             return False
 
     def _primary_query(self):
-        response = self.chat.generate([self.messages])
+        try:
+            response = self.chat.generate([self.messages])
+        except openai.error.InvalidRequestError as e:
+            return str(e), None
 
         msg = response.generations[0][0].text
         token_usage = response.llm_output.get("token_usage")

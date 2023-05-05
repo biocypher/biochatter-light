@@ -535,8 +535,9 @@ def main():
         elif "demo" in ss.mode:
             demo_next_button()
         else:
-            chat_box()
-            autofocus_area()
+            if not ss.get("error"):
+                chat_box()
+                autofocus_area()
 
     with annot_tab:
         st.markdown(

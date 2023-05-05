@@ -412,6 +412,20 @@ class ChatGSE:
             st.session_state.input
         )
 
+        if not token_usage:
+            # indicates error
+            msg = "The model appears to have encountered an error. " + response
+            self._write_and_history("Assistant", msg)
+            st.session_state.error = True
+
+            token_usage = {
+                "prompt_tokens": 0,
+                "completion_tokens": 0,
+                "total_tokens": 0,
+            }
+
+            return response, token_usage
+
         self._write_and_history(
             st.session_state.conversation.user_name, st.session_state.input
         )
