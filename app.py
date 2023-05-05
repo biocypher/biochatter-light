@@ -209,10 +209,7 @@ def remaining_tokens():
 
 def display_token_usage():
     with st.expander("Token usage", expanded=True):
-        if ss.primary_model == "gpt-3.5-turbo":
-            maximum = 4097  # TODO get this programmatically
-        elif ss.primary_model == "bigscience/bloom":
-            maximum = 1000
+        maximum = ss.get("token_limit", 0)
 
         st.markdown(
             f"""

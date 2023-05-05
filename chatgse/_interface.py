@@ -85,8 +85,10 @@ class ChatGSE:
     def _check_for_api_key(self, write: bool = True):
         if st.session_state.primary_model == "gpt-3.5-turbo":
             key = st.session_state.get("openai_api_key")
+            st.session_state.token_limit = 4097
         elif st.session_state.primary_model == "bigscience/bloom":
             key = st.session_state.get("huggingfacehub_api_key")
+            st.session_state.token_limit = 1000
 
         if not key:
             if st.session_state.primary_model == "gpt-3.5-turbo":
@@ -227,7 +229,10 @@ class ChatGSE:
                 the sidebar and press 'Yes' once you are finished. I will
                 recognise methods if their names are mentioned in the file name.
                 These are the tools I am familiar with: {', '.join([f"`{name}`"
-                for name in KNOWN_TOOLS])}.
+                for name in KNOWN_TOOLS])}. Please keep in mind that all data
+                you provide will count towards the token usage of your
+                conversation prompt. The limit of the currently active model is
+                {st.session_state.token_limit}.
                 """
             self._write_and_history("Assistant", msg1)
             msg2 = """
