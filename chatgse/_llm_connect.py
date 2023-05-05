@@ -205,7 +205,13 @@ class GptConversation(Conversation):
     def _primary_query(self):
         try:
             response = self.chat.generate([self.messages])
-        except openai.error.InvalidRequestError as e:
+        # catch multiple errors at once
+        except (
+            openai.error.InvalidRequestError,
+            openai.error.APIConnectionError,
+            openai.error.RateLimitError,
+            openai.error.APIError,
+        ) as e:
             return str(e), None
 
         msg = response.generations[0][0].text
