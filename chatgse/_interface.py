@@ -1,4 +1,5 @@
 # user interface class for ChatGSE
+import json
 from loguru import logger
 import os
 import pandas as pd
@@ -10,9 +11,15 @@ ss = st.session_state
 
 API_KEY_REQUIRED = "The currently selected model requires an API key."
 DEMO_MODE = (
-    "You can also try a demonstration setup with toy data by pressing the "
-    "button below. After guiding you throught the initial steps, this will "
-    "also take you to a functional chat using the community key."
+    "You can also try a `Demonstration` setup with toy data by pressing the "
+    "second button below. After guiding you throught the initial steps, this "
+    "will also take you to a functional chat using the community key."
+)
+API_KEY_SUCCESS = (
+    "Hello! I am the model's assistant. For more explanation, "
+    "please see the :red[About] text in the sidebar. We will now "
+    "be going through some initial setup steps together. To get "
+    "started, could you please tell me your name?"
 )
 PLEASE_ENTER_QUESTIONS = (
     "The model will be with you shortly. "
@@ -34,6 +41,10 @@ class ChatGSE:
             ss.history = []
 
     def _display_history(self):
+        """
+        Renders the history of the conversation on each reload. Also saves a
+        JSON to the session state for download.
+        """
         for item in ss.history:
             for role, msg in item.items():
                 if role == "tool":
@@ -45,6 +56,12 @@ class ChatGSE:
                     )
                 else:
                     st.markdown(self._render_msg(role, msg))
+
+    def update_json_history(self):
+        """
+        Write ss.history to JSON and put it into session state.
+        """
+        ss.json_history = json.dumps(ss.history)
 
     @staticmethod
     def _render_msg(role: str, msg: str):
@@ -82,31 +99,32 @@ class ChatGSE:
 
         if not key:
             if ss.primary_model == "gpt-3.5-turbo":
-                msg = f"""
-                    {API_KEY_REQUIRED} You can use your own [OpenAI API
-                    key](https://platform.openai.com/account/api-keys), or try 
-                    the platform using our community key by pressing the
-                    "Community Key" button. You can get a key by signing up
-                    [here](https://platform.openai.com/) and enabling billing.
-                    We will not store your key, and only use it for the requests
-                    made in this session. If you use community credits,
-                    please be considerate of other users; if you use the
-                    platform extensively, please use your own key. Using
-                    GPT-3.5-turbo, a full conversation (4000 tokens) costs about
-                    0.01 USD. {DEMO_MODE}
-                    """
+                msg = (
+                    f"{API_KEY_REQUIRED} You can use your own [OpenAI API "
+                    "key](https://platform.openai.com/account/api-keys), or "
+                    "try the platform using our community key by pressing the "
+                    "`Use The Community Key` button. You can get a key by "
+                    "signing up [here](https://platform.openai.com/) and enabling "
+                    "billing. We will not store your key, and only use it for "
+                    "the requests made in this session. If you use community "
+                    "credits, please be considerate of other users; if you "
+                    "use the platform extensively, please use your own key. "
+                    "Using GPT-3.5-turbo, a full conversation (4000 tokens) "
+                    f"costs about 0.01 USD. {DEMO_MODE}"
+                )
                 self._history_only("Assistant", msg)
                 ss.show_community_select = True
             elif ss.primary_model == "bigscience/bloom":
-                msg = f"""
-                    {API_KEY_REQUIRED} Please enter your [HuggingFace Hub API
-                    key](https://huggingface.co/settings/token). You can get one
-                    by signing up [here](https://huggingface.co/). We will not
-                    store your key, and only use it for the requests made in
-                    this session. If you run the app locally, you can prevent
-                    this message by setting the environment variable
-                    `HUGGINGFACEHUB_API_TOKEN` to your key.
-                    """
+                msg = (
+                    f"{API_KEY_REQUIRED} Please enter your [HuggingFace Hub "
+                    "API key](https://huggingface.co/settings/token). You "
+                    "can get one by signing up "
+                    "[here](https://huggingface.co/). We will not store your "
+                    "key, and only use it for the requests made in this "
+                    "session. If you run the app locally, you can prevent "
+                    "this message by setting the environment variable "
+                    "`HUGGINGFACEHUB_API_TOKEN` to your key."
+                )
                 self._history_only("Assistant", msg)
 
             return "getting_key"
@@ -114,22 +132,17 @@ class ChatGSE:
         success = self._try_api_key(key)
 
         if not success:
-            msg = """
-                The API key in your environment is not valid. Please enter a
-                valid key.
-                """
+            msg = (
+                "The API key in your environment is not valid. Please enter a "
+                "valid key."
+            )
             self._history_only("Assistant", msg)
 
             return "getting_key"
 
         if not ss.get("asked_for_name"):
             ss.asked_for_name = True
-            msg = """
-                I am the model's assistant. For more explanation, please see the 
-                :red[About] text in the sidebar. We will now be going through some
-                initial setup steps together. To get started, could you please tell
-                me your name?
-                """
+            msg = f"{API_KEY_SUCCESS}"
             if write:
                 self._write_and_history("Assistant", msg)
             else:
@@ -152,21 +165,17 @@ class ChatGSE:
         logger.info("Getting API Key.")
         sucess = self._try_api_key(key)
         if not sucess:
-            msg = """
-                The API key you entered is not valid. Please try again.
-                """
+            msg = (
+                "The API key you entered is not valid. Please enter a valid "
+                "key."
+            )
             self._write_and_history("Assistant", msg)
 
             return "getting_key"
 
         if not ss.get("asked_for_name"):
             ss.asked_for_name = True
-            msg = """
-                Thank you! I am the model's assistant. For more explanation, please
-                see the :red[About] text in the sidebar. We will now be going
-                through some initial setup steps together. To get started, could you
-                please tell me your name?
-                """
+            msg = f"{API_KEY_SUCCESS}"
             self._write_and_history("Assistant", msg)
 
         ss.show_community_select = False
@@ -174,12 +183,7 @@ class ChatGSE:
         return "getting_name"
 
     def _ask_for_user_name(self):
-        msg = """
-                Thank you! I am the model's assistant. For more explanation, please
-                see the :red[About] text in the sidebar. We will now be going
-                through some initial setup steps together. To get started, could you
-                please tell me your name?
-                """
+        msg = f"{API_KEY_SUCCESS}"
         self._write_and_history("Assistant", msg)
 
         return "getting_name"
@@ -211,37 +215,37 @@ class ChatGSE:
 
     def _ask_for_data_input(self):
         if not ss.tool_data:
-            msg1 = f"""
-                You have selected `{ss.conversation.context}` as
-                your context. Do you want to provide input files from analytic
-                methods? They will not be stored or analysed beyond your
-                queries. If so, please provide the files by uploading them in
-                the sidebar and press 'Yes' once you are finished. I will
-                recognise methods if their names are mentioned in the file name.
-                These are the tools I am familiar with: {', '.join([f"`{name}`"
-                for name in KNOWN_TOOLS])}. Please keep in mind that all data
-                you provide will count towards the token usage of your
-                conversation prompt. The limit of the currently active model is
-                {ss.token_limit}.
-                """
+            msg1 = (
+                f"You have selected `{ss.conversation.context}` as your "
+                "context. Do you want to provide input files from analytic "
+                "methods? They will not be stored or analysed beyond your "
+                "queries. If so, please provide the files by uploading them in "
+                "the sidebar and press 'Yes' once you are finished. I will "
+                "recognise methods if their names are mentioned in the file "
+                "name. These are the tools I am familiar with: "
+                f"{', '.join([f'`{name}`' for name in KNOWN_TOOLS])}. Please "
+                "keep in mind that all data you provide will count towards the "
+                f"token usage of your conversation prompt. The limit of the "
+                f"currently active model is {ss.token_limit}."
+            )
             self._write_and_history("Assistant", msg1)
-            msg2 = """
-                If you don't want to provide any files, please press 'No'. You
-                will still be able to provide free text information about your
-                results later. Any free text you provide will also not be stored
-                or analysed beyond your queries.
-                """
+            msg2 = (
+                "If you don't want to provide any files, please press 'No'. "
+                "You will still be able to provide free text information about "
+                "your results later. Any free text you provide will also not "
+                "be stored or analysed beyond your queries."
+            )
             self._write_and_history("Assistant", msg2)
             return "getting_data_file_input"
 
         file_names = [f"`{f.name}`" for f in ss.tool_data]
 
-        msg1 = f"""
-            You have selected `{ss.conversation.context}` as
-            your context. I see you have already uploaded some data files:
-            {', '.join(file_names)}. If you wish to add
-            more, please do so now. Once you are done, please press 'Yes'.
-            """
+        msg1 = (
+            f"You have selected `{ss.conversation.context}` as your context. "
+            "I see you have already uploaded some data files: "
+            f"{', '.join(file_names)}. If you wish to add more, please do so "
+            "now. Once you are done, please press 'Yes'."
+        )
         self._write_and_history("Assistant", msg1)
 
         return "getting_data_file_input"
@@ -250,10 +254,10 @@ class ChatGSE:
         logger.info("--- Biomedical data input ---")
 
         if not ss.get("tool_data") and not "demo" in ss.get("mode"):
-            msg = """
-                No files detected. Please upload your files in the sidebar, or
-                press 'No' to continue without providing any files.
-                """
+            msg = (
+                "No files detected. Please upload your files in the sidebar, "
+                "or press 'No' to continue without providing any files."
+            )
             self._write_and_history("Assistant", msg)
             return "getting_data_file_input"
 
@@ -268,21 +272,21 @@ class ChatGSE:
             else:
                 ss.tool_list = ss.tool_data
 
-            msg = f"""
-                Thank you! I have read the following 
-                {len(ss.tool_list)} files:
-                {', '.join([f"`{f.name}`" for f in ss.tool_list])}.
-                """
+            msg = (
+                "Thank you! I have read the following "
+                f"{len(ss.tool_list)} files: "
+                f"{', '.join([f'`{f.name}`' for f in ss.tool_list])}."
+            )
             self._write_and_history("Assistant", msg)
 
         if not ss.get("read_tools"):
             ss.read_tools = []
 
         if len(ss.read_tools) == len(ss.tool_list):
-            msg = f"""
-                I have read all the files you provided.
-                {PLEASE_ENTER_QUESTIONS}
-                """
+            msg = (
+                "I have read all the files you provided. "
+                f"{PLEASE_ENTER_QUESTIONS}"
+            )
             self._write_and_history("Assistant", msg)
             return "chat"
 
@@ -299,9 +303,7 @@ class ChatGSE:
 
             self._write_and_history(
                 "Assistant",
-                f"""
-                `{tool}` results
-                """,
+                f"`{tool}` results",
             )
             st.markdown(
                 f"""
@@ -316,12 +318,10 @@ class ChatGSE:
             if not any([tool in fl.name for tool in KNOWN_TOOLS]):
                 self._write_and_history(
                     "Assistant",
-                    f"""
-                    Sorry, `{tool}` is not among the tools I know 
-                    ({KNOWN_TOOLS}). Please provide information about the data
-                    below (what are rows and columns, what are the values, 
-                    etc.).
-                    """,
+                    f"Sorry, `{tool}` is not among the tools I know "
+                    f"({KNOWN_TOOLS}). Please provide information about the "
+                    "data below (what are rows and columns, what are the "
+                    "values, etc.). Please try to be as specific as possible.",
                 )
                 return "getting_data_file_description"
 
@@ -329,11 +329,9 @@ class ChatGSE:
 
             self._write_and_history(
                 "Assistant",
-                """
-                Would you like to provide additional information, for instance
-                on a contrast or experimental design? If so, please enter it
-                below; if not, please enter 'no'.
-                """,
+                "Would you like to provide additional information, for instance "
+                "on a contrast or experimental design? If so, please enter it "
+                "below; if not, please enter 'no'.",
             )
 
             return "getting_data_file_description"
@@ -351,10 +349,10 @@ class ChatGSE:
 
         if response.lower() in ["n", "no", "no."]:
             logger.info("No additional data input provided.")
-            msg = """
-                Okay, I will use the information from the tool without further
-                specification.
-                """
+            msg = (
+                "Okay, I will use the information from the tool without "
+                "further specification."
+            )
             self._write_and_history("Assistant", msg)
             return self._get_data_input()
 
@@ -366,14 +364,14 @@ class ChatGSE:
 
     def _ask_for_manual_data_input(self):
         logger.info("Asking for manual data input.")
-        msg = """
-            Please provide a list of biological data points (activities of
-            pathways or transcription factors, expression of transcripts or
-            proteins), optionally with directional information and/or a
-            contrast. Since you did not provide any tool data, please try to be
-            as specific as possible. You can also paste `markdown` tables or
-            other structured data here.
-            """
+        msg = (
+            "Please provide a list of biological data points (activities of "
+            "pathways or transcription factors, expression of transcripts or "
+            "proteins), optionally with directional information and/or a "
+            "contrast. Since you did not provide any tool data, please try to "
+            "be as specific as possible. You can also paste `markdown` tables "
+            "or other structured data here."
+        )
         self._write_and_history("Assistant", msg)
         return "getting_manual_data_input"
 

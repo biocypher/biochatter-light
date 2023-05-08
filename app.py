@@ -413,6 +413,17 @@ def app_info():
     )
 
 
+def download_chat_history(cg: ChatGSE):
+    cg.update_json_history()
+    st.download_button(
+        label="Download Chat History JSON",
+        data=ss.json_history,
+        file_name="chat_history.json",
+        mime="application/json",
+        use_container_width=True,
+    )
+
+
 def spacer(n=2, line=False, next_n=0):
     for _ in range(n):
         st.write("")
@@ -561,13 +572,14 @@ def main():
             file_uploader()
             with st.expander("About"):
                 app_info()
-            remaining_tokens()
             if (
                 ss.get("show_community_select", False)
                 and ss.get("primary_model") in OPENAI_MODELS
             ):
+                remaining_tokens()
                 community_select()
             display_token_usage()
+            download_chat_history(cg)
             model_select()
 
         # CHAT BOX
