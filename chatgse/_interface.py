@@ -1,7 +1,6 @@
 # user interface class for ChatGSE
 import json
 from loguru import logger
-import os
 import pandas as pd
 import streamlit as st
 from chatgse._llm_connect import GptConversation, BloomConversation

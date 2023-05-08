@@ -1,3 +1,7 @@
+import streamlit as st
+
+ss = st.session_state
+
 from abc import ABC, abstractmethod
 import openai
 
@@ -6,6 +10,51 @@ from langchain.schema import AIMessage, HumanMessage, SystemMessage
 from langchain.llms import HuggingFaceHub
 
 from ._stats import get_stats
+
+SYSTEM_SETUP_MESSAGES = [
+    "You are an assistant to a biomedical researcher.",
+    "Your role is to contextualise the user's findings with biomedical "
+    "background knowledge. If provided with a list, please give granular "
+    "feedback about the individual entities, your knowledge about them, and "
+    "what they may mean in the context of the research.",
+    "You can ask the user to provide explanations and more background at any "
+    "time, for instance on the treatment a patient has received, or the "
+    "experimental background. But for now, wait for the user to ask a "
+    "question.",
+]
+
+CORRECTIVE_SETUP_MESSAGES = [
+    "You are a biomedical researcher.",
+    "Your task is to check for factual correctness and consistency of the "
+    "statements of another agent.",
+    "Please correct the following message. Ignore references to previous "
+    "statements, only correct the current input. If there is nothing to "
+    "correct, please respond with just 'OK', and nothing else!",
+]
+
+TOOL_MESSAGES = {
+    "progeny": (
+        "The user has provided information in the form of a table. The rows "
+        "refer to biological entities (patients, samples, cell types, or the "
+        "like), and the columns refer to pathways. The values are pathway "
+        "activities derived using the bioinformatics method progeny. Here are "
+        "the data: {df}"
+    ),
+    "dorothea": (
+        "The user has provided information in the form of a table. The rows "
+        "refer to biological entities (patients, samples, cell types, or the "
+        "like), and the columns refer to transcription factors. The values are "
+        "transcription factor activities derived using the bioinformatics "
+        "method dorothea. Here are the data: {df}"
+    ),
+    "gsea": (
+        "The user has provided information in the form of a table. The first "
+        "column refers to biological entities (samples, cell types, or the "
+        "like), and the individual columns refer to the enrichment of "
+        "individual gene sets, such as hallmarks, derived using the "
+        "bioinformatics method gsea. Here are the data: {df}"
+    ),
+}
 
 
 class Conversation(ABC):
@@ -27,45 +76,27 @@ class Conversation(ABC):
         super().__init__()
         self.history = []
         self.messages = []
+        self.ca_messages = []
 
-        self.messages.append(
-            SystemMessage(
-                content="You are an assistant to a biomedical researcher."
+        if not ss.get("system_setup_messages"):
+            ss.system_setup_messages = SYSTEM_SETUP_MESSAGES
+
+        for msg in ss.system_setup_messages:
+            self.messages.append(
+                SystemMessage(
+                    content=msg,
+                ),
             )
-        )
-        self.messages.append(
-            SystemMessage(
-                content="Your role is to contextualise the user's findings "
-                "with biomedical background knowledge. If provided with a "
-                "list, please give granular feedback about the individual "
-                "entities, your knowledge about them, and what they may mean "
-                "in the context of the research."
-            ),
-        )
-        self.messages.append(
-            SystemMessage(
-                content="You can ask the user to provide explanations and more "
-                "background at any time, for instance on the treatment a "
-                "patient has received, or the experimental background. But "
-                "for now, wait for the user to ask a question."
-            ),
-        )
 
-        self.ca_messages = [
-            SystemMessage(
-                content="You are a biomedical researcher.",
-            ),
-            SystemMessage(
-                content="Your task is to check for factual correctness and "
-                "consistency of the statements of another agent.",
-            ),
-            SystemMessage(
-                content="Please correct the following message. Ignore "
-                "references to previous statements, only correct the current "
-                "input. If there is nothing to correct, please respond with "
-                "just 'OK', and nothing else!",
-            ),
-        ]
+        if not ss.get("corrective_setup_messages"):
+            ss.corrective_setup_messages = CORRECTIVE_SETUP_MESSAGES
+
+        for msg in ss.corrective_setup_messages:
+            self.ca_messages.append(
+                SystemMessage(
+                    content=msg,
+                ),
+            )
 
     def set_user_name(self, user_name: str):
         self.user_name = user_name
@@ -109,36 +140,13 @@ class Conversation(ABC):
         self.data_input_tool = df
 
         if "progeny" in tool:
-            msg = (
-                "The user has provided information in the form of a table. "
-                "The rows refer to biological entities (patients, samples, "
-                "cell types, or the like), and the columns refer to pathways. "
-                "The values are pathway activities derived using the "
-                f"bioinformatics method progeny. Here are the data: {df}"
-            )
-            self.append_system_message(msg)
+            self.append_system_message(TOOL_MESSAGES["progeny"].format(df=df))
 
         elif "dorothea" in tool:
-            msg = (
-                "The user has provided information in the form of a table. "
-                "The rows refer to biological entities (patients, samples, "
-                "cell types, or the like), and the columns refer to "
-                "transcription factors. The values are transcription factor "
-                "activities derived using the bioinformatics method dorothea. "
-                f"Here are the data: {df}"
-            )
-            self.append_system_message(msg)
+            self.append_system_message(TOOL_MESSAGES["dorothea"].format(df=df))
 
         elif "gsea" in tool:
-            msg = (
-                "The user has provided information in the form of a table. "
-                "The first column refers to biological entities (samples, "
-                "cell types, or the like), and the individual columns refer "
-                "to the enrichment of individual gene sets, such as hallmarks, "
-                "derived using the bioinformatics method gsea. Here are the "
-                f"data: {df}"
-            )
-            self.append_system_message(msg)
+            self.append_system_message(TOOL_MESSAGES["gsea"].format(df=df))
 
     def query(self, text: str):
         self.append_user_message(text)
