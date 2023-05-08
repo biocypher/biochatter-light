@@ -26,7 +26,7 @@ HIDE_MENU_MOD_FOOTER = """
 #MainMenu {visibility: hidden;}
 footer {visibility: hidden;}
 footer:after {
-    content:'Made with Streamlit by Sebastian Lobentanzer, Copyright 2023, Heidelberg University';
+    content:'Made with Streamlit by Sebastian Lobentanzer, Copyright 2023, Heidelberg University Hospital';
     visibility: visible;
     display: block;
     height: 50px;
@@ -44,7 +44,6 @@ class ChatGSE:
 
         if "history" not in st.session_state:
             st.session_state.history = []
-            self._history_only("Assistant", "Welcome to ``ChatGSE``!")
 
     def _display_init(self):
         st.markdown(HIDE_MENU_MOD_FOOTER, unsafe_allow_html=True)

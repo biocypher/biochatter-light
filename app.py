@@ -18,18 +18,29 @@ st.set_page_config(
 )
 ss = st.session_state
 
+OPENAI_MODELS = [
+    "gpt-3.5-turbo",
+    "gpt-4",
+    "davinci",
+]
+
+DEV_FUNCTIONALITY = (
+    "This functionality is not available when using the community API key, as "
+    "it can involve many requests to the API."
+)
+
+OFFLINE_FUNCTIONALITY = (
+    "functionality is currently under development and not yet available in the "
+    "online version of ChatGSE. Please check back later or check the [GitHub "
+    "Repository](https://github.com/biocypher/ChatGSE) for running the app "
+    "locally."
+)
 
 # IMPORTS
 import os
 import datetime
 from chatgse._interface import ChatGSE
 from chatgse._stats import get_community_usage_cost
-
-OPENAI_MODELS = [
-    "gpt-3.5-turbo",
-    "gpt-4",
-    "davinci",
-]
 
 
 # HANDLERS
@@ -441,7 +452,7 @@ def main():
         exp_design_tab,
         prompts_tab,
         correct_tab,
-        vector_tab,
+        docsum_tab,
     ) = st.tabs(
         [
             "Gene Sets and Pathways",
@@ -449,13 +460,14 @@ def main():
             "Experimental Design",
             "Prompt Engineering",
             "Correcting Agent",
-            "Vector Database",
+            "Document Summarisation",
         ]
     )
 
     with chat_tab:
         # WELCOME MESSAGE AND CHAT HISTORY
         cg._display_init()
+        st.markdown("Welcome to ``ChatGSE``!")
         cg._display_history()
 
         # CHAT BOT LOGIC
@@ -503,10 +515,15 @@ def main():
                 cg._ask_for_data_input()
 
             elif ss.mode == "demo_tool":
+                st.write("(Here, we simulate the upload of a data file.)")
                 cg._get_data_input()
 
             elif ss.mode == "demo_manual":
                 cg._get_data_input_manual()
+                st.write(
+                    "(The next step will involve sending a basic query to the "
+                    "model. This may take a few seconds.)"
+                )
 
             elif ss.mode == "demo_chat":
                 with st.spinner("Thinking..."):
@@ -565,34 +582,88 @@ def main():
                 autofocus_area()
 
     with annot_tab:
-        st.markdown(
-            "`Assistant`: Cell type annotation functionality is currently "
-            "under development. Please check back later."
-        )
+        if ss.user == "community":
+            st.markdown(f"{DEV_FUNCTIONALITY}")
+        else:
+            st.markdown(
+                "A common repetitive task in bioinformatics is to annotate "
+                "single-cell datasets with cell type labels. This task is usually "
+                "performed by a human expert, who will look at the expression of "
+                "marker genes and assign a cell type label based on their "
+                "knowledge of the cell types present in the tissue of interest. "
+                "Large Language Models have been shown to be able to perform this "
+                "task with high accuracy, and can be used to automate cell type "
+                "annotation with minimal human input (see e.g. [this arXiv "
+                "preprint](https://www.biorxiv.org/content/10.1101/2023.04.16.537094v1))."
+            )
+            st.markdown(
+                f"`Assistant`: Cell type annotation {OFFLINE_FUNCTIONALITY}"
+            )
 
     with exp_design_tab:
         st.markdown(
-            "`Assistant`: Experimental design functionality is currently "
-            "under development. Please check back later."
+            "Experimental design is a crucial step in any biological experiment. "
+            "However, it can be a subtle and complex task, requiring a deep "
+            "understanding of the biological system under study as well as "
+            "statistical and computational expertise. Large Language Models "
+            "can potentially fill the gaps that exist in most research groups, "
+            "which traditionally focus on either the biological or the "
+            "statistical aspects of experimental design."
+        )
+        st.markdown(
+            f"`Assistant`: Experimental design functionality {OFFLINE_FUNCTIONALITY}"
         )
 
     with prompts_tab:
         st.markdown(
-            "`Assistant`: Prompt engineering functionality is currently "
-            "under development. Please check back later."
+            "The construction of prompts is a crucial step in the use of "
+            "Large Language Models. However, it can be a subtle and complex "
+            "task, often requiring empirical testing on prompt composition "
+            "due to the black-box nature of the models. We provide composable "
+            "prompts and prompt templates (which can include variables), as "
+            "well as save and load functionality for prompt sets to facilitate "
+            "testing, reproducibility, and sharing."
+        )
+        st.markdown(
+            f"`Assistant`: Prompt engineering functionality {OFFLINE_FUNCTIONALITY}"
         )
 
     with correct_tab:
         st.markdown(
-            "`Assistant`: Correction agent functionality is currently "
-            "under development. Please check back later."
+            "Large Language Models are very good at synthesising information "
+            "from their training set, and thus can be useful to explain the "
+            "biological context of a particular gene set or cell type. "
+            "However, they can sometimes be incorrect or misleading, and "
+            "have been known to occasionally hallucinate while being very "
+            "convinced of their answer. To ameliorate this issue, we include "
+            "a correcting agent that automatically checks the validity of the "
+            "primary model's statements, and corrects them if necessary."
+        )
+        st.markdown(
+            f"`Assistant`: Correction agent functionality {OFFLINE_FUNCTIONALITY}"
         )
 
-    with vector_tab:
-        st.markdown(
-            "`Assistant`: Vector database connection functionality is "
-            "currently under development. Please check back later."
-        )
+    with docsum_tab:
+        if ss.user == "community":
+            st.markdown(f"{DEV_FUNCTIONALITY}")
+        else:
+            st.markdown(
+                "While Large Language Models have access to vast amounts of "
+                "knowledge, this knowledge only includes what was present in "
+                "their training set, and thus excludes very current research "
+                "as well as research articles that are not open access. To "
+                "fill in the gaps of the model's knowledge, we include a "
+                "document summarisation approach that stores knowledge from "
+                "user-provided documents in a vector database, which can be "
+                "used to supplement the model prompt by retrieving the most "
+                "relevant contents of the provided documents. This process "
+                "builds on the unique functionality of vector databases to "
+                "perform similarity search on the embeddings of the documents' "
+                "contents."
+            )
+            st.markdown(
+                f"`Assistant`: Document summarisation functionality {OFFLINE_FUNCTIONALITY}"
+            )
 
 
 if __name__ == "__main__":
