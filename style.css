@@ -1,0 +1,8 @@
+
+div.stButton button {
+    height: 80px;
+}
+
+section[data-testid="stSidebar"] div.stButton button {
+    height: 60px;
+}
