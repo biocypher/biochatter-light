@@ -11,7 +11,7 @@ from langchain.llms import HuggingFaceHub
 
 from ._stats import get_stats
 
-SYSTEM_SETUP_MESSAGES = [
+PRIMARY_MODEL_PROMPTS = [
     "You are an assistant to a biomedical researcher.",
     "Your role is to contextualise the user's findings with biomedical "
     "background knowledge. If provided with a list, please give granular "
@@ -23,7 +23,7 @@ SYSTEM_SETUP_MESSAGES = [
     "question.",
 ]
 
-CORRECTIVE_SETUP_MESSAGES = [
+CORRECTING_AGENT_PROMPTS = [
     "You are a biomedical researcher.",
     "Your task is to check for factual correctness and consistency of the "
     "statements of another agent.",
@@ -32,7 +32,7 @@ CORRECTIVE_SETUP_MESSAGES = [
     "correct, please respond with just 'OK', and nothing else!",
 ]
 
-TOOL_MESSAGES = {
+TOOL_PROMPTS = {
     "progeny": (
         "The user has provided information in the form of a table. The rows "
         "refer to biological entities (patients, samples, cell types, or the "
@@ -78,25 +78,14 @@ class Conversation(ABC):
         self.messages = []
         self.ca_messages = []
 
-        if not ss.get("system_setup_messages"):
-            ss.system_setup_messages = SYSTEM_SETUP_MESSAGES
+        if not ss.get("primary_model_prompts"):
+            ss.primary_model_prompts = PRIMARY_MODEL_PROMPTS
 
-        for msg in ss.system_setup_messages:
-            self.messages.append(
-                SystemMessage(
-                    content=msg,
-                ),
-            )
+        if not ss.get("correcting_agent_prompts"):
+            ss.correcting_agent_prompts = CORRECTING_AGENT_PROMPTS
 
-        if not ss.get("corrective_setup_messages"):
-            ss.corrective_setup_messages = CORRECTIVE_SETUP_MESSAGES
-
-        for msg in ss.corrective_setup_messages:
-            self.ca_messages.append(
-                SystemMessage(
-                    content=msg,
-                ),
-            )
+        if not ss.get("tool_prompts"):
+            ss.tool_prompts = TOOL_PROMPTS
 
     def set_user_name(self, user_name: str):
         self.user_name = user_name
@@ -127,6 +116,23 @@ class Conversation(ABC):
         )
 
     def setup(self, context: str):
+        """
+        Set up the conversation with general prompts and a context.
+        """
+        for msg in ss.primary_model_prompts:
+            self.messages.append(
+                SystemMessage(
+                    content=msg,
+                ),
+            )
+
+        for msg in ss.correcting_agent_prompts:
+            self.ca_messages.append(
+                SystemMessage(
+                    content=msg,
+                ),
+            )
+
         self.context = context
         msg = f"The topic of the research is {context}."
         self.append_system_message(msg)
@@ -140,13 +146,15 @@ class Conversation(ABC):
         self.data_input_tool = df
 
         if "progeny" in tool:
-            self.append_system_message(TOOL_MESSAGES["progeny"].format(df=df))
+            self.append_system_message(ss.tool_prompts["progeny"].format(df=df))
 
         elif "dorothea" in tool:
-            self.append_system_message(TOOL_MESSAGES["dorothea"].format(df=df))
+            self.append_system_message(
+                ss.tool_prompts["dorothea"].format(df=df)
+            )
 
         elif "gsea" in tool:
-            self.append_system_message(TOOL_MESSAGES["gsea"].format(df=df))
+            self.append_system_message(ss.tool_prompts["gsea"].format(df=df))
 
     def query(self, text: str):
         self.append_user_message(text)

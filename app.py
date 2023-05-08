@@ -50,6 +50,11 @@ import os
 import datetime
 from chatgse._interface import ChatGSE
 from chatgse._stats import get_community_usage_cost
+from chatgse._llm_connect import (
+    PRIMARY_MODEL_PROMPTS,
+    CORRECTING_AGENT_PROMPTS,
+    TOOL_PROMPTS,
+)
 
 
 # HANDLERS
@@ -433,6 +438,98 @@ def spacer(n=2, line=False, next_n=0):
         st.write("")
 
 
+def show_primary_model_prompts():
+    if not ss.get("primary_model_prompts"):
+        ss.primary_model_prompts = PRIMARY_MODEL_PROMPTS
+
+    for num, msg in enumerate(ss.primary_model_prompts):
+        field, button = st.columns([4, 1])
+        with field:
+            ss.primary_model_prompts[num] = st.text_area(
+                label=str(num + 1),
+                value=msg,
+                label_visibility="collapsed",
+            )
+        with button:
+            st.button(
+                f"Remove prompt {num + 1}",
+                on_click=remove_prompt,
+                args=(ss.primary_model_prompts, num),
+                key=f"remove_prompt_{num}",
+                use_container_width=True,
+            )
+
+
+def show_correcting_agent_prompts():
+    if not ss.get("correcting_agent_prompts"):
+        ss.correcting_agent_prompts = CORRECTING_AGENT_PROMPTS
+
+    for num, msg in enumerate(ss.correcting_agent_prompts):
+        field, button = st.columns([4, 1])
+        with field:
+            ss.correcting_agent_prompts[num] = st.text_area(
+                label=str(num + 1),
+                value=msg,
+                label_visibility="collapsed",
+            )
+        with button:
+            st.button(
+                f"Remove prompt {num + 1}",
+                on_click=remove_prompt,
+                args=(ss.correcting_agent_prompts, num),
+                key=f"remove_prompt_{num}",
+                use_container_width=True,
+            )
+
+
+def show_tool_prompts():
+    if not ss.get("tool_prompts"):
+        ss.tool_prompts = TOOL_PROMPTS
+
+    for nam in list(ss.tool_prompts.keys()):
+        msg = ss.tool_prompts[nam]
+        label, field, fill = st.columns([3, 21, 6])
+        with label:
+            st.write("Name:")
+        with field:
+            nunam = st.text_input(
+                label="Name",
+                value=nam,
+                label_visibility="collapsed",
+            )
+        with fill:
+            st.write("")
+
+        area, button = st.columns([4, 1])
+        with area:
+            numsg = st.text_area(
+                label=nam,
+                value=msg,
+                label_visibility="collapsed",
+            )
+        with button:
+            st.button(
+                f"Remove prompt {nam}",
+                on_click=remove_tool_prompt,
+                args=(nam,),
+                key=f"remove_prompt_{nam}",
+                use_container_width=True,
+            )
+
+        if nunam != nam:
+            ss.tool_prompts[nunam] = ss.tool_prompts.pop(nam)
+        elif numsg != msg:
+            ss.tool_prompts[nunam] = numsg
+
+
+def remove_prompt(prompt_list, num):
+    del prompt_list[num]
+
+
+def remove_tool_prompt(nam):
+    ss.tool_prompts.pop(nam)
+
+
 def main():
     # NEW SESSION
     if not ss.get("mode"):
@@ -644,9 +741,33 @@ def main():
             "well as save and load functionality for prompt sets to facilitate "
             "testing, reproducibility, and sharing."
         )
-        st.markdown(
-            f"`Assistant`: Prompt engineering functionality {OFFLINE_FUNCTIONALITY}"
-        )
+
+        if not ss.mode in [
+            "getting_key",
+            "using_community_key",
+            "getting_name",
+            "getting_context",
+        ]:
+            st.markdown(
+                "`Assistant`: Prompt tuning is only available before "
+                "initialising the conversation, that is, before giving a "
+                "context. Please reset the app to tune the prompt set."
+            )
+
+        else:
+            ss.prompts = st.selectbox(
+                "Select a prompt set",
+                ("Primary Model", "Correcting Agent", "Tools"),
+            )
+
+            if ss.prompts == "Primary Model":
+                show_primary_model_prompts()
+
+            elif ss.prompts == "Correcting Agent":
+                show_correcting_agent_prompts()
+
+            elif ss.prompts == "Tools":
+                show_tool_prompts()
 
     with correct_tab:
         st.markdown(
