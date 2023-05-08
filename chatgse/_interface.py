@@ -23,20 +23,6 @@ PLEASE_ENTER_QUESTIONS = (
     "more questions."
 )
 KNOWN_TOOLS = ["progeny", "dorothea", "gsea"]
-HIDE_MENU_MOD_FOOTER = """
-<style>
-#MainMenu {visibility: hidden;}
-footer {visibility: hidden;}
-footer:after {
-    content:'Made with Streamlit by Sebastian Lobentanzer, Copyright 2023, Heidelberg University Hospital';
-    visibility: visible;
-    display: block;
-    height: 50px;
-    clear: both;
-    color: darkgrey;
-    }
-</style>
-"""
 
 
 class ChatGSE:
@@ -46,9 +32,6 @@ class ChatGSE:
 
         if "history" not in ss:
             ss.history = []
-
-    def _display_init(self):
-        st.markdown(HIDE_MENU_MOD_FOOTER, unsafe_allow_html=True)
 
     def _display_history(self):
         for item in ss.history:

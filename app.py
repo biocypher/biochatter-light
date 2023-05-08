@@ -475,7 +475,6 @@ def main():
 
     with chat_tab:
         # WELCOME MESSAGE AND CHAT HISTORY
-        cg._display_init()
         st.markdown("Welcome to ``ChatGSE``!")
         cg._display_history()
 

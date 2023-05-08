@@ -1,3 +1,13 @@
+#MainMenu {visibility: hidden;}
+footer {visibility: hidden;}
+footer:after {
+    content:'Made with Streamlit by Sebastian Lobentanzer, Copyright 2023, Heidelberg University Hospital';
+    visibility: visible;
+    display: block;
+    height: 50px;
+    clear: both;
+    color: darkgrey;
+    }
 
 div.stButton button {
     height: 80px;
