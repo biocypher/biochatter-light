@@ -435,8 +435,22 @@ def main():
             "total_tokens": 0,
         }
 
-    chat_tab, annot_tab, prompts_tab = st.tabs(
-        ["Gene Sets and Pathways", "Cell Type Annotation", "Prompt Engineering"]
+    (
+        chat_tab,
+        annot_tab,
+        exp_design_tab,
+        prompts_tab,
+        correct_tab,
+        vector_tab,
+    ) = st.tabs(
+        [
+            "Gene Sets and Pathways",
+            "Cell Type Annotation",
+            "Experimental Design",
+            "Prompt Engineering",
+            "Correcting Agent",
+            "Vector Database",
+        ]
     )
 
     with chat_tab:
@@ -556,10 +570,28 @@ def main():
             "under development. Please check back later."
         )
 
+    with exp_design_tab:
+        st.markdown(
+            "`Assistant`: Experimental design functionality is currently "
+            "under development. Please check back later."
+        )
+
     with prompts_tab:
         st.markdown(
             "`Assistant`: Prompt engineering functionality is currently "
             "under development. Please check back later."
+        )
+
+    with correct_tab:
+        st.markdown(
+            "`Assistant`: Correction agent functionality is currently "
+            "under development. Please check back later."
+        )
+
+    with vector_tab:
+        st.markdown(
+            "`Assistant`: Vector database connection functionality is "
+            "currently under development. Please check back later."
         )
 
 
