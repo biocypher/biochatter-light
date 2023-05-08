@@ -110,12 +110,21 @@ def chat_box():
 
 
 def openai_key_chat_box():
-    st.text_input(
-        "OpenAI API Key:",
-        on_change=on_submit,
-        key="widget",
-        placeholder="(sk-...)",
-    )
+    demo, community, field = st.columns([1, 1, 3])
+
+    with demo:
+        st.button("Show A Demonstration", on_click=demo_mode)
+
+    with community:
+        st.button("Use The Community Key", on_click=use_community_key)
+
+    with field:
+        st.text_input(
+            "OpenAI API Key:",
+            on_change=on_submit,
+            key="widget",
+            placeholder="(sk-...)",
+        )
 
 
 def huggingface_key_chat_box():

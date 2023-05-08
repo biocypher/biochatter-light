@@ -6,6 +6,7 @@ import streamlit as st
 from chatgse._llm_connect import GptConversation, BloomConversation
 
 
+API_KEY_REQUIRED = "The currently selected model requires an API key."
 PLEASE_ENTER_QUESTIONS = (
     "The model will be with you shortly. "
     "Please enter your questions below. "
@@ -92,30 +93,32 @@ class ChatGSE:
 
         if not key:
             if st.session_state.primary_model == "gpt-3.5-turbo":
-                msg = """
-                    Please enter your [OpenAI API
-                    key](https://platform.openai.com/account/api-keys). You can
-                    get one by signing up [here](https://platform.openai.com/).
+                msg = f"""
+                    {API_KEY_REQUIRED} You can use your own [OpenAI API
+                    key](https://platform.openai.com/account/api-keys), or try 
+                    the platform using our community key by pressing the
+                    "Community Key" button. You can get a key by signing up
+                    [here](https://platform.openai.com/) and enabling billing.
                     We will not store your key, and only use it for the requests
                     made in this session. If you run the app locally, you can
                     prevent this message by setting the environment variable
-                    `OPENAI_API_KEY` to your key. If there are community credits
-                    available (see in the sidebar), you can press the
-                    corresponding button to use them, but please be considerate
-                    of other users and only use the community credits if you
-                    need to.
+                    `OPENAI_API_KEY` to your key. If you use community credits,
+                    please be considerate of other users; if you use the
+                    platform extensively, please use your own key. Using
+                    GPT-3.5-turbo, a full conversation (4000 tokens) costs about
+                    0.01 USD.
                     """
                 self._history_only("Assistant", msg)
                 st.session_state.show_community_select = True
             elif st.session_state.primary_model == "bigscience/bloom":
-                msg = """
-                    Please enter your [HuggingFace Hub API
-                    key](https://huggingface.co/settings/token). You can get one by
-                    signing up [here](https://huggingface.co/). We will not store
-                    your key, and only use it for the requests made in this session.
-                    If you run the app locally, you can prevent this message by
-                    setting the environment variable `HUGGINGFACEHUB_API_TOKEN` to
-                    your key.
+                msg = f"""
+                    {API_KEY_REQUIRED} Please enter your [HuggingFace Hub API
+                    key](https://huggingface.co/settings/token). You can get one
+                    by signing up [here](https://huggingface.co/). We will not
+                    store your key, and only use it for the requests made in
+                    this session.  If you run the app locally, you can prevent
+                    this message by setting the environment variable
+                    `HUGGINGFACEHUB_API_TOKEN` to your key.
                     """
                 self._history_only("Assistant", msg)
 
