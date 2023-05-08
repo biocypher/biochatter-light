@@ -5,6 +5,8 @@ import pandas as pd
 import streamlit as st
 from chatgse._llm_connect import GptConversation, BloomConversation
 
+ss = st.session_state
+
 
 API_KEY_REQUIRED = "The currently selected model requires an API key."
 DEMO_MODE = (
@@ -39,17 +41,17 @@ footer:after {
 
 class ChatGSE:
     def __init__(self):
-        if "input" not in st.session_state:
-            st.session_state.input = ""
+        if "input" not in ss:
+            ss.input = ""
 
-        if "history" not in st.session_state:
-            st.session_state.history = []
+        if "history" not in ss:
+            ss.history = []
 
     def _display_init(self):
         st.markdown(HIDE_MENU_MOD_FOOTER, unsafe_allow_html=True)
 
     def _display_history(self):
-        for item in st.session_state.history:
+        for item in ss.history:
             for role, msg in item.items():
                 if role == "tool":
                     st.markdown(
@@ -66,12 +68,12 @@ class ChatGSE:
         return f"`{role}`: {msg}"
 
     def _history_only(self, role: str, msg: str):
-        st.session_state.history.append({role: msg})
+        ss.history.append({role: msg})
 
     def _write_and_history(self, role: str, msg: str):
         logger.info(f"Writing message from {role}: {msg}")
         st.markdown(self._render_msg(role, msg))
-        st.session_state.history.append({role: msg})
+        ss.history.append({role: msg})
         with open("chatgse-logs.txt", "a") as f:
             f.write(f"{role}: {msg}\n")
 
@@ -79,24 +81,24 @@ class ChatGSE:
         """
         Set the LLM model to use for the conversation.
         """
-        if st.session_state.get("conversation"):
+        if ss.get("conversation"):
             logger.warning("Conversation already exists, overwriting.")
 
         if model_name == "gpt-3.5-turbo":
-            st.session_state.conversation = GptConversation()
+            ss.conversation = GptConversation()
         elif model_name == "bigscience/bloom":
-            st.session_state.conversation = BloomConversation()
+            ss.conversation = BloomConversation()
 
     def _check_for_api_key(self, write: bool = True):
-        if st.session_state.primary_model == "gpt-3.5-turbo":
-            key = st.session_state.get("openai_api_key")
-            st.session_state.token_limit = 4097
-        elif st.session_state.primary_model == "bigscience/bloom":
-            key = st.session_state.get("huggingfacehub_api_key")
-            st.session_state.token_limit = 1000
+        if ss.primary_model == "gpt-3.5-turbo":
+            key = ss.get("openai_api_key")
+            ss.token_limit = 4097
+        elif ss.primary_model == "bigscience/bloom":
+            key = ss.get("huggingfacehub_api_key")
+            ss.token_limit = 1000
 
         if not key:
-            if st.session_state.primary_model == "gpt-3.5-turbo":
+            if ss.primary_model == "gpt-3.5-turbo":
                 msg = f"""
                     {API_KEY_REQUIRED} You can use your own [OpenAI API
                     key](https://platform.openai.com/account/api-keys), or try 
@@ -111,8 +113,8 @@ class ChatGSE:
                     0.01 USD. {DEMO_MODE}
                     """
                 self._history_only("Assistant", msg)
-                st.session_state.show_community_select = True
-            elif st.session_state.primary_model == "bigscience/bloom":
+                ss.show_community_select = True
+            elif ss.primary_model == "bigscience/bloom":
                 msg = f"""
                     {API_KEY_REQUIRED} Please enter your [HuggingFace Hub API
                     key](https://huggingface.co/settings/token). You can get one
@@ -137,8 +139,8 @@ class ChatGSE:
 
             return "getting_key"
 
-        if not st.session_state.get("asked_for_name"):
-            st.session_state.asked_for_name = True
+        if not ss.get("asked_for_name"):
+            ss.asked_for_name = True
             msg = """
                 I am the model's assistant. For more explanation, please see the 
                 :red[About] text in the sidebar. We will now be going through some
@@ -150,14 +152,14 @@ class ChatGSE:
             else:
                 self._history_only("Assistant", msg)
 
-        st.session_state.show_community_select = False
+        ss.show_community_select = False
 
         return "getting_name"
 
     def _try_api_key(self, key: str = None):
-        success = st.session_state.conversation.set_api_key(
+        success = ss.conversation.set_api_key(
             key,
-            st.session_state.user,
+            ss.user,
         )
         if not success:
             return False
@@ -174,8 +176,8 @@ class ChatGSE:
 
             return "getting_key"
 
-        if not st.session_state.get("asked_for_name"):
-            st.session_state.asked_for_name = True
+        if not ss.get("asked_for_name"):
+            ss.asked_for_name = True
             msg = """
                 Thank you! I am the model's assistant. For more explanation, please
                 see the :red[About] text in the sidebar. We will now be going
@@ -184,7 +186,7 @@ class ChatGSE:
                 """
             self._write_and_history("Assistant", msg)
 
-        st.session_state.show_community_select = False
+        ss.show_community_select = False
 
         return "getting_name"
 
@@ -201,8 +203,8 @@ class ChatGSE:
 
     def _get_user_name(self):
         logger.info("Getting user name.")
-        name = st.session_state.input
-        st.session_state.conversation.set_user_name(name)
+        name = ss.input
+        ss.conversation.set_user_name(name)
         self._write_and_history(
             name,
             name,
@@ -219,15 +221,15 @@ class ChatGSE:
     def _get_context(self):
         logger.info("Getting context.")
         self._write_and_history(
-            st.session_state.conversation.user_name,
-            st.session_state.input,
+            ss.conversation.user_name,
+            ss.input,
         )
-        st.session_state.conversation.setup(st.session_state.input)
+        ss.conversation.setup(ss.input)
 
     def _ask_for_data_input(self):
-        if not st.session_state.tool_data:
+        if not ss.tool_data:
             msg1 = f"""
-                You have selected `{st.session_state.conversation.context}` as
+                You have selected `{ss.conversation.context}` as
                 your context. Do you want to provide input files from analytic
                 methods? They will not be stored or analysed beyond your
                 queries. If so, please provide the files by uploading them in
@@ -237,7 +239,7 @@ class ChatGSE:
                 for name in KNOWN_TOOLS])}. Please keep in mind that all data
                 you provide will count towards the token usage of your
                 conversation prompt. The limit of the currently active model is
-                {st.session_state.token_limit}.
+                {ss.token_limit}.
                 """
             self._write_and_history("Assistant", msg1)
             msg2 = """
@@ -249,10 +251,10 @@ class ChatGSE:
             self._write_and_history("Assistant", msg2)
             return "getting_data_file_input"
 
-        file_names = [f"`{f.name}`" for f in st.session_state.tool_data]
+        file_names = [f"`{f.name}`" for f in ss.tool_data]
 
         msg1 = f"""
-            You have selected `{st.session_state.conversation.context}` as
+            You have selected `{ss.conversation.context}` as
             your context. I see you have already uploaded some data files:
             {', '.join(file_names)}. If you wish to add
             more, please do so now. Once you are done, please press 'Yes'.
@@ -264,9 +266,7 @@ class ChatGSE:
     def _get_data_input(self):
         logger.info("--- Biomedical data input ---")
 
-        if not st.session_state.get(
-            "tool_data"
-        ) and not "demo" in st.session_state.get("mode"):
+        if not ss.get("tool_data") and not "demo" in ss.get("mode"):
             msg = """
                 No files detected. Please upload your files in the sidebar, or
                 press 'No' to continue without providing any files.
@@ -274,28 +274,28 @@ class ChatGSE:
             self._write_and_history("Assistant", msg)
             return "getting_data_file_input"
 
-        if not st.session_state.get("started_tool_input"):
-            st.session_state.started_tool_input = True
+        if not ss.get("started_tool_input"):
+            ss.started_tool_input = True
 
             logger.info("Tool data provided.")
 
             # mock for demo mode
-            if "demo" in st.session_state.get("mode"):
-                st.session_state.tool_list = st.session_state.demo_tool_data
+            if "demo" in ss.get("mode"):
+                ss.tool_list = ss.demo_tool_data
             else:
-                st.session_state.tool_list = st.session_state.tool_data
+                ss.tool_list = ss.tool_data
 
             msg = f"""
                 Thank you! I have read the following 
-                {len(st.session_state.tool_list)} files:
-                {', '.join([f"`{f.name}`" for f in st.session_state.tool_list])}.
+                {len(ss.tool_list)} files:
+                {', '.join([f"`{f.name}`" for f in ss.tool_list])}.
                 """
             self._write_and_history("Assistant", msg)
 
-        if not st.session_state.get("read_tools"):
-            st.session_state.read_tools = []
+        if not ss.get("read_tools"):
+            ss.read_tools = []
 
-        if len(st.session_state.read_tools) == len(st.session_state.tool_list):
+        if len(ss.read_tools) == len(ss.tool_list):
             msg = f"""
                 I have read all the files you provided.
                 {PLEASE_ENTER_QUESTIONS}
@@ -303,16 +303,16 @@ class ChatGSE:
             self._write_and_history("Assistant", msg)
             return "chat"
 
-        for fl in st.session_state.tool_list:
+        for fl in ss.tool_list:
             tool = fl.name.split(".")[0].lower()
-            if tool in st.session_state.read_tools:
+            if tool in ss.read_tools:
                 continue
 
             if "tsv" in fl.name:
                 df = pd.read_csv(fl, sep="\t")
             else:
                 df = pd.read_csv(fl)
-            st.session_state.read_tools.append(tool)
+            ss.read_tools.append(tool)
 
             self._write_and_history(
                 "Assistant",
@@ -327,7 +327,7 @@ class ChatGSE:
                 """
             )
 
-            st.session_state.history.append({"tool": df.to_markdown()})
+            ss.history.append({"tool": df.to_markdown()})
             logger.info("<Tool data displayed.>")
 
             if not any([tool in fl.name for tool in KNOWN_TOOLS]):
@@ -342,9 +342,7 @@ class ChatGSE:
                 )
                 return "getting_data_file_description"
 
-            st.session_state.conversation.setup_data_input_tool(
-                df.to_json(), tool
-            )
+            ss.conversation.setup_data_input_tool(df.to_json(), tool)
 
             self._write_and_history(
                 "Assistant",
@@ -360,11 +358,11 @@ class ChatGSE:
     def _get_data_file_description(self):
         logger.info("Asking for additional data input info.")
 
-        response = str(st.session_state.input)
-        st.session_state.input = ""
+        response = str(ss.input)
+        ss.input = ""
 
         self._write_and_history(
-            st.session_state.conversation.user_name,
+            ss.conversation.user_name,
             response,
         )
 
@@ -378,7 +376,7 @@ class ChatGSE:
             return self._get_data_input()
 
         logger.info("Additional data input provided.")
-        st.session_state.conversation.append_user_message(response)
+        ss.conversation.append_user_message(response)
         data_input_response = "Thank you for the input!"
         self._write_and_history("Assistant", data_input_response)
         return self._get_data_input()
@@ -399,13 +397,11 @@ class ChatGSE:
     def _get_data_input_manual(self):
         logger.info("No tool info provided. Getting manual data input.")
 
-        st.session_state.conversation.setup_data_input_manual(
-            st.session_state.input
-        )
+        ss.conversation.setup_data_input_manual(ss.input)
 
         self._write_and_history(
-            st.session_state.conversation.user_name,
-            st.session_state.input,
+            ss.conversation.user_name,
+            ss.input,
         )
 
         data_input_response = (
@@ -418,15 +414,13 @@ class ChatGSE:
     def _get_response(self):
         logger.info("Getting response from LLM.")
 
-        response, token_usage, correction = st.session_state.conversation.query(
-            st.session_state.input
-        )
+        response, token_usage, correction = ss.conversation.query(ss.input)
 
         if not token_usage:
             # indicates error
             msg = "The model appears to have encountered an error. " + response
             self._write_and_history("Assistant", msg)
-            st.session_state.error = True
+            ss.error = True
 
             token_usage = {
                 "prompt_tokens": 0,
@@ -436,9 +430,7 @@ class ChatGSE:
 
             return response, token_usage
 
-        self._write_and_history(
-            st.session_state.conversation.user_name, st.session_state.input
-        )
+        self._write_and_history(ss.conversation.user_name, ss.input)
 
         if correction:
             self._write_and_history("ChatGSE", response)
