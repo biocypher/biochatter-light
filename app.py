@@ -449,6 +449,7 @@ def show_primary_model_prompts():
                 label=str(num + 1),
                 value=msg,
                 label_visibility="collapsed",
+                placeholder="Enter your prompt here.",
             )
         with button:
             st.button(
@@ -458,6 +459,12 @@ def show_primary_model_prompts():
                 key=f"remove_prompt_{num}",
                 use_container_width=True,
             )
+
+    st.button(
+        "Add New Primary Model Prompt",
+        on_click=add_prompt,
+        args=(ss.primary_model_prompts,),
+    )
 
 
 def show_correcting_agent_prompts():
@@ -471,6 +478,7 @@ def show_correcting_agent_prompts():
                 label=str(num + 1),
                 value=msg,
                 label_visibility="collapsed",
+                placeholder="Enter your prompt here.",
             )
         with button:
             st.button(
@@ -480,6 +488,12 @@ def show_correcting_agent_prompts():
                 key=f"remove_prompt_{num}",
                 use_container_width=True,
             )
+
+    st.button(
+        "Add New Correcting Agent Prompt",
+        on_click=add_prompt,
+        args=(ss.correcting_agent_prompts,),
+    )
 
 
 def show_tool_prompts():
@@ -496,6 +510,7 @@ def show_tool_prompts():
                 label="Name",
                 value=nam,
                 label_visibility="collapsed",
+                placeholder="Enter a name for your prompt.",
             )
         with fill:
             st.write("")
@@ -506,6 +521,7 @@ def show_tool_prompts():
                 label=nam,
                 value=msg,
                 label_visibility="collapsed",
+                placeholder="Enter your prompt here.",
             )
         with button:
             st.button(
@@ -521,9 +537,22 @@ def show_tool_prompts():
         elif numsg != msg:
             ss.tool_prompts[nunam] = numsg
 
+    st.button(
+        "Add New Tool Prompt",
+        on_click=add_tool_prompt,
+    )
+
+
+def add_prompt(prompt_list):
+    prompt_list.append("")
+
 
 def remove_prompt(prompt_list, num):
     del prompt_list[num]
+
+
+def add_tool_prompt():
+    ss.tool_prompts[""] = ""
 
 
 def remove_tool_prompt(nam):
