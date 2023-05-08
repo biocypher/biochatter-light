@@ -7,6 +7,11 @@ from chatgse._llm_connect import GptConversation, BloomConversation
 
 
 API_KEY_REQUIRED = "The currently selected model requires an API key."
+DEMO_MODE = (
+    "You can also try a demonstration setup with toy data by pressing the "
+    "button below. After guiding you throught the initial steps, this will "
+    "also take you to a functional chat using the community key."
+)
 PLEASE_ENTER_QUESTIONS = (
     "The model will be with you shortly. "
     "Please enter your questions below. "
@@ -100,13 +105,11 @@ class ChatGSE:
                     "Community Key" button. You can get a key by signing up
                     [here](https://platform.openai.com/) and enabling billing.
                     We will not store your key, and only use it for the requests
-                    made in this session. If you run the app locally, you can
-                    prevent this message by setting the environment variable
-                    `OPENAI_API_KEY` to your key. If you use community credits,
+                    made in this session. If you use community credits,
                     please be considerate of other users; if you use the
                     platform extensively, please use your own key. Using
                     GPT-3.5-turbo, a full conversation (4000 tokens) costs about
-                    0.01 USD.
+                    0.01 USD. {DEMO_MODE}
                     """
                 self._history_only("Assistant", msg)
                 st.session_state.show_community_select = True
@@ -116,7 +119,7 @@ class ChatGSE:
                     key](https://huggingface.co/settings/token). You can get one
                     by signing up [here](https://huggingface.co/). We will not
                     store your key, and only use it for the requests made in
-                    this session.  If you run the app locally, you can prevent
+                    this session. If you run the app locally, you can prevent
                     this message by setting the environment variable
                     `HUGGINGFACEHUB_API_TOKEN` to your key.
                     """
