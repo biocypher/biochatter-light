@@ -143,7 +143,7 @@ def openai_key_chat_box():
             "OpenAI API Key:",
             on_change=on_submit,
             key="widget",
-            placeholder="(sk-...)",
+            placeholder="(sk-...) Press [Enter] to submit.",
         )
 
 
