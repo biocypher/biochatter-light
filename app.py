@@ -562,9 +562,6 @@ def remove_tool_prompt(nam):
 def main():
     # NEW SESSION
     if not ss.get("mode"):
-        with open("chatgse-logs.txt", "a") as f:
-            f.write("--- NEW SESSION ---\n")
-
         ss.user = "default"
 
     # SETUP

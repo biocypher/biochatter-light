@@ -73,8 +73,6 @@ class ChatGSE:
         logger.info(f"Writing message from {role}: {msg}")
         st.markdown(self._render_msg(role, msg))
         ss.history.append({role: msg})
-        with open("chatgse-logs.txt", "a") as f:
-            f.write(f"{role}: {msg}\n")
 
     def set_model(self, model_name: str):
         """
