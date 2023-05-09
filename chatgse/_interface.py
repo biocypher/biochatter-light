@@ -87,6 +87,17 @@ class ChatGSE:
             ss.conversation = BloomConversation()
 
     def _check_for_api_key(self, write: bool = True):
+        """
+        Upon app start, check for the validity of any API key in the session
+        state. If there is none, or the given is invalid, ask again.
+
+        Args:
+            write: Whether to write the message or only append it to the
+            history (for app logic reasons).
+
+        Returns:
+            The next state to go to (either "getting_key" or "getting_name")
+        """
         if ss.primary_model == "gpt-3.5-turbo":
             key = ss.get("openai_api_key")
             ss.token_limit = 4097
