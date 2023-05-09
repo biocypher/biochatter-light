@@ -120,18 +120,20 @@ class Conversation(ABC):
         Set up the conversation with general prompts and a context.
         """
         for msg in ss.primary_model_prompts:
-            self.messages.append(
-                SystemMessage(
-                    content=msg,
-                ),
-            )
+            if msg:
+                self.messages.append(
+                    SystemMessage(
+                        content=msg,
+                    ),
+                )
 
         for msg in ss.correcting_agent_prompts:
-            self.ca_messages.append(
-                SystemMessage(
-                    content=msg,
-                ),
-            )
+            if msg:
+                self.ca_messages.append(
+                    SystemMessage(
+                        content=msg,
+                    ),
+                )
 
         self.context = context
         msg = f"The topic of the research is {context}."
