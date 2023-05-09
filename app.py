@@ -616,17 +616,17 @@ def main():
 
     (
         chat_tab,
+        prompts_tab,
         annot_tab,
         exp_design_tab,
-        prompts_tab,
         correct_tab,
         docsum_tab,
     ) = st.tabs(
         [
             "Gene Sets and Pathways",
+            "Prompt Engineering",
             "Cell Type Annotation",
             "Experimental Design",
-            "Prompt Engineering",
             "Correcting Agent",
             "Document Summarisation",
         ]
