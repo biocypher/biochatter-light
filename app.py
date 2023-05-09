@@ -585,8 +585,11 @@ def remove_tool_prompt(nam):
     ss.tool_prompts.pop(nam)
 
 
-def prompt_save_load():
-    save, load = st.columns(2)
+def prompt_save_load_reset():
+    st.write("Save-load functionality coming soon.")
+    return
+
+    save, load, reset = st.columns(3)
     with save:
         prompt_save_button()
     with load:
@@ -599,6 +602,19 @@ def prompt_save_load():
         )
         if uploaded_file:
             load_prompt_set(uploaded_file)
+    with reset:
+        st.button(
+            "Reset to Default",
+            on_click=reset_prompt_set,
+            use_container_width=True,
+        )
+
+
+def reset_prompt_set():
+    ss.primary_model_prompts = PRIMARY_MODEL_PROMPTS
+    ss.correcting_agent_prompts = CORRECTING_AGENT_PROMPTS
+    ss.tool_prompts = TOOL_PROMPTS
+    st.experimental_rerun()
 
 
 def prompt_save_button():
@@ -866,7 +882,7 @@ def main():
             prompt_save_button()
 
         else:
-            prompt_save_load()
+            prompt_save_load_reset()
             ss.prompts = st.selectbox(
                 "Select a prompt set",
                 ("Primary Model", "Correcting Agent", "Tools"),
