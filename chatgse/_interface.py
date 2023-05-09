@@ -11,7 +11,7 @@ ss = st.session_state
 API_KEY_REQUIRED = "The currently selected model requires an API key."
 DEMO_MODE = (
     "You can also try a `Demonstration` setup with toy data by pressing the "
-    "first button below. After guiding you throught the initial steps, this "
+    "first button below. After guiding you through the initial steps, this "
     "will also take you to a functional chat using the community key."
 )
 API_KEY_SUCCESS = (
