@@ -5,3 +5,4 @@ __pycache__
 chatgse-logs.txt
 .DS_Store
 input/*
+env.txt
