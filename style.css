@@ -13,6 +13,10 @@ div.stButton button {
     height: 80px;
 }
 
+div.stDownloadButton button {
+    height: 78px;
+}
+
 section[data-testid="stSidebar"] div.stButton button {
     height: 60px;
 }

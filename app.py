@@ -3,6 +3,7 @@ app_name = "chatgse"
 __version__ = "0.2.13"
 
 # BOILERPLATE
+import json
 import streamlit as st
 import streamlit.components.v1 as components
 from streamlit.runtime.uploaded_file_manager import (
@@ -584,6 +585,29 @@ def remove_tool_prompt(nam):
     ss.tool_prompts.pop(nam)
 
 
+def prompt_save_load():
+    save, load = st.columns(2)
+    with save:
+        st.download_button(
+            "Save Full Prompt Set (JSON)",
+            data=json.dumps(""),
+            use_container_width=True,
+        )
+    with load:
+        st.file_uploader(
+            "Load",
+            type="json",
+            label_visibility="collapsed",
+            accept_multiple_files=False,
+            key="load_prompt_set",
+            on_change=load_prompt_set,
+        )
+
+
+def load_prompt_set(file):
+    pass
+
+
 def main():
     # NEW SESSION
     if not ss.get("mode"):
@@ -792,8 +816,8 @@ def main():
             "task, often requiring empirical testing on prompt composition "
             "due to the black-box nature of the models. We provide composable "
             "prompts and prompt templates (which can include variables), as "
-            "well as save and load functionality for prompt sets to facilitate "
-            "testing, reproducibility, and sharing."
+            "well as save and load functionality for full prompt sets to "
+            "facilitate testing, reproducibility, and sharing."
         )
 
         if not ss.mode in [
@@ -809,6 +833,7 @@ def main():
             )
 
         else:
+            prompt_save_load()
             ss.prompts = st.selectbox(
                 "Select a prompt set",
                 ("Primary Model", "Correcting Agent", "Tools"),
