@@ -439,6 +439,12 @@ def spacer(n=2, line=False, next_n=0):
 
 
 def show_primary_model_prompts():
+    st.markdown(
+        "`Assistant`: Here you can edit the prompts used to set up the primary "
+        "LLM. You can modify or remove the existing prompts, as well as add new "
+        "ones. They will be used in the order they are listed in here."
+    )
+
     if not ss.get("primary_model_prompts"):
         ss.primary_model_prompts = PRIMARY_MODEL_PROMPTS
 
@@ -468,6 +474,12 @@ def show_primary_model_prompts():
 
 
 def show_correcting_agent_prompts():
+    st.markdown(
+        "`Assistant`: Here you can edit the prompts used to set up the "
+        "correcting agent. You can modify or remove the existing prompts, as "
+        "well as add new ones. They will be used in the order they are listed "
+        "in here."
+    )
     if not ss.get("correcting_agent_prompts"):
         ss.correcting_agent_prompts = CORRECTING_AGENT_PROMPTS
 
@@ -497,6 +509,18 @@ def show_correcting_agent_prompts():
 
 
 def show_tool_prompts():
+    st.markdown(
+        "`Assistant`: Here you can edit the tool-specific prompts given to the "
+        "primary LLM. You can modify the names as well as the prompts "
+        "themselves. The names are what is used to automatically select the "
+        "prompt based on the filename of the uploaded file (the name of the "
+        "prompt should be a substring of the filename). You can also add new "
+        "prompts here. Please note that the order of the prompts is neither "
+        "relevant nor preserved. Also note that the `{df}` placeholder is used "
+        "to insert the uploaded data into the prompt, and thus should always be "
+        "included."
+    )
+
     if not ss.get("tool_prompts"):
         ss.tool_prompts = TOOL_PROMPTS
 
@@ -525,7 +549,7 @@ def show_tool_prompts():
             )
         with button:
             st.button(
-                f"Remove prompt {nam}",
+                f"Remove prompt `{nam}`",
                 on_click=remove_tool_prompt,
                 args=(nam,),
                 key=f"remove_prompt_{nam}",
@@ -534,6 +558,7 @@ def show_tool_prompts():
 
         if nunam != nam:
             ss.tool_prompts[nunam] = ss.tool_prompts.pop(nam)
+            st.experimental_rerun()
         elif numsg != msg:
             ss.tool_prompts[nunam] = numsg
 
@@ -609,7 +634,10 @@ def main():
 
     with chat_tab:
         # WELCOME MESSAGE AND CHAT HISTORY
-        st.markdown("Welcome to ``ChatGSE``!")
+        st.markdown(
+            "Welcome to ``ChatGSE``! "
+            ":violet[If you are on a small screen, you may need to shift-scroll to the right to see all tabs. -->]"
+        )
         cg._display_history()
 
         # CHAT BOT LOGIC
