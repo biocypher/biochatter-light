@@ -120,7 +120,7 @@ class ChatGSE:
                     "Using GPT-3.5-turbo, a full conversation (4000 tokens) "
                     f"costs about 0.01 USD. {DEMO_MODE}"
                 )
-                self._history_only("Assistant", msg)
+                self._history_only("📎 Assistant", msg)
                 ss.show_community_select = True
             elif ss.primary_model == "bigscience/bloom":
                 msg = (
@@ -133,7 +133,7 @@ class ChatGSE:
                     "this message by setting the environment variable "
                     "`HUGGINGFACEHUB_API_TOKEN` to your key."
                 )
-                self._history_only("Assistant", msg)
+                self._history_only("📎 Assistant", msg)
 
             return "getting_key"
 
@@ -144,7 +144,7 @@ class ChatGSE:
                 "The API key in your environment is not valid. Please enter a "
                 "valid key."
             )
-            self._history_only("Assistant", msg)
+            self._history_only("📎 Assistant", msg)
 
             return "getting_key"
 
@@ -152,9 +152,9 @@ class ChatGSE:
             ss.asked_for_name = True
             msg = f"{API_KEY_SUCCESS}"
             if write:
-                self._write_and_history("Assistant", msg)
+                self._write_and_history("📎 Assistant", msg)
             else:
-                self._history_only("Assistant", msg)
+                self._history_only("📎 Assistant", msg)
 
         ss.show_community_select = False
 
@@ -177,14 +177,14 @@ class ChatGSE:
                 "The API key you entered is not valid. Please enter a valid "
                 "key."
             )
-            self._write_and_history("Assistant", msg)
+            self._write_and_history("📎 Assistant", msg)
 
             return "getting_key"
 
         if not ss.get("asked_for_name"):
             ss.asked_for_name = True
             msg = f"{API_KEY_SUCCESS}"
-            self._write_and_history("Assistant", msg)
+            self._write_and_history("📎 Assistant", msg)
 
         ss.show_community_select = False
 
@@ -192,7 +192,7 @@ class ChatGSE:
 
     def _ask_for_user_name(self):
         msg = f"{API_KEY_SUCCESS}"
-        self._write_and_history("Assistant", msg)
+        self._write_and_history("📎 Assistant", msg)
 
         return "getting_name"
 
@@ -209,7 +209,7 @@ class ChatGSE:
             "What is the context of your inquiry? For instance, this could be a "
             "disease, an experimental design, or a research area."
         )
-        self._write_and_history("Assistant", msg)
+        self._write_and_history("📎 Assistant", msg)
 
         return "getting_context"
 
@@ -222,7 +222,7 @@ class ChatGSE:
         ss.conversation.setup(ss.input)
 
     def _ask_for_data_input(self):
-        if not ss.tool_data:
+        if not ss.get("tool_data"):
             msg1 = (
                 f"You have selected `{ss.conversation.context}` as your "
                 "context. Do you want to provide input files from analytic "
@@ -236,14 +236,14 @@ class ChatGSE:
                 f"token usage of your conversation prompt. The limit of the "
                 f"currently active model is {ss.token_limit}."
             )
-            self._write_and_history("Assistant", msg1)
+            self._write_and_history("📎 Assistant", msg1)
             msg2 = (
                 "If you don't want to provide any files, please press 'No'. "
                 "You will still be able to provide free text information about "
                 "your results later. Any free text you provide will also not "
                 "be stored or analysed beyond your queries."
             )
-            self._write_and_history("Assistant", msg2)
+            self._write_and_history("📎 Assistant", msg2)
             return "getting_data_file_input"
 
         file_names = [f"`{f.name}`" for f in ss.tool_data]
@@ -254,7 +254,7 @@ class ChatGSE:
             f"{', '.join(file_names)}. If you wish to add more, please do so "
             "now. Once you are done, please press 'Yes'."
         )
-        self._write_and_history("Assistant", msg1)
+        self._write_and_history("📎 Assistant", msg1)
 
         return "getting_data_file_input"
 
@@ -266,7 +266,7 @@ class ChatGSE:
                 "No files detected. Please upload your files in the sidebar, "
                 "or press 'No' to continue without providing any files."
             )
-            self._write_and_history("Assistant", msg)
+            self._write_and_history("📎 Assistant", msg)
             return "getting_data_file_input"
 
         if not ss.get("started_tool_input"):
@@ -285,7 +285,7 @@ class ChatGSE:
                 f"{len(ss.tool_list)} files: "
                 f"{', '.join([f'`{f.name}`' for f in ss.tool_list])}."
             )
-            self._write_and_history("Assistant", msg)
+            self._write_and_history("📎 Assistant", msg)
 
         if not ss.get("read_tools"):
             ss.read_tools = []
@@ -295,7 +295,7 @@ class ChatGSE:
                 "I have read all the files you provided. "
                 f"{PLEASE_ENTER_QUESTIONS}"
             )
-            self._write_and_history("Assistant", msg)
+            self._write_and_history("📎 Assistant", msg)
             return "chat"
 
         for fl in ss.tool_list:
@@ -310,7 +310,7 @@ class ChatGSE:
             ss.read_tools.append(tool)
 
             self._write_and_history(
-                "Assistant",
+                "📎 Assistant",
                 f"`{tool}` results",
             )
             st.markdown(
@@ -325,7 +325,7 @@ class ChatGSE:
 
             if not any([tool in fl.name for tool in KNOWN_TOOLS]):
                 self._write_and_history(
-                    "Assistant",
+                    "📎 Assistant",
                     f"Sorry, `{tool}` is not among the tools I know "
                     f"({KNOWN_TOOLS}). Please provide information about the "
                     "data below (what are rows and columns, what are the "
@@ -336,7 +336,7 @@ class ChatGSE:
             ss.conversation.setup_data_input_tool(df.to_json(), tool)
 
             self._write_and_history(
-                "Assistant",
+                "📎 Assistant",
                 "Would you like to provide additional information, for instance "
                 "on a contrast or experimental design? If so, please enter it "
                 "below; if not, please enter 'no'.",
@@ -361,13 +361,13 @@ class ChatGSE:
                 "Okay, I will use the information from the tool without "
                 "further specification."
             )
-            self._write_and_history("Assistant", msg)
+            self._write_and_history("📎 Assistant", msg)
             return self._get_data_input()
 
         logger.info("Additional data input provided.")
         ss.conversation.append_user_message(response)
         data_input_response = "Thank you for the input!"
-        self._write_and_history("Assistant", data_input_response)
+        self._write_and_history("📎 Assistant", data_input_response)
         return self._get_data_input()
 
     def _ask_for_manual_data_input(self):
@@ -380,7 +380,7 @@ class ChatGSE:
             "be as specific as possible. You can also paste `markdown` tables "
             "or other structured data here."
         )
-        self._write_and_history("Assistant", msg)
+        self._write_and_history("📎 Assistant", msg)
         return "getting_manual_data_input"
 
     def _get_data_input_manual(self):
@@ -396,7 +396,7 @@ class ChatGSE:
         data_input_response = (
             "Thank you for the input. " f"{PLEASE_ENTER_QUESTIONS}"
         )
-        self._write_and_history("Assistant", data_input_response)
+        self._write_and_history("📎 Assistant", data_input_response)
 
         return "chat"
 
@@ -408,7 +408,7 @@ class ChatGSE:
         if not token_usage:
             # indicates error
             msg = "The model appears to have encountered an error. " + response
-            self._write_and_history("Assistant", msg)
+            self._write_and_history("📎 Assistant", msg)
             ss.error = True
 
             token_usage = {
@@ -422,10 +422,10 @@ class ChatGSE:
         self._write_and_history(ss.conversation.user_name, ss.input)
 
         if correction:
-            self._write_and_history("ChatGSE", response)
-            self._write_and_history("Correcting agent", correction)
+            self._write_and_history("💬🧬 ChatGSE", response)
+            self._write_and_history("🕵️ Correcting agent", correction)
 
         else:
-            self._write_and_history("ChatGSE", response)
+            self._write_and_history("💬🧬 ChatGSE", response)
 
         return response, token_usage

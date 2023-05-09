@@ -241,7 +241,6 @@ def app_header():
     st.markdown(
         f"""
         # 💬🧬 :red[ChatGSE] `{__version__}`
-        For a new session, please refresh the page.
         """
     )
     st.warning(
@@ -357,7 +356,7 @@ def community_select():
 
 def use_community_key():
     ss.openai_api_key = os.environ["OPENAI_COMMUNITY_KEY"]
-    ss.cg._history_only("Assistant", "Using community key!")
+    ss.cg._history_only("📎 Assistant", "Using community key!")
     ss.user = "community"
     ss.mode = "using_community_key"
     ss.show_community_select = False
@@ -366,7 +365,7 @@ def use_community_key():
 
 def demo_mode():
     ss.openai_api_key = os.environ["OPENAI_COMMUNITY_KEY"]
-    ss.cg._history_only("Assistant", "Using community key!")
+    ss.cg._history_only("📎 Assistant", "Using community key!")
     ss.user = "community"
     ss.show_community_select = False
     ss.input = "Demo User"
@@ -435,21 +434,21 @@ def app_info():
         interface, which allows storage and reuse of the user's prompts by
         OpenAI)
         
-        The agents you will be talking to are an `Assistant` (a pre-programmed
-        conversational algorithm), a `ChatGSE` model, which is a pre-trained
-        language model with instructions aimed at specifically improving the
-        quality of biomedical answers, and a `Correcting agent`, which is a
-        separate pre-trained language model with the task of catching and
-        correcting false information conveyed by the primary model. You will
-        only see the `Correcting agent` if it detects that the `ChatGSE` model
-        has made a mistake. In general, even though we try our best to avoid
-        mistakes using the correcting agent and internal safeguards, the general
-        limitations of the used Large Language Model apply: their statements can
-        sometimes be incorrect or misleading, and depending on the complexity of
-        the task may not yield the desired results. They are however very good
-        at synthesising information from their training set, and thus can be
-        useful to explain the biological context of, for instance, a particular
-        gene set or cell type.
+        The agents you will be talking to are an `📎 Assistant` (a
+        pre-programmed conversational algorithm), a `💬🧬 ChatGSE` model, which
+        is a pre-trained language model with instructions aimed at specifically
+        improving the quality of biomedical answers, and a `🕵️ Correcting agent`,
+        which is a separate pre-trained language model with the task of catching
+        and correcting false information conveyed by the primary model. You will
+        only see the `🕵️ Correcting agent` if it detects that the `💬🧬 ChatGSE`
+        model has made a mistake. In general, even though we try our best to
+        avoid mistakes using the correcting agent and internal safeguards, the
+        general limitations of the used Large Language Model apply: their
+        statements can sometimes be incorrect or misleading, and depending on
+        the complexity of the task may not yield the desired results. They are
+        however very good at synthesising information from their training set,
+        and thus can be useful to explain the biological context of, for
+        instance, a particular gene set or cell type.
 
         ChatGSE is developed by [Sebastian
         Lobentanzer](https://slobentanzer.github.io); you can find the source
@@ -481,7 +480,7 @@ def spacer(n=2, line=False, next_n=0):
 
 def show_primary_model_prompts():
     st.markdown(
-        "`Assistant`: Here you can edit the prompts used to set up the primary "
+        "`📎 Assistant`: Here you can edit the prompts used to set up the primary "
         "LLM. You can modify or remove the existing prompts, as well as add new "
         "ones. They will be used in the order they are listed in here."
     )
@@ -513,7 +512,7 @@ def show_primary_model_prompts():
 
 def show_correcting_agent_prompts():
     st.markdown(
-        "`Assistant`: Here you can edit the prompts used to set up the "
+        "`📎 Assistant`: Here you can edit the prompts used to set up the "
         "correcting agent. You can modify or remove the existing prompts, as "
         "well as add new ones. They will be used in the order they are listed "
         "in here."
@@ -546,7 +545,7 @@ def show_correcting_agent_prompts():
 
 def show_tool_prompts():
     st.markdown(
-        "`Assistant`: Here you can edit the tool-specific prompts given to the "
+        "`📎 Assistant`: Here you can edit the tool-specific prompts given to the "
         "primary LLM. You can modify the names as well as the prompts "
         "themselves. The names are what is used to automatically select the "
         "prompt based on the filename of the uploaded file (the name of the "
@@ -620,10 +619,7 @@ def remove_tool_prompt(nam):
 
 
 def prompt_save_load_reset():
-    st.write("Save-load functionality coming soon.")
-    return
-
-    save, load, reset = st.columns(3)
+    save, load = st.columns(2)
     with save:
         prompt_save_button()
     with load:
@@ -636,16 +632,6 @@ def prompt_save_load_reset():
         )
         if uploaded_file:
             load_prompt_set(uploaded_file)
-    with reset:
-        st.button(
-            "Reset to Default",
-            on_click=reset_prompt_set,
-            use_container_width=True,
-        )
-
-
-def reset_prompt_set():
-    pass
 
 
 def prompt_save_button():
@@ -681,7 +667,7 @@ def load_prompt_set(uploaded_file):
 
 def reset_button():
     st.button(
-        "⚠️ Reset App",
+        "♻️ Reset App",
         on_click=reset_app,
         use_container_width=True,
     )
@@ -814,7 +800,7 @@ def main():
                 with st.spinner("Thinking..."):
                     ss.response, ss.token_usage = cg._get_response()
                 cg._write_and_history(
-                    "Assistant",
+                    "📎 Assistant",
                     "🎉 This concludes the demonstration. You can chat with the "
                     "model now, or start your own inquiry! Please always keep "
                     "in mind that Large Language Models can sometimes be "
@@ -836,7 +822,8 @@ def main():
         with st.sidebar:
             app_header()
             reset_button()
-            file_uploader()
+            if ss.mode == "getting_data_file_input":
+                file_uploader()
             with st.expander("About"):
                 app_info()
             if (
@@ -884,7 +871,7 @@ def main():
                 "preprint](https://www.biorxiv.org/content/10.1101/2023.04.16.537094v1))."
             )
             st.markdown(
-                f"`Assistant`: Cell type annotation {OFFLINE_FUNCTIONALITY}"
+                f"`📎 Assistant`: Cell type annotation {OFFLINE_FUNCTIONALITY}"
             )
 
     with exp_design_tab:
@@ -898,7 +885,7 @@ def main():
             "statistical aspects of experimental design."
         )
         st.markdown(
-            f"`Assistant`: Experimental design functionality {OFFLINE_FUNCTIONALITY}"
+            f"`📎 Assistant`: Experimental design functionality {OFFLINE_FUNCTIONALITY}"
         )
 
     with prompts_tab:
@@ -919,7 +906,7 @@ def main():
             "getting_context",
         ]:
             st.markdown(
-                "`Assistant`: Prompt tuning is only available before "
+                "`📎 Assistant`: Prompt tuning is only available before "
                 "initialising the conversation, that is, before giving a "
                 "context. Please reset the app to tune the prompt set."
             )
@@ -953,7 +940,7 @@ def main():
             "primary model's statements, and corrects them if necessary."
         )
         st.markdown(
-            f"`Assistant`: Correction agent functionality {OFFLINE_FUNCTIONALITY}"
+            f"`📎 Assistant`: Correction agent functionality {OFFLINE_FUNCTIONALITY}"
         )
 
     with docsum_tab:
@@ -975,7 +962,7 @@ def main():
                 "contents."
             )
             st.markdown(
-                f"`Assistant`: Document summarisation functionality {OFFLINE_FUNCTIONALITY}"
+                f"`📎 Assistant`: Document summarisation functionality {OFFLINE_FUNCTIONALITY}"
             )
 
 
