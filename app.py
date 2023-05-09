@@ -588,24 +588,56 @@ def remove_tool_prompt(nam):
 def prompt_save_load():
     save, load = st.columns(2)
     with save:
-        st.download_button(
-            "Save Full Prompt Set (JSON)",
-            data=json.dumps(""),
-            use_container_width=True,
-        )
+        prompt_save_button()
     with load:
-        st.file_uploader(
+        uploaded_file = st.file_uploader(
             "Load",
             type="json",
             label_visibility="collapsed",
             accept_multiple_files=False,
             key="load_prompt_set",
-            on_change=load_prompt_set,
         )
+        if uploaded_file:
+            load_prompt_set(uploaded_file)
 
 
-def load_prompt_set(file):
-    pass
+def prompt_save_button():
+    now = datetime.datetime.now()
+    date = now.strftime("%Y-%m-%d_%H-%M-%S")
+    st.download_button(
+        "Save Full Prompt Set (JSON)",
+        data=save_prompt_set(),
+        use_container_width=True,
+        file_name=f"ChatGSE_prompt_set-{date}.json",
+    )
+
+
+def save_prompt_set():
+    """
+    Return JSON serialisation of the current prompt set.
+
+    Returns:
+        str: JSON serialisation of the current prompt set.
+    """
+    prompts = {
+        "primary_model_prompts": ss.primary_model_prompts,
+        "correcting_agent_prompts": ss.correcting_agent_prompts,
+        "tool_prompts": ss.tool_prompts,
+    }
+    return json.dumps(prompts)
+
+
+def load_prompt_set(uploaded_file):
+    """
+    Given an uploaded JSON file, load the prompts from it.
+
+    Args:
+        uploaded_file (FileUploader): The uploaded JSON file.
+    """
+    prompts = json.load(uploaded_file)
+    ss.primary_model_prompts = prompts["primary_model_prompts"]
+    ss.correcting_agent_prompts = prompts["correcting_agent_prompts"]
+    ss.tool_prompts = prompts["tool_prompts"]
 
 
 def main():
@@ -831,6 +863,7 @@ def main():
                 "initialising the conversation, that is, before giving a "
                 "context. Please reset the app to tune the prompt set."
             )
+            prompt_save_button()
 
         else:
             prompt_save_load()
