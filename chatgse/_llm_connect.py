@@ -11,51 +11,6 @@ from langchain.llms import HuggingFaceHub
 
 from ._stats import get_stats
 
-PRIMARY_MODEL_PROMPTS = [
-    "You are an assistant to a biomedical researcher.",
-    "Your role is to contextualise the user's findings with biomedical "
-    "background knowledge. If provided with a list, please give granular "
-    "feedback about the individual entities, your knowledge about them, and "
-    "what they may mean in the context of the research.",
-    "You can ask the user to provide explanations and more background at any "
-    "time, for instance on the treatment a patient has received, or the "
-    "experimental background. But for now, wait for the user to ask a "
-    "question.",
-]
-
-CORRECTING_AGENT_PROMPTS = [
-    "You are a biomedical researcher.",
-    "Your task is to check for factual correctness and consistency of the "
-    "statements of another agent.",
-    "Please correct the following message. Ignore references to previous "
-    "statements, only correct the current input. If there is nothing to "
-    "correct, please respond with just 'OK', and nothing else!",
-]
-
-TOOL_PROMPTS = {
-    "progeny": (
-        "The user has provided information in the form of a table. The rows "
-        "refer to biological entities (patients, samples, cell types, or the "
-        "like), and the columns refer to pathways. The values are pathway "
-        "activities derived using the bioinformatics method progeny. Here are "
-        "the data: {df}"
-    ),
-    "dorothea": (
-        "The user has provided information in the form of a table. The rows "
-        "refer to biological entities (patients, samples, cell types, or the "
-        "like), and the columns refer to transcription factors. The values are "
-        "transcription factor activities derived using the bioinformatics "
-        "method dorothea. Here are the data: {df}"
-    ),
-    "gsea": (
-        "The user has provided information in the form of a table. The first "
-        "column refers to biological entities (samples, cell types, or the "
-        "like), and the individual columns refer to the enrichment of "
-        "individual gene sets, such as hallmarks, derived using the "
-        "bioinformatics method gsea. Here are the data: {df}"
-    ),
-}
-
 
 class Conversation(ABC):
     """
@@ -77,15 +32,6 @@ class Conversation(ABC):
         self.history = []
         self.messages = []
         self.ca_messages = []
-
-        if not ss.get("primary_model_prompts"):
-            ss.primary_model_prompts = PRIMARY_MODEL_PROMPTS
-
-        if not ss.get("correcting_agent_prompts"):
-            ss.correcting_agent_prompts = CORRECTING_AGENT_PROMPTS
-
-        if not ss.get("tool_prompts"):
-            ss.tool_prompts = TOOL_PROMPTS
 
     def set_user_name(self, user_name: str):
         self.user_name = user_name
@@ -119,7 +65,7 @@ class Conversation(ABC):
         """
         Set up the conversation with general prompts and a context.
         """
-        for msg in ss.primary_model_prompts:
+        for msg in ss.prompts["primary_model_prompts"]:
             if msg:
                 self.messages.append(
                     SystemMessage(
@@ -127,7 +73,7 @@ class Conversation(ABC):
                     ),
                 )
 
-        for msg in ss.correcting_agent_prompts:
+        for msg in ss.prompts["correcting_agent_prompts"]:
             if msg:
                 self.ca_messages.append(
                     SystemMessage(
@@ -148,15 +94,19 @@ class Conversation(ABC):
         self.data_input_tool = df
 
         if "progeny" in tool:
-            self.append_system_message(ss.tool_prompts["progeny"].format(df=df))
+            self.append_system_message(
+                ss.prompts["tool_prompts"]["progeny"].format(df=df)
+            )
 
         elif "dorothea" in tool:
             self.append_system_message(
-                ss.tool_prompts["dorothea"].format(df=df)
+                ss.prompts["tool_prompts"]["dorothea"].format(df=df)
             )
 
         elif "gsea" in tool:
-            self.append_system_message(ss.tool_prompts["gsea"].format(df=df))
+            self.append_system_message(
+                ss.prompts["tool_prompts"]["gsea"].format(df=df)
+            )
 
     def query(self, text: str):
         self.append_user_message(text)

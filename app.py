@@ -46,16 +46,56 @@ OFFLINE_FUNCTIONALITY = (
     "locally."
 )
 
+PRIMARY_MODEL_PROMPTS = [
+    "You are an assistant to a biomedical researcher.",
+    "Your role is to contextualise the user's findings with biomedical "
+    "background knowledge. If provided with a list, please give granular "
+    "feedback about the individual entities, your knowledge about them, and "
+    "what they may mean in the context of the research.",
+    "You can ask the user to provide explanations and more background at any "
+    "time, for instance on the treatment a patient has received, or the "
+    "experimental background. But for now, wait for the user to ask a "
+    "question.",
+]
+
+CORRECTING_AGENT_PROMPTS = [
+    "You are a biomedical researcher.",
+    "Your task is to check for factual correctness and consistency of the "
+    "statements of another agent.",
+    "Please correct the following message. Ignore references to previous "
+    "statements, only correct the current input. If there is nothing to "
+    "correct, please respond with just 'OK', and nothing else!",
+]
+
+TOOL_PROMPTS = {
+    "progeny": (
+        "The user has provided information in the form of a table. The rows "
+        "refer to biological entities (patients, samples, cell types, or the "
+        "like), and the columns refer to pathways. The values are pathway "
+        "activities derived using the bioinformatics method progeny. Here are "
+        "the data: {df}"
+    ),
+    "dorothea": (
+        "The user has provided information in the form of a table. The rows "
+        "refer to biological entities (patients, samples, cell types, or the "
+        "like), and the columns refer to transcription factors. The values are "
+        "transcription factor activities derived using the bioinformatics "
+        "method dorothea. Here are the data: {df}"
+    ),
+    "gsea": (
+        "The user has provided information in the form of a table. The first "
+        "column refers to biological entities (samples, cell types, or the "
+        "like), and the individual columns refer to the enrichment of "
+        "individual gene sets, such as hallmarks, derived using the "
+        "bioinformatics method gsea. Here are the data: {df}"
+    ),
+}
+
 # IMPORTS
 import os
 import datetime
 from chatgse._interface import ChatGSE
 from chatgse._stats import get_community_usage_cost
-from chatgse._llm_connect import (
-    PRIMARY_MODEL_PROMPTS,
-    CORRECTING_AGENT_PROMPTS,
-    TOOL_PROMPTS,
-)
 
 
 # HANDLERS
@@ -446,13 +486,10 @@ def show_primary_model_prompts():
         "ones. They will be used in the order they are listed in here."
     )
 
-    if not ss.get("primary_model_prompts"):
-        ss.primary_model_prompts = PRIMARY_MODEL_PROMPTS
-
-    for num, msg in enumerate(ss.primary_model_prompts):
+    for num, msg in enumerate(ss.prompts["primary_model_prompts"]):
         field, button = st.columns([4, 1])
         with field:
-            ss.primary_model_prompts[num] = st.text_area(
+            ss.prompts["primary_model_prompts"][num] = st.text_area(
                 label=str(num + 1),
                 value=msg,
                 label_visibility="collapsed",
@@ -462,7 +499,7 @@ def show_primary_model_prompts():
             st.button(
                 f"Remove prompt {num + 1}",
                 on_click=remove_prompt,
-                args=(ss.primary_model_prompts, num),
+                args=(ss.prompts["primary_model_prompts"], num),
                 key=f"remove_prompt_{num}",
                 use_container_width=True,
             )
@@ -470,7 +507,7 @@ def show_primary_model_prompts():
     st.button(
         "Add New Primary Model Prompt",
         on_click=add_prompt,
-        args=(ss.primary_model_prompts,),
+        args=(ss.prompts["primary_model_prompts"],),
     )
 
 
@@ -481,13 +518,11 @@ def show_correcting_agent_prompts():
         "well as add new ones. They will be used in the order they are listed "
         "in here."
     )
-    if not ss.get("correcting_agent_prompts"):
-        ss.correcting_agent_prompts = CORRECTING_AGENT_PROMPTS
 
-    for num, msg in enumerate(ss.correcting_agent_prompts):
+    for num, msg in enumerate(ss.prompts["correcting_agent_prompts"]):
         field, button = st.columns([4, 1])
         with field:
-            ss.correcting_agent_prompts[num] = st.text_area(
+            ss.prompts["correcting_agent_prompts"][num] = st.text_area(
                 label=str(num + 1),
                 value=msg,
                 label_visibility="collapsed",
@@ -497,7 +532,7 @@ def show_correcting_agent_prompts():
             st.button(
                 f"Remove prompt {num + 1}",
                 on_click=remove_prompt,
-                args=(ss.correcting_agent_prompts, num),
+                args=(ss.prompts["correcting_agent_prompts"], num),
                 key=f"remove_prompt_{num}",
                 use_container_width=True,
             )
@@ -505,7 +540,7 @@ def show_correcting_agent_prompts():
     st.button(
         "Add New Correcting Agent Prompt",
         on_click=add_prompt,
-        args=(ss.correcting_agent_prompts,),
+        args=(ss.prompts["correcting_agent_prompts"],),
     )
 
 
@@ -522,11 +557,8 @@ def show_tool_prompts():
         "included."
     )
 
-    if not ss.get("tool_prompts"):
-        ss.tool_prompts = TOOL_PROMPTS
-
-    for nam in list(ss.tool_prompts.keys()):
-        msg = ss.tool_prompts[nam]
+    for nam in list(ss.prompts["tool_prompts"].keys()):
+        msg = ss.prompts["tool_prompts"][nam]
         label, field, fill = st.columns([3, 21, 6])
         with label:
             st.write("Name:")
@@ -558,10 +590,12 @@ def show_tool_prompts():
             )
 
         if nunam != nam:
-            ss.tool_prompts[nunam] = ss.tool_prompts.pop(nam)
+            ss.prompts["tool_prompts"][nunam] = ss.prompts["tool_prompts"].pop(
+                nam
+            )
             st.experimental_rerun()
         elif numsg != msg:
-            ss.tool_prompts[nunam] = numsg
+            ss.prompts["tool_prompts"][nunam] = numsg
 
     st.button(
         "Add New Tool Prompt",
@@ -578,11 +612,11 @@ def remove_prompt(prompt_list, num):
 
 
 def add_tool_prompt():
-    ss.tool_prompts[""] = ""
+    ss.prompts["tool_prompts"][""] = ""
 
 
 def remove_tool_prompt(nam):
-    ss.tool_prompts.pop(nam)
+    ss.prompts["tool_prompts"].pop(nam)
 
 
 def prompt_save_load_reset():
@@ -611,10 +645,7 @@ def prompt_save_load_reset():
 
 
 def reset_prompt_set():
-    ss.primary_model_prompts = PRIMARY_MODEL_PROMPTS
-    ss.correcting_agent_prompts = CORRECTING_AGENT_PROMPTS
-    ss.tool_prompts = TOOL_PROMPTS
-    st.experimental_rerun()
+    pass
 
 
 def prompt_save_button():
@@ -635,12 +666,7 @@ def save_prompt_set():
     Returns:
         str: JSON serialisation of the current prompt set.
     """
-    prompts = {
-        "primary_model_prompts": ss.primary_model_prompts,
-        "correcting_agent_prompts": ss.correcting_agent_prompts,
-        "tool_prompts": ss.tool_prompts,
-    }
-    return json.dumps(prompts)
+    return json.dumps(ss.prompts)
 
 
 def load_prompt_set(uploaded_file):
@@ -650,16 +676,33 @@ def load_prompt_set(uploaded_file):
     Args:
         uploaded_file (FileUploader): The uploaded JSON file.
     """
-    prompts = json.load(uploaded_file)
-    ss.primary_model_prompts = prompts["primary_model_prompts"]
-    ss.correcting_agent_prompts = prompts["correcting_agent_prompts"]
-    ss.tool_prompts = prompts["tool_prompts"]
+    ss.prompts = json.load(uploaded_file)
+
+
+def reset_button():
+    st.button(
+        "⚠️ Reset App",
+        on_click=reset_app,
+        use_container_width=True,
+    )
+
+
+def reset_app():
+    """
+    Reset the app to its initial state.
+    """
+    ss.clear()
 
 
 def main():
     # NEW SESSION
     if not ss.get("mode"):
         ss.user = "default"
+        ss.prompts = {
+            "primary_model_prompts": PRIMARY_MODEL_PROMPTS,
+            "correcting_agent_prompts": CORRECTING_AGENT_PROMPTS,
+            "tool_prompts": TOOL_PROMPTS,
+        }
 
     # SETUP
     # check for API keys
@@ -792,6 +835,7 @@ def main():
         # SIDEBAR
         with st.sidebar:
             app_header()
+            reset_button()
             file_uploader()
             with st.expander("About"):
                 app_info()
@@ -883,18 +927,18 @@ def main():
 
         else:
             prompt_save_load_reset()
-            ss.prompts = st.selectbox(
+            ss.prompts_box = st.selectbox(
                 "Select a prompt set",
                 ("Primary Model", "Correcting Agent", "Tools"),
             )
 
-            if ss.prompts == "Primary Model":
+            if ss.prompts_box == "Primary Model":
                 show_primary_model_prompts()
 
-            elif ss.prompts == "Correcting Agent":
+            elif ss.prompts_box == "Correcting Agent":
                 show_correcting_agent_prompts()
 
-            elif ss.prompts == "Tools":
+            elif ss.prompts_box == "Tools":
                 show_tool_prompts()
 
     with correct_tab:
