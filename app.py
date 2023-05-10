@@ -437,7 +437,7 @@ def app_info():
         The agents you will be talking to are an `📎 Assistant` (a
         pre-programmed conversational algorithm), a `💬🧬 ChatGSE` model, which
         is a pre-trained language model with instructions aimed at specifically
-        improving the quality of biomedical answers, and a `🕵️ Correcting agent`,
+        improving the quality of biomedical answers, and a `️️🕵️ Correcting agent`,
         which is a separate pre-trained language model with the task of catching
         and correcting false information conveyed by the primary model. You will
         only see the `🕵️ Correcting agent` if it detects that the `💬🧬 ChatGSE`
@@ -680,6 +680,38 @@ def reset_app():
     ss.clear()
 
 
+def show_about_section():
+    what, how = st.columns(2)
+    with what:
+        st.subheader(
+            "ℹ️ What",
+        )
+        st.button(
+            "A platform for the application of Large Language Models in biomedical research.",
+            disabled=True,
+            use_container_width=True,
+        )
+        st.button(
+            "An interface for the intuitive interaction with current cutting-edge AI.",
+            disabled=True,
+            use_container_width=True,
+        )
+    with how:
+        st.subheader(
+            "🔧 How",
+        )
+        st.button(
+            "Building wrappers around LLMs to tune their responses and ameliorate their shortcomings.",
+            disabled=True,
+            use_container_width=True,
+        )
+        st.button(
+            "Connecting to complementary technology, such as (vector) databases and model chaining.",
+            disabled=True,
+            use_container_width=True,
+        )
+
+
 def main():
     # NEW SESSION
     if not ss.get("mode"):
@@ -739,6 +771,10 @@ def main():
             "Welcome to ``ChatGSE``! "
             ":violet[If you are on a small screen, you may need to shift-scroll to the right to see all tabs. -->]"
         )
+
+        if ss.mode in ["getting_key", "getting_name"]:
+            show_about_section()
+
         cg._display_history()
 
         # CHAT BOT LOGIC
