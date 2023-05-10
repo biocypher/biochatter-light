@@ -772,8 +772,9 @@ def main():
             ":violet[If you are on a small screen, you may need to shift-scroll to the right to see all tabs. -->]"
         )
 
-        if ss.mode in ["getting_key", "getting_name"]:
+        if ss.mode == "getting_key":
             show_about_section()
+            cg._display_setup()
 
         cg._display_history()
 

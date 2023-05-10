@@ -39,6 +39,18 @@ class ChatGSE:
         if "history" not in ss:
             ss.history = []
 
+        if "setup_messages" not in ss:
+            ss.setup_messages = []
+
+    def _display_setup(self):
+        """
+        Renders setup messages on each reload. Conditionally shown only at setup
+        stage.
+        """
+        for item in ss.setup_messages:
+            for role, msg in item.items():
+                st.markdown(self._render_msg(role, msg))
+
     def _display_history(self):
         """
         Renders the history of the conversation on each reload. Also saves a
@@ -69,10 +81,18 @@ class ChatGSE:
     def _history_only(self, role: str, msg: str):
         ss.history.append({role: msg})
 
+    def _setup_only(self, role: str, msg: str):
+        ss.setup_messages.append({role: msg})
+
     def _write_and_history(self, role: str, msg: str):
         logger.info(f"Writing message from {role}: {msg}")
         st.markdown(self._render_msg(role, msg))
         ss.history.append({role: msg})
+
+    def _write_and_setup(self, role: str, msg: str):
+        logger.info(f"Writing message from {role}: {msg}")
+        st.markdown(self._render_msg(role, msg))
+        ss.setup_messages.append({role: msg})
 
     def set_model(self, model_name: str):
         """
@@ -120,7 +140,7 @@ class ChatGSE:
                     "Using GPT-3.5-turbo, a full conversation (4000 tokens) "
                     f"costs about 0.01 USD. {DEMO_MODE}"
                 )
-                self._history_only("📎 Assistant", msg)
+                self._setup_only("📎 Assistant", msg)
                 ss.show_community_select = True
             elif ss.primary_model == "bigscience/bloom":
                 msg = (
@@ -133,7 +153,7 @@ class ChatGSE:
                     "this message by setting the environment variable "
                     "`HUGGINGFACEHUB_API_TOKEN` to your key."
                 )
-                self._history_only("📎 Assistant", msg)
+                self._setup_only("📎 Assistant", msg)
 
             return "getting_key"
 
@@ -144,7 +164,7 @@ class ChatGSE:
                 "The API key in your environment is not valid. Please enter a "
                 "valid key."
             )
-            self._history_only("📎 Assistant", msg)
+            self._setup_only("📎 Assistant", msg)
 
             return "getting_key"
 
@@ -177,7 +197,7 @@ class ChatGSE:
                 "The API key you entered is not valid. Please enter a valid "
                 "key."
             )
-            self._write_and_history("📎 Assistant", msg)
+            self._write_and_setup("📎 Assistant", msg)
 
             return "getting_key"
 
