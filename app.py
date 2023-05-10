@@ -91,6 +91,26 @@ TOOL_PROMPTS = {
     ),
 }
 
+WHAT_MESSAGES = [
+    "A platform for the application of Large Language Models (LLMs) in biomedical research.",
+    "A way to make LLMs more __useful__ and __trustworthy__.",
+    "A way to make biomedical research more reproducible.",
+    "A platform for contextualisation of biomedical results.",
+    "An interface for the intuitive interaction with current cutting-edge AI.",
+    "An [open-source project](https://github.com/biocypher/ChatGSE).",
+    "A way to make biomedical research more efficient.",
+]
+
+HOW_MESSAGES = [
+    "Building wrappers around LLMs to tune their responses and ameliorate their shortcomings.",
+    "Connecting to complementary technology, such as (vector) databases and model chaining.",
+    "Being playful and experimental, and having fun!",
+    "Coming together as a community and being [communicative](https://biocypher.zulipchat.com).",
+    "Collaborating on the future of biomedical research.",
+    "Following open science principles.",
+    "Being transparent about the limitations of the technology.",
+]
+
 # IMPORTS
 import os
 import datetime
@@ -437,7 +457,7 @@ def app_info():
         The agents you will be talking to are an `📎 Assistant` (a
         pre-programmed conversational algorithm), a `💬🧬 ChatGSE` model, which
         is a pre-trained language model with instructions aimed at specifically
-        improving the quality of biomedical answers, and a `️️🕵️ Correcting agent`,
+        improving the quality of biomedical answers, and a `️️️️️️️️️🕵️ Correcting agent`,
         which is a separate pre-trained language model with the task of catching
         and correcting false information conveyed by the primary model. You will
         only see the `🕵️ Correcting agent` if it detects that the `💬🧬 ChatGSE`
@@ -681,35 +701,47 @@ def reset_app():
 
 
 def show_about_section():
+    if not ss.get("what_messages"):
+        ss.what_messages = WHAT_MESSAGES
+
+    if not ss.get("how_messages"):
+        ss.how_messages = HOW_MESSAGES
+
     what, how = st.columns(2)
     with what:
         st.subheader(
             "ℹ️ What",
         )
-        st.button(
-            "A platform for the application of Large Language Models in biomedical research.",
-            disabled=True,
-            use_container_width=True,
-        )
-        st.button(
-            "An interface for the intuitive interaction with current cutting-edge AI.",
-            disabled=True,
-            use_container_width=True,
-        )
+        for i in range(3):
+            msg = ss.what_messages[i]
+            st.button(
+                msg,
+                use_container_width=True,
+                on_click=shuffle_messages,
+                args=(ss.what_messages, i),
+            )
     with how:
         st.subheader(
             "🔧 How",
         )
-        st.button(
-            "Building wrappers around LLMs to tune their responses and ameliorate their shortcomings.",
-            disabled=True,
-            use_container_width=True,
-        )
-        st.button(
-            "Connecting to complementary technology, such as (vector) databases and model chaining.",
-            disabled=True,
-            use_container_width=True,
-        )
+        for i in range(3):
+            msg = ss.how_messages[i]
+            st.button(
+                msg,
+                use_container_width=True,
+                on_click=shuffle_messages,
+                args=(ss.how_messages, i),
+            )
+
+
+def shuffle_messages(l: list, i: int):
+    """Replaces the message at position i with the message at position 3, and
+    moves the replaced message to the end of the list."""
+    l[i], l[3] = (
+        l[3],
+        l[i],
+    )
+    l.append(l.pop(3))
 
 
 def main():
