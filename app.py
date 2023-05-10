@@ -109,6 +109,7 @@ HOW_MESSAGES = [
     "Collaborating on the future of biomedical research.",
     "Following open science principles.",
     "Being transparent about the limitations of the technology.",
+    "Being modular and extensible.",
 ]
 
 # IMPORTS
@@ -457,7 +458,7 @@ def app_info():
         The agents you will be talking to are an `📎 Assistant` (a
         pre-programmed conversational algorithm), a `💬🧬 ChatGSE` model, which
         is a pre-trained language model with instructions aimed at specifically
-        improving the quality of biomedical answers, and a `️️️️️️️️️🕵️ Correcting agent`,
+        improving the quality of biomedical answers, and a `️️️️️️️️️️️🕵️ Correcting agent`,
         which is a separate pre-trained language model with the task of catching
         and correcting false information conveyed by the primary model. You will
         only see the `🕵️ Correcting agent` if it detects that the `💬🧬 ChatGSE`
@@ -709,8 +710,12 @@ def show_about_section():
 
     what, how = st.columns(2)
     with what:
-        st.subheader(
-            "ℹ️ What",
+        st.markdown(
+            "### "
+            "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"
+            "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"
+            "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"
+            "ℹ️ What"
         )
         for i in range(3):
             msg = ss.what_messages[i]
@@ -721,8 +726,11 @@ def show_about_section():
                 args=(ss.what_messages, i),
             )
     with how:
-        st.subheader(
-            "🔧 How",
+        st.markdown(
+            "### "
+            "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"
+            "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"
+            "🔧 How"
         )
         for i in range(3):
             msg = ss.how_messages[i]
