@@ -64,7 +64,7 @@ def get_stats(**kw):
 
 def get_community_usage_cost():
     usage_stats = get_stats(user=DEFAULT_USER)
-    data = usage_stats.get(f"usage:v4:[date]:{DEFAULT_USER}")
+    data = usage_stats.get(f"usage:[date]:{DEFAULT_USER}")
     used = 0.0
     used += (
         0.04 * data.get("total_tokens:gpt-4", 0) / 1000

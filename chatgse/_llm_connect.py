@@ -219,7 +219,7 @@ class GptConversation(Conversation):
         object with the increment method.
         """
         self.usage_stats.increment(
-            f"usage:v4:[date]:[user]",
+            f"usage:[date]:[user]",
             {f"{k}:{model}": v for k, v in token_usage.items()},
         )
 
