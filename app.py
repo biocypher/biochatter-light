@@ -733,6 +733,13 @@ def show_about_section():
                 args=(ss.how_messages, i),
             )
 
+    st.info(
+        "This app is still in development; you are seeing a preview with "
+        "limited functionality. If you'd like to contribute to the project, "
+        "please find us on [GitHub](https://github.com/biocypher/ChatGSE). "
+        "We'd love to hear from you!"
+    )
+
 
 def shuffle_messages(l: list, i: int):
     """Replaces the message at position i with the message at position 3, and
