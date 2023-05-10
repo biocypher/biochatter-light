@@ -744,8 +744,8 @@ def show_about_section():
     st.info(
         "This app is still in development; you are seeing a preview with "
         "limited functionality. If you'd like to contribute to the project, "
-        "please find us on [GitHub](https://github.com/biocypher/ChatGSE). "
-        "We'd love to hear from you!"
+        "please find us on [GitHub](https://github.com/biocypher/ChatGSE) or "
+        "[Zulip](https://biocypher.zulipchat.com). We'd love to hear from you!"
     )
 
 
