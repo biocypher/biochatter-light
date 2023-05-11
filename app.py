@@ -117,6 +117,7 @@ import os
 import datetime
 from chatgse._interface import ChatGSE
 from chatgse._stats import get_community_usage_cost
+from chatgse._interface import community_possible
 
 
 # HANDLERS
@@ -197,15 +198,32 @@ def chat_box():
 
 
 def openai_key_chat_box():
-    demo, community, field = st.columns([1, 1, 3])
+    if community_possible():
+        demo, community, field = st.columns([1, 1, 3])
 
-    with demo:
-        st.button("Show A Demonstration", on_click=demo_mode)
+        with demo:
+            st.button(
+                "Show A Demonstration",
+                on_click=demo_mode,
+                use_container_width=True,
+            )
 
-    with community:
-        st.button("Use The Community Key", on_click=use_community_key)
+        with community:
+            st.button(
+                "Use The Community Key",
+                on_click=use_community_key,
+                use_container_width=True,
+            )
 
-    with field:
+        with field:
+            st.text_input(
+                "OpenAI API Key:",
+                on_change=on_submit,
+                key="widget",
+                placeholder="(sk-...) Press [Enter] to submit.",
+            )
+
+    else:
         st.text_input(
             "OpenAI API Key:",
             on_change=on_submit,
@@ -913,6 +931,7 @@ def main():
             if (
                 ss.get("show_community_select", False)
                 and ss.get("primary_model") in OPENAI_MODELS
+                and community_possible()
             ):
                 remaining_tokens()
                 community_select()

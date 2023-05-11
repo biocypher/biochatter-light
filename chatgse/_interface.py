@@ -1,5 +1,6 @@
 # user interface class for ChatGSE
 import json
+import os
 from loguru import logger
 import pandas as pd
 import streamlit as st
@@ -8,7 +9,17 @@ from chatgse._llm_connect import GptConversation, BloomConversation
 ss = st.session_state
 
 
+# ENVIRONMENT VARIABLES
+def community_possible():
+    return "OPENAI_COMMUNITY_KEY" in os.environ and "REDIS_PW" in os.environ
+
+
 API_KEY_REQUIRED = "The currently selected model requires an API key."
+COMMUNITY_SELECT = (
+    "You can use your own [OpenAI API "
+    "key](https://platform.openai.com/account/api-keys), or try the platform "
+    "using our community key by pressing the `Use The Community Key` button."
+)
 DEMO_MODE = (
     "You can also try a `Demonstration` setup with toy data by pressing the "
     "first button below. After guiding you through the initial steps, this "
@@ -127,21 +138,30 @@ class ChatGSE:
 
         if not key:
             if ss.primary_model == "gpt-3.5-turbo":
-                msg = (
-                    f"{API_KEY_REQUIRED} You can use your own [OpenAI API "
-                    "key](https://platform.openai.com/account/api-keys), or "
-                    "try the platform using our community key by pressing the "
-                    "`Use The Community Key` button. You can get a key by "
-                    "signing up [here](https://platform.openai.com/) and enabling "
+                msg = f"{API_KEY_REQUIRED} "
+                if community_possible():
+                    msg += f"{COMMUNITY_SELECT} "
+                msg += (
+                    "You can get a key by signing up "
+                    "[here](https://platform.openai.com/) and enabling "
                     "billing. We will not store your key, and only use it for "
-                    "the requests made in this session. If you use community "
-                    "credits, please be considerate of other users; if you "
-                    "use the platform extensively, please use your own key. "
-                    "Using GPT-3.5-turbo, a full conversation (4000 tokens) "
-                    f"costs about 0.01 USD. {DEMO_MODE}"
+                    "the requests made in this session. "
                 )
+                if community_possible():
+                    msg += (
+                        "If you use community credits, please be considerate of "
+                        "other users; if you use the platform extensively, "
+                        "please use your own key. "
+                    )
+                msg += (
+                    "Using GPT-3.5-turbo, a full conversation (4000 tokens) "
+                    f"costs about 0.01 USD. "
+                )
+                if community_possible():
+                    msg += f"{DEMO_MODE}"
                 self._setup_only("📎 Assistant", msg)
                 ss.show_community_select = True
+
             elif ss.primary_model == "bigscience/bloom":
                 msg = (
                     f"{API_KEY_REQUIRED} Please enter your [HuggingFace Hub "
