@@ -94,22 +94,25 @@ TOOL_PROMPTS = {
 WHAT_MESSAGES = [
     "A platform for the application of Large Language Models (LLMs) in biomedical research.",
     "A way to make LLMs more __useful__ and __trustworthy__.",
-    "A way to make biomedical research more reproducible.",
+    "A means to make biomedical research more reproducible.",
     "A platform for contextualisation of biomedical results.",
     "An interface for the intuitive interaction with current cutting-edge AI.",
-    "An [open-source project](https://github.com/biocypher/ChatGSE).",
+    "An __open-source__ project.",
     "A way to make biomedical research more efficient.",
+    "A time-saver.",
 ]
 
 HOW_MESSAGES = [
     "Building wrappers around LLMs to tune their responses and ameliorate their shortcomings.",
     "Connecting to complementary technology, such as (vector) databases and model chaining.",
     "Being playful and experimental, and having fun!",
-    "Coming together as a community and being [communicative](https://biocypher.zulipchat.com).",
+    "Coming together as a community and being communicative.",
     "Collaborating on the future of biomedical research.",
+    "Engineering prompts to make LLMs more useful.",
     "Following open science principles.",
     "Being transparent about the limitations of the technology.",
     "Being modular and extensible.",
+    "Injecting prior knowledge into LLM queries.",
 ]
 
 # IMPORTS
