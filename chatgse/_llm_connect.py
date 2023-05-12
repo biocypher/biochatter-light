@@ -152,6 +152,7 @@ class GptConversation(Conversation):
         conversational agent. Set the user for usage statistics.
         """
         openai.api_key = api_key
+        self.set_user_name(user)
 
         try:
             openai.Model.list()
@@ -165,7 +166,8 @@ class GptConversation(Conversation):
                 temperature=0,
                 openai_api_key=api_key,
             )
-            self.usage_stats = get_stats(user=user)
+            if user == "community":
+                self.usage_stats = get_stats(user=user)
             return True
         except openai.error.AuthenticationError as e:
             return False
@@ -218,10 +220,11 @@ class GptConversation(Conversation):
         Update redis database with token usage statistics using the usage_stats
         object with the increment method.
         """
-        self.usage_stats.increment(
-            f"usage:[date]:[user]",
-            {f"{k}:{model}": v for k, v in token_usage.items()},
-        )
+        if self.user_name == "community":
+            self.usage_stats.increment(
+                f"usage:[date]:[user]",
+                {f"{k}:{model}": v for k, v in token_usage.items()},
+            )
 
 
 class BloomConversation(Conversation):
