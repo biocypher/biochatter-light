@@ -2,7 +2,8 @@
 Gene set interpretation and more, assisted by large language models. Find the
 deployed app at https://chatgse.streamlit.app. We are currently ***heavily***
 work in progress, but we are commited to open source and very open to comments,
-criticisms, and contributions! Preprint coming soon.
+criticisms, and contributions! Read the [preprint
+here](https://arxiv.org/abs/2305.06488)!
 
 ## 🤝 Get involved!
 We are very happy about contributions from the community, large and small!
