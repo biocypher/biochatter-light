@@ -1,4 +1,6 @@
-# user interface class for ChatGSE
+# ChatGSE user interface class
+# manage the different roles / stages of conversation
+
 import json
 import os
 from loguru import logger

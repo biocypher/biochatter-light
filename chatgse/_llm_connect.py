@@ -1,3 +1,10 @@
+# ChatGSE LLM connectivity
+# connect to API
+# keep track of message history
+# query API
+# correct response
+# update usage stats
+
 import streamlit as st
 
 ss = st.session_state

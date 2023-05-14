@@ -1,4 +1,4 @@
-# app.py: streamlit chat app for contextualisation of biomedical results
+# ChatGSE app.py: streamlit chat app for contextualisation of biomedical results
 app_name = "chatgse"
 __version__ = "0.2.17"
 
