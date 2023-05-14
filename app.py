@@ -90,6 +90,11 @@ TOOL_PROMPTS = {
         "bioinformatics method gsea. Here are the data: {df}"
     ),
 }
+DOCSUM_PROMPTS = [
+    "The user has provided additional background information from articles; "
+    "the following statements are the closest matches to the user's query: "
+    "{statements}",
+]
 
 WHAT_MESSAGES = [
     "A platform for the application of Large Language Models (LLMs) in biomedical research.",
@@ -585,6 +590,35 @@ def show_correcting_agent_prompts():
     )
 
 
+def show_docsum_prompts():
+    st.markdown(
+        "`📎 Assistant`: Here you can edit the prompts used to set up the "
+        "Document Summarisation task. Text passages from any uploaded "
+        "documents will be passed on to the primary model using these prompts. "
+        "The placeholder `{statments}` will be replaced by the text passages. "
+        "Upload documents and edit vector database settings in the "
+        "`Document Summarisation` tab."
+    )
+
+    for num, msg in enumerate(ss.prompts["docsum_prompts"]):
+        field, button = st.columns([4, 1])
+        with field:
+            ss.prompts["docsum_prompts"][num] = st.text_area(
+                label=str(num + 1),
+                value=msg,
+                label_visibility="collapsed",
+                placeholder="Enter your prompt here.",
+            )
+        with button:
+            st.button(
+                f"Remove prompt {num + 1}",
+                on_click=remove_prompt,
+                args=(ss.prompts["docsum_prompts"], num),
+                key=f"remove_prompt_{num}",
+                use_container_width=True,
+            )
+
+
 def show_tool_prompts():
     st.markdown(
         "`📎 Assistant`: Here you can edit the tool-specific prompts given to the "
@@ -790,6 +824,7 @@ def main():
             "primary_model_prompts": PRIMARY_MODEL_PROMPTS,
             "correcting_agent_prompts": CORRECTING_AGENT_PROMPTS,
             "tool_prompts": TOOL_PROMPTS,
+            "docsum_prompts": DOCSUM_PROMPTS,
         }
 
     # SETUP
@@ -1024,7 +1059,12 @@ def main():
             prompt_save_load_reset()
             ss.prompts_box = st.selectbox(
                 "Select a prompt set",
-                ("Primary Model", "Correcting Agent", "Tools"),
+                (
+                    "Primary Model",
+                    "Correcting Agent",
+                    "Tools",
+                    "Document Summarisation",
+                ),
             )
 
             if ss.prompts_box == "Primary Model":
@@ -1035,6 +1075,9 @@ def main():
 
             elif ss.prompts_box == "Tools":
                 show_tool_prompts()
+
+            elif ss.prompts_box == "Document Summarisation":
+                show_docsum_prompts()
 
     with correct_tab:
         st.markdown(
