@@ -15,6 +15,8 @@ from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain.document_loaders import TextLoader
 from langchain.vectorstores import Milvus
 
+import fitz
+
 
 class DocumentSummariser:
     def __init__(
@@ -54,8 +56,34 @@ class DocumentSummariser:
         self.separators = separators
 
     def _load_document(self, path: str) -> List[Document]:
-        loader = TextLoader(path)
-        return loader.load()
+        """
+        Loads a document from a path; accepts txt and pdf files. Txt files are
+        loaded as-is, pdf files are converted to text using fitz.
+
+        Args:
+            path (str): path to document
+
+        Returns:
+            List[Document]: list of documents
+        """
+        if path.endswith(".txt"):
+            loader = TextLoader(path)
+            return loader.load()
+        elif path.endswith(".pdf"):
+            doc = fitz.open(path)
+            text = ""
+            for page in doc:
+                text += page.get_text()
+
+            meta = {k: v for k, v in doc.metadata.items() if v}
+            meta.update({"source": path})
+
+            return [
+                Document(
+                    page_content=text,
+                    metadata=meta,
+                )
+            ]
 
     def split_document(self, path: str) -> List[Document]:
         document = self._load_document(path)
