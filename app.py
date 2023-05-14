@@ -855,18 +855,18 @@ def main():
     (
         chat_tab,
         prompts_tab,
+        docsum_tab,
         annot_tab,
         exp_design_tab,
         correct_tab,
-        docsum_tab,
     ) = st.tabs(
         [
             "Gene Sets and Pathways",
             "Prompt Engineering",
+            "Document Summarisation",
             "Cell Type Annotation",
             "Experimental Design",
             "Correcting Agent",
-            "Document Summarisation",
         ]
     )
 
@@ -874,7 +874,8 @@ def main():
         # WELCOME MESSAGE AND CHAT HISTORY
         st.markdown(
             "Welcome to ``ChatGSE``! "
-            ":violet[If you are on a small screen, you may need to shift-scroll to the right to see all tabs. -->]"
+            ":violet[If you are on a small screen, you may need to "
+            "shift-scroll to the right to see all tabs. -->]"
         )
 
         if ss.mode == "getting_key":
