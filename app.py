@@ -840,12 +840,16 @@ def docsum_panel():
         type=["txt", "pdf"],
     )
     if uploaded_file:
+        if not ss.get("docsum"):
+            ss.docsum = DocumentSummariser()
         val = uploaded_file.getvalue()
         if uploaded_file.type == "application/pdf":
             doc = document_from_pdf(val)
         elif uploaded_file.type == "text/plain":
             doc = document_from_txt(val)
-        docsum = DocumentSummariser(document=doc)
+        ss.docsum.set_document(doc)
+        split = ss.docsum.split_text()
+        ss.docsum.store_embeddings(split)
 
 
 def main():

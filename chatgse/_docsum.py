@@ -47,7 +47,7 @@ class DocumentSummariser:
             "port": "19530",
         }
 
-        self.document = document
+        self.document = None
 
     def set_chunk_siue(self, chunk_size: int) -> None:
         self.chunk_size = chunk_size
@@ -58,7 +58,10 @@ class DocumentSummariser:
     def set_separators(self, separators: list) -> None:
         self.separators = separators
 
-    def _load_document(self, path: str) -> List[Document]:
+    def set_document(self, document: List[Document]) -> None:
+        self.document = document
+
+    def _load_document(self, path: str) -> None:
         """
         Loads a document from a path; accepts txt and pdf files. Txt files are
         loaded as-is, pdf files are converted to text using fitz.
@@ -88,18 +91,18 @@ class DocumentSummariser:
                 )
             ]
 
-    def split_document(self) -> List[Document]:
+    def split_document(self) -> None:
         text_splitter = RecursiveCharacterTextSplitter(
             chunk_size=self.chunk_size,
             chunk_overlap=self.chunk_overlap,
             separators=self.separators,
         )
-        return text_splitter.split_documents(self.document)
+        self.split = text_splitter.split_documents(self.document)
 
-    def store_embeddings(self, documents: List[Document]) -> None:
+    def store_embeddings(self) -> None:
         if self.vector_db_vendor == "milvus":
             self.vector_db = Milvus.from_documents(
-                documents=documents,
+                documents=self.split,
                 embedding=self.embeddings,
                 connection_args=self.connection_args,
             )
@@ -118,6 +121,8 @@ class DocumentSummariser:
 
         """
         if self.vector_db_vendor == "milvus":
+            if not self.vector_db:
+                raise ValueError("No vector store loaded")
             return self.vector_db.similarity_search(query=query, k=k)
         else:
             raise NotImplementedError(self.vector_db_vendor)

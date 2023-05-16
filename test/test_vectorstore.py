@@ -18,12 +18,13 @@ def test_document_summariser():
     assert isinstance(document, bytes)
 
     doc = document_from_pdf(document)
-    docsum = DocumentSummariser(document=doc)
-    documents = docsum.split_document()
-    assert isinstance(documents, list)
-    assert isinstance(documents[0], Document)
+    docsum = DocumentSummariser()
+    docsum.set_document(doc)
+    docsum.split_document()
+    assert isinstance(docsum.split, list)
+    assert isinstance(docsum.split[0], Document)
 
-    docsum.store_embeddings(documents)
+    docsum.store_embeddings()
     assert docsum.vector_db is not None
 
     query = "What is BioCypher?"
