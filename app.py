@@ -128,7 +128,11 @@ import datetime
 from chatgse._interface import ChatGSE
 from chatgse._stats import get_community_usage_cost
 from chatgse._interface import community_possible
-from chatgse._docsum import DocumentSummariser
+from chatgse._docsum import (
+    DocumentSummariser,
+    document_from_pdf,
+    document_from_txt,
+)
 
 
 # HANDLERS
@@ -550,7 +554,7 @@ def show_primary_model_prompts():
                 f"Remove prompt {num + 1}",
                 on_click=remove_prompt,
                 args=(ss.prompts["primary_model_prompts"], num),
-                key=f"remove_prompt_{num}",
+                key=f"remove_primary_prompt_{num}",
                 use_container_width=True,
             )
 
@@ -836,7 +840,12 @@ def docsum_panel():
         type=["txt", "pdf"],
     )
     if uploaded_file:
-        docsum = DocumentSummariser()
+        val = uploaded_file.getvalue()
+        if uploaded_file.type == "application/pdf":
+            doc = document_from_pdf(val)
+        elif uploaded_file.type == "text/plain":
+            doc = document_from_txt(val)
+        docsum = DocumentSummariser(document=doc)
 
 
 def main():
@@ -1146,9 +1155,12 @@ def main():
                 "perform similarity search on the embeddings of the documents' "
                 "contents."
             )
-            st.markdown(
-                f"`📎 Assistant`: Document summarisation functionality {OFFLINE_FUNCTIONALITY}"
-            )
+            if ss.online:
+                st.markdown(
+                    f"`📎 Assistant`: Document summarisation functionality {OFFLINE_FUNCTIONALITY}"
+                )
+            else:
+                docsum_panel()
 
 
 if __name__ == "__main__":

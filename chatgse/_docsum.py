@@ -23,6 +23,7 @@ class DocumentSummariser:
         self,
         chunk_size: int = 1000,
         chunk_overlap: int = 0,
+        document: Optional[Document] = None,
         separators: Optional[list] = None,
         model: Optional[str] = None,
         vector_db_vendor: Optional[str] = None,
@@ -46,6 +47,8 @@ class DocumentSummariser:
             "port": "19530",
         }
 
+        self.document = document
+
     def set_chunk_siue(self, chunk_size: int) -> None:
         self.chunk_size = chunk_size
 
@@ -68,7 +71,7 @@ class DocumentSummariser:
         """
         if path.endswith(".txt"):
             loader = TextLoader(path)
-            return loader.load()
+            self.document = loader.load()
         elif path.endswith(".pdf"):
             doc = fitz.open(path)
             text = ""
@@ -78,21 +81,20 @@ class DocumentSummariser:
             meta = {k: v for k, v in doc.metadata.items() if v}
             meta.update({"source": path})
 
-            return [
+            self.document = [
                 Document(
                     page_content=text,
                     metadata=meta,
                 )
             ]
 
-    def split_document(self, path: str) -> List[Document]:
-        document = self._load_document(path)
+    def split_document(self) -> List[Document]:
         text_splitter = RecursiveCharacterTextSplitter(
             chunk_size=self.chunk_size,
             chunk_overlap=self.chunk_overlap,
             separators=self.separators,
         )
-        return text_splitter.split_documents(document)
+        return text_splitter.split_documents(self.document)
 
     def store_embeddings(self, documents: List[Document]) -> None:
         if self.vector_db_vendor == "milvus":
@@ -119,3 +121,38 @@ class DocumentSummariser:
             return self.vector_db.similarity_search(query=query, k=k)
         else:
             raise NotImplementedError(self.vector_db_vendor)
+
+
+def document_from_pdf(pdf) -> List[Document]:
+    """
+    Receive a byte representation of a pdf file and return a list of Documents
+    with metadata.
+    """
+    doc = fitz.open(stream=pdf, filetype="pdf")
+    text = ""
+    for page in doc:
+        text += page.get_text()
+
+    meta = {k: v for k, v in doc.metadata.items() if v}
+    meta.update({"source": "pdf"})
+
+    return [
+        Document(
+            page_content=text,
+            metadata=meta,
+        )
+    ]
+
+
+def document_from_txt(txt) -> List[Document]:
+    """
+    Receive a byte representation of a txt file and return a list of Documents
+    with metadata.
+    """
+    meta = {"source": "txt"}
+    return [
+        Document(
+            page_content=txt,
+            metadata=meta,
+        )
+    ]
