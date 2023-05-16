@@ -845,6 +845,13 @@ def docsum_panel():
             "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"
             "📄 Upload Document"
         )
+        if ss.get("online"):
+            st.warning(
+                "This feature is currently not available in online mode, as it "
+                "requires connection to a vector database. Please run the app "
+                "locally to use this feature. See the [README]("
+                "https://github.com/biocypher/ChatGSE) for more info."
+            )
         st.info(
             "Upload documents one at a time. Upon upload, the document is "
             "split according to the settings and the embeddings are stored in "
@@ -854,6 +861,7 @@ def docsum_panel():
             "Upload a document for summarisation",
             type=["txt", "pdf"],
             label_visibility="collapsed",
+            disabled=ss.online,
         )
         if uploaded_file:
             with st.spinner("Saving embeddings..."):
@@ -867,7 +875,7 @@ def docsum_panel():
                 ss.docsum.set_document(doc)
                 ss.docsum.split_document()
                 ss.docsum.store_embeddings()
-                st.success("Embeddings saved!")
+            st.success("Embeddings saved!")
 
     with settings:
         if not ss.get("docsum"):
@@ -884,6 +892,7 @@ def docsum_panel():
         st.checkbox(
             "Use document summarisation prompt",
             value=ss.docsum.use_prompt,
+            disabled=ss.online,
         )
 
         st.slider(
@@ -892,6 +901,7 @@ def docsum_panel():
             max_value=5000,
             value=ss.docsum.chunk_size,
             step=1,
+            disabled=ss.online,
         )
         st.slider(
             "Overlap",
@@ -899,11 +909,13 @@ def docsum_panel():
             max_value=1000,
             value=ss.docsum.chunk_overlap,
             step=1,
+            disabled=ss.online,
         )
         st.multiselect(
             "Separators (defaults: new line, comma, space)",
             options=ss.docsum.separators,
             default=ss.docsum.separators,
+            disabled=ss.online,
         )
         st.slider(
             "Number of results to use in the prompt",
@@ -911,6 +923,7 @@ def docsum_panel():
             max_value=20,
             value=ss.docsum.n_results,
             step=1,
+            disabled=ss.online,
         )
 
 
@@ -969,7 +982,7 @@ def main():
         correct_tab,
     ) = st.tabs(
         [
-            "Gene Sets and Pathways",
+            "Chat",
             "Prompt Engineering",
             "Document Summarisation",
             "Cell Type Annotation",
@@ -1221,12 +1234,7 @@ def main():
                 "perform similarity search on the embeddings of the documents' "
                 "contents."
             )
-            if ss.online:
-                st.markdown(
-                    f"`📎 Assistant`: Document summarisation functionality {OFFLINE_FUNCTIONALITY}"
-                )
-            else:
-                docsum_panel()
+            docsum_panel()
 
 
 if __name__ == "__main__":
