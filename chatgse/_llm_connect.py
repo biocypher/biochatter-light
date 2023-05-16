@@ -118,6 +118,10 @@ class Conversation(ABC):
     def query(self, text: str):
         self.append_user_message(text)
 
+        if ss.get("docsum"):
+            if ss.docsum.use_prompt:
+                self._inject_context(text)
+
         msg, token_usage = self._primary_query()
 
         if not token_usage:
@@ -138,6 +142,18 @@ class Conversation(ABC):
     @abstractmethod
     def _correct_response(self, msg: str):
         pass
+
+    def _inject_context(self, text: str):
+        statements = ss.docsum.similarity_search(text)
+        prompts = ss.prompts["docsum_prompts"]
+        if statements:
+            for i, prompt in enumerate(prompts):
+                if i == len(prompts) - 1:
+                    self.append_system_message(
+                        prompt.format(statements=statements)
+                    )
+                else:
+                    self.append_system_message(prompt)
 
 
 class GptConversation(Conversation):
