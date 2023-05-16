@@ -1,6 +1,5 @@
-import os
+import pytest
 
-print(os.getcwd())
 from chatgse._docsum import (
     DocumentSummariser,
     Document,

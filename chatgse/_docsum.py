@@ -21,17 +21,21 @@ import fitz
 class DocumentSummariser:
     def __init__(
         self,
+        use_prompt: bool = True,
         chunk_size: int = 1000,
         chunk_overlap: int = 0,
         document: Optional[Document] = None,
         separators: Optional[list] = None,
+        n_results: int = 3,
         model: Optional[str] = None,
         vector_db_vendor: Optional[str] = None,
         connection_args: Optional[dict] = None,
     ) -> None:
+        self.use_prompt = use_prompt
         self.chunk_size = chunk_size
         self.chunk_overlap = chunk_overlap
         self.separators = separators or [" ", ",", "\n"]
+        self.n_results = n_results
 
         # TODO: variable embeddings depending on model
         # for now, just use ada-002
@@ -123,7 +127,9 @@ class DocumentSummariser:
         if self.vector_db_vendor == "milvus":
             if not self.vector_db:
                 raise ValueError("No vector store loaded")
-            return self.vector_db.similarity_search(query=query, k=k)
+            return self.vector_db.similarity_search(
+                query=query, k=k or self.n_results
+            )
         else:
             raise NotImplementedError(self.vector_db_vendor)
 

@@ -835,21 +835,83 @@ def docsum_panel():
     of results to return. Also displays the list of closest matches to the last
     executed query.
     """
-    uploaded_file = st.file_uploader(
-        "Upload a document for summarisation",
-        type=["txt", "pdf"],
-    )
-    if uploaded_file:
+
+    uploader, settings = st.columns(2)
+
+    with uploader:
+        st.markdown(
+            "### "
+            "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"
+            "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"
+            "📄 Upload Document"
+        )
+        st.info(
+            "Upload documents one at a time. Upon upload, the document is "
+            "split according to the settings and the embeddings are stored in "
+            "the connected vector database."
+        )
+        uploaded_file = st.file_uploader(
+            "Upload a document for summarisation",
+            type=["txt", "pdf"],
+            label_visibility="collapsed",
+        )
+        if uploaded_file:
+            with st.spinner("Saving embeddings..."):
+                if not ss.get("docsum"):
+                    ss.docsum = DocumentSummariser()
+                val = uploaded_file.getvalue()
+                if uploaded_file.type == "application/pdf":
+                    doc = document_from_pdf(val)
+                elif uploaded_file.type == "text/plain":
+                    doc = document_from_txt(val)
+                ss.docsum.set_document(doc)
+                ss.docsum.split_document()
+                ss.docsum.store_embeddings()
+                st.success("Embeddings saved!")
+
+    with settings:
         if not ss.get("docsum"):
             ss.docsum = DocumentSummariser()
-        val = uploaded_file.getvalue()
-        if uploaded_file.type == "application/pdf":
-            doc = document_from_pdf(val)
-        elif uploaded_file.type == "text/plain":
-            doc = document_from_txt(val)
-        ss.docsum.set_document(doc)
-        split = ss.docsum.split_text()
-        ss.docsum.store_embeddings(split)
+
+        st.markdown(
+            "### "
+            "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"
+            "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"
+            "🔧 Settings"
+        )
+
+        # checkbox for whether to use the docsum prompt
+        st.checkbox(
+            "Use document summarisation prompt",
+            value=ss.docsum.use_prompt,
+        )
+
+        st.slider(
+            "Chunk size",
+            min_value=100,
+            max_value=5000,
+            value=ss.docsum.chunk_size,
+            step=1,
+        )
+        st.slider(
+            "Overlap",
+            min_value=0,
+            max_value=1000,
+            value=ss.docsum.chunk_overlap,
+            step=1,
+        )
+        st.multiselect(
+            "Separators (defaults: new line, comma, space)",
+            options=ss.docsum.separators,
+            default=ss.docsum.separators,
+        )
+        st.slider(
+            "Number of results to use in the prompt",
+            min_value=1,
+            max_value=20,
+            value=ss.docsum.n_results,
+            step=1,
+        )
 
 
 def main():
