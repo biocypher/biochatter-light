@@ -293,16 +293,17 @@ def app_header():
         # 💬🧬 :red[ChatGSE] `{__version__}`
         """
     )
-    st.warning(
-        """
-        Please note that on
-        streamlit cloud, the app may reload automatically after a period of
-        inactivity, which may lead to inconsistencies in the app state or
-        uploaded files. For this reason, it is recommended to go through an
-        individual conversation without interruptions. We are looking into more
-        persistent solutions for hosting the app.
-        """
-    )
+    if ss.get("on_streamlit"):
+        st.warning(
+            """
+            Please note that on
+            streamlit cloud, the app may reload automatically after a period of
+            inactivity, which may lead to inconsistencies in the app state or
+            uploaded files. For this reason, it is recommended to go through an
+            individual conversation without interruptions. We are looking into more
+            persistent solutions for hosting the app.
+            """
+        )
 
 
 def get_remaining_tokens():
@@ -848,6 +849,16 @@ def main():
             "tool_prompts": TOOL_PROMPTS,
             "docsum_prompts": DOCSUM_PROMPTS,
         }
+
+        # CHECK ENVIRONMENT
+        if os.getenv("ON_STREAMLIT"):
+            ss.on_streamlit = True
+            ss.online = True
+        elif os.getenv("ON_SELFHOSTED"):
+            ss.on_selfhosted = True
+            ss.online = True
+        else:
+            ss.online = False
 
     # SETUP
     # check for API keys
