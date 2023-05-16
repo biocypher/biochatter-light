@@ -22,6 +22,7 @@ class DocumentSummariser:
     def __init__(
         self,
         use_prompt: bool = True,
+        used: bool = False,
         chunk_size: int = 1000,
         chunk_overlap: int = 0,
         document: Optional[Document] = None,
@@ -32,6 +33,7 @@ class DocumentSummariser:
         connection_args: Optional[dict] = None,
     ) -> None:
         self.use_prompt = use_prompt
+        self.used = used
         self.chunk_size = chunk_size
         self.chunk_overlap = chunk_overlap
         self.separators = separators or [" ", ",", "\n"]
@@ -40,19 +42,18 @@ class DocumentSummariser:
         # TODO: variable embeddings depending on model
         # for now, just use ada-002
         if not ss.online:
-            self.embeddings = OpenAIEmbeddings()
+            self.embeddings = OpenAIEmbeddings(openai_api_key=ss.openai_api_key)
         else:
             self.embeddings = None
-
-        # TODO: vector db selection
-        self.vector_db_vendor = vector_db_vendor or "milvus"
-        self.vector_db = None
 
         # connection arguments
         self.connection_args = connection_args or {
             "host": "127.0.0.1",
             "port": "19530",
         }
+        # TODO: vector db selection
+        self.vector_db_vendor = vector_db_vendor or "milvus"
+        self.vector_db = None
 
         self.document = None
 

@@ -144,7 +144,17 @@ class Conversation(ABC):
         pass
 
     def _inject_context(self, text: str):
-        statements = ss.docsum.similarity_search(text)
+        if not ss.docsum.used:
+            st.info(
+                "No document has been analysed yet. To use document "
+                "summarisation, please analyse at least one document first."
+            )
+            return
+
+        with st.spinner("Performing similarity search..."):
+            statements = [
+                doc.page_content for doc in ss.docsum.similarity_search(text)
+            ]
         prompts = ss.prompts["docsum_prompts"]
         if statements:
             for i, prompt in enumerate(prompts):
@@ -191,6 +201,7 @@ class GptConversation(Conversation):
             )
             if user == "community":
                 self.usage_stats = get_stats(user=user)
+            ss.openai_api_key = api_key
             return True
         except openai.error.AuthenticationError as e:
             return False

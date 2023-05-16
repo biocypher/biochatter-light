@@ -862,6 +862,9 @@ def docsum_panel():
             disabled=ss.online,
         )
         if uploaded_file:
+            if not ss.docsum.used:
+                ss.docsum.used = True
+
             with st.spinner("Saving embeddings..."):
                 val = uploaded_file.getvalue()
                 if uploaded_file.type == "application/pdf":
@@ -875,7 +878,7 @@ def docsum_panel():
 
     with settings:
         if not ss.get("docsum"):
-            ss.docsum = DocumentSummariser()
+            ss.docsum = DocumentSummariser(use_prompt=False)
 
         st.markdown(
             "### "
@@ -885,41 +888,43 @@ def docsum_panel():
         )
 
         # checkbox for whether to use the docsum prompt
-        st.checkbox(
+        ss.docsum.use_prompt = st.checkbox(
             "Use document summarisation prompt",
             value=ss.docsum.use_prompt,
             disabled=ss.online,
         )
 
-        st.slider(
+        disabled = ss.online or (not ss.docsum.use_prompt)
+
+        ss.docsum.chunk_size = st.slider(
             "Chunk size",
             min_value=100,
             max_value=5000,
             value=ss.docsum.chunk_size,
             step=1,
-            disabled=ss.online,
+            disabled=disabled,
         )
-        st.slider(
+        ss.docsum.chunk_overlap = st.slider(
             "Overlap",
             min_value=0,
             max_value=1000,
             value=ss.docsum.chunk_overlap,
             step=1,
-            disabled=ss.online,
+            disabled=disabled,
         )
-        st.multiselect(
-            "Separators (defaults: new line, comma, space)",
-            options=ss.docsum.separators,
-            default=ss.docsum.separators,
-            disabled=ss.online,
-        )
-        st.slider(
+        # ss.docsum.separators = st.multiselect(
+        #     "Separators (defaults: new line, comma, space)",
+        #     options=ss.docsum.separators,
+        #     default=ss.docsum.separators,
+        #     disabled=disabled,
+        # )
+        ss.docsum.n_results = st.slider(
             "Number of results to use in the prompt",
             min_value=1,
             max_value=20,
             value=ss.docsum.n_results,
             step=1,
-            disabled=ss.online,
+            disabled=disabled,
         )
 
 
@@ -1230,7 +1235,13 @@ def main():
                 "perform similarity search on the embeddings of the documents' "
                 "contents."
             )
-            docsum_panel()
+            if ss.get("openai_api_key"):
+                docsum_panel()
+            else:
+                st.info(
+                    "Please enter your OpenAI API key to use the document "
+                    "summarisation functionality."
+                )
 
 
 if __name__ == "__main__":
