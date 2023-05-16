@@ -299,14 +299,12 @@ def app_header():
     )
     if ss.get("on_streamlit"):
         st.warning(
-            """
-            Please note that on
-            streamlit cloud, the app may reload automatically after a period of
-            inactivity, which may lead to inconsistencies in the app state or
-            uploaded files. For this reason, it is recommended to go through an
-            individual conversation without interruptions. We are looking into more
-            persistent solutions for hosting the app.
-            """
+            "Please note that, on streamlit cloud, the app may reload "
+            "automatically after a period of inactivity, which may lead to "
+            "inconsistencies in the app state or uploaded files. For this "
+            "reason, it is recommended to go through an individual "
+            "conversation without interruptions. Please visit our [self-hosted "
+            "instance](https://chat.biocypher.org) to prevent this."
         )
 
 
@@ -865,8 +863,6 @@ def docsum_panel():
         )
         if uploaded_file:
             with st.spinner("Saving embeddings..."):
-                if not ss.get("docsum"):
-                    ss.docsum = DocumentSummariser()
                 val = uploaded_file.getvalue()
                 if uploaded_file.type == "application/pdf":
                     doc = document_from_pdf(val)

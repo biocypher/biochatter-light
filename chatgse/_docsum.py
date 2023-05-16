@@ -39,7 +39,10 @@ class DocumentSummariser:
 
         # TODO: variable embeddings depending on model
         # for now, just use ada-002
-        self.embeddings = OpenAIEmbeddings()
+        if not ss.online:
+            self.embeddings = OpenAIEmbeddings()
+        else:
+            self.embeddings = None
 
         # TODO: vector db selection
         self.vector_db_vendor = vector_db_vendor or "milvus"
