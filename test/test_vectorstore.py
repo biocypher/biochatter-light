@@ -9,6 +9,8 @@ def test_document_summariser():
     # uses ada-002 for embeddings
     docsum = DocumentSummariser()
     text_path = "test/bc_summary.pdf"
+    # load document as file
+
     documents = docsum.split_document(text_path)
     assert isinstance(documents, list)
     assert isinstance(documents[0], Document)
