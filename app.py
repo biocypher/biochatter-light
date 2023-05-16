@@ -91,9 +91,11 @@ TOOL_PROMPTS = {
     ),
 }
 DOCSUM_PROMPTS = [
-    "The user has provided additional background information from articles; "
-    "the following statements are the closest matches to the user's query: "
-    "{statements}",
+    "The user has provided additional background information from scientific "
+    "articles.",
+    "Take the following statements into account and specifically comment on "
+    "consistencies and inconsistencies with all other information available to "
+    "you: {statements}",
 ]
 
 WHAT_MESSAGES = [
@@ -126,6 +128,7 @@ import datetime
 from chatgse._interface import ChatGSE
 from chatgse._stats import get_community_usage_cost
 from chatgse._interface import community_possible
+from chatgse._docsum import DocumentSummariser
 
 
 # HANDLERS
@@ -814,6 +817,25 @@ def shuffle_messages(l: list, i: int):
         l[i],
     )
     l.append(l.pop(3))
+
+
+def docsum_panel():
+    """
+    Upload files for document summarisation, one file at a time. Upon upload,
+    document is split and embedded into a connected vector DB using the
+    `_docsum.py` module. The top k results of similarity search of the user's
+    query will be injected into the prompt to the primary model (only once per
+    query). The panel displays a file_uploader panel, settings for the text
+    splitter (chunk size and overlap, separators), and a slider for the number
+    of results to return. Also displays the list of closest matches to the last
+    executed query.
+    """
+    uploaded_file = st.file_uploader(
+        "Upload a document for summarisation",
+        type=["txt", "pdf"],
+    )
+    if uploaded_file:
+        docsum = DocumentSummariser()
 
 
 def main():
