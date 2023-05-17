@@ -904,8 +904,10 @@ def docsum_panel():
                 "The following are the closest matches to the last executed "
                 "query."
             )
+            out = ""
             for s in ss.current_statements:
-                st.info(f"{s}")
+                out += f"- {s}\n"
+            st.markdown(out)
 
     with settings:
         st.markdown(
@@ -917,14 +919,14 @@ def docsum_panel():
 
         # checkbox for whether to use the docsum prompt
         st.checkbox(
-            "Use document summarisation prompt",
+            "Use document summarisation to inject search results into the prompt",
             value=ss.docsum.use_prompt,
             on_change=toggle_docsum_prompt,
             disabled=ss.online,
         )
 
         ss.docsum.chunk_size = st.slider(
-            "Chunk size",
+            "Chunk size: how large should the embedded text fragments be?",
             min_value=100,
             max_value=5000,
             value=1000,
@@ -932,7 +934,7 @@ def docsum_panel():
             disabled=disabled,
         )
         ss.docsum.chunk_overlap = st.slider(
-            "Overlap",
+            "Overlap: should the chunks overlap, and by how much?",
             min_value=0,
             max_value=1000,
             value=0,
@@ -946,7 +948,7 @@ def docsum_panel():
         #     disabled=disabled,
         # )
         ss.docsum.n_results = st.slider(
-            "Number of results to use in the prompt",
+            "Number of results: how many chunks should be used to supplement the prompt?",
             min_value=1,
             max_value=20,
             value=3,
