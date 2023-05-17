@@ -157,6 +157,7 @@ class Conversation(ABC):
             ]
         prompts = ss.prompts["docsum_prompts"]
         if statements:
+            ss.current_statements = statements
             for i, prompt in enumerate(prompts):
                 if i == len(prompts) - 1:
                     self.append_system_message(

@@ -864,13 +864,17 @@ def docsum_panel():
             "split according to the settings and the embeddings are stored in "
             "the connected vector database."
         )
-        uploaded_file = st.file_uploader(
-            "Upload a document for summarisation",
-            type=["txt", "pdf"],
-            label_visibility="collapsed",
-            disabled=disabled,
-        )
-        if uploaded_file:
+        with st.form("Upload Document", clear_on_submit=True):
+            uploaded_file = st.file_uploader(
+                "Upload a document for summarisation",
+                type=["txt", "pdf"],
+                label_visibility="collapsed",
+                disabled=disabled,
+            )
+            submitted = st.form_submit_button(
+                "Upload", use_container_width=True
+            )
+        if submitted and uploaded_file is not None:
             if not ss.docsum.used:
                 ss.docsum.used = True
 
@@ -884,6 +888,20 @@ def docsum_panel():
                 ss.docsum.split_document()
                 ss.docsum.store_embeddings()
             st.success("Embeddings saved!")
+
+        if ss.get("current_statements"):
+            st.markdown(
+                "### "
+                "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"
+                "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"
+                "🔍 Search Results"
+            )
+            st.info(
+                "The following are the closest matches to the last executed "
+                "query."
+            )
+            for s in ss.current_statements:
+                st.info(f"{s}")
 
     with settings:
         st.markdown(
@@ -905,7 +923,7 @@ def docsum_panel():
             "Chunk size",
             min_value=100,
             max_value=5000,
-            value=ss.docsum.chunk_size,
+            value=1000,
             step=1,
             disabled=disabled,
         )
@@ -913,7 +931,7 @@ def docsum_panel():
             "Overlap",
             min_value=0,
             max_value=1000,
-            value=ss.docsum.chunk_overlap,
+            value=0,
             step=1,
             disabled=disabled,
         )
@@ -927,7 +945,7 @@ def docsum_panel():
             "Number of results to use in the prompt",
             min_value=1,
             max_value=20,
-            value=ss.docsum.n_results,
+            value=3,
             step=1,
             disabled=disabled,
         )
