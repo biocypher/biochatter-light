@@ -21,10 +21,20 @@ please join our community at https://biocypher.zulipchat.com!
 >
 > This disclaimer was adapted from the [Pooch](https://github.com/fatiando/pooch) project.
 
-## Prompt engineering discussions
+## 🛠 Prompt engineering discussions
 You can discuss your favourite prompt setups and share the corresponding JSON
 files in the discussion
 [here](https://github.com/biocypher/ChatGSE/discussions/11)!
+
+## 📑 Document summarisation / In-context learning
+The document summarisation feature is currently only available on local builds
+of ChatGSE (see below). It requires a connection to a vector database
+(currently only [Milvus](https://milvus.io/) is supported). Please follow [these
+instructions](https://milvus.io/docs/install_standalone-docker.md) to mount a
+Docker instance on your machine (using standard ports). Then, you can run the
+ChatGSE app as described below, using the document summarisation feature to
+upload documents and use similarity search to inject context into your prompts.
+
 
 ## Local deployment
 
