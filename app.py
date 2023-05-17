@@ -964,7 +964,7 @@ def docsum_panel():
                 "📄 Uploaded Documents"
             )
             st.info(
-                "The following are the documents that have been uploaded for "
+                "The following documents have been uploaded for "
                 "embedding / prompt injection. Only the current session is "
                 "captured; the connected vector database currently needs to "
                 "be manually maintained."
