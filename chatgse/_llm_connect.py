@@ -153,7 +153,11 @@ class Conversation(ABC):
 
         with st.spinner("Performing similarity search..."):
             statements = [
-                doc.page_content for doc in ss.docsum.similarity_search(text)
+                doc.page_content
+                for doc in ss.docsum.similarity_search(
+                    text,
+                    ss.docsum.n_results,
+                )
             ]
         prompts = ss.prompts["docsum_prompts"]
         if statements:
