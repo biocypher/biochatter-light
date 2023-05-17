@@ -1,6 +1,6 @@
-# app.py: streamlit chat app for contextualisation of biomedical results
+# ChatGSE app.py: streamlit chat app for contextualisation of biomedical results
 app_name = "chatgse"
-__version__ = "0.2.17"
+__version__ = "0.2.18"
 
 # BOILERPLATE
 import json
@@ -90,6 +90,13 @@ TOOL_PROMPTS = {
         "bioinformatics method gsea. Here are the data: {df}"
     ),
 }
+DOCSUM_PROMPTS = [
+    "The user has provided additional background information from scientific "
+    "articles.",
+    "Take the following statements into account and specifically comment on "
+    "consistencies and inconsistencies with all other information available to "
+    "you: {statements}",
+]
 
 WHAT_MESSAGES = [
     "A platform for the application of Large Language Models (LLMs) in biomedical research.",
@@ -121,6 +128,11 @@ import datetime
 from chatgse._interface import ChatGSE
 from chatgse._stats import get_community_usage_cost
 from chatgse._interface import community_possible
+from chatgse._docsum import (
+    DocumentSummariser,
+    document_from_pdf,
+    document_from_txt,
+)
 
 
 # HANDLERS
@@ -287,14 +299,12 @@ def app_header():
     )
     if ss.get("on_streamlit"):
         st.warning(
-            """
-            Please note that on
-            streamlit cloud, the app may reload automatically after a period of
-            inactivity, which may lead to inconsistencies in the app state or
-            uploaded files. For this reason, it is recommended to go through an
-            individual conversation without interruptions. We are looking into more
-            persistent solutions for hosting the app.
-            """
+            "Please note that, on streamlit cloud, the app may reload "
+            "automatically after a period of inactivity, which may lead to "
+            "inconsistencies in the app state or uploaded files. For this "
+            "reason, it is recommended to go through an individual "
+            "conversation without interruptions. Please visit our [self-hosted "
+            "instance](https://chat.biocypher.org) to prevent this."
         )
 
 
@@ -542,7 +552,7 @@ def show_primary_model_prompts():
                 f"Remove prompt {num + 1}",
                 on_click=remove_prompt,
                 args=(ss.prompts["primary_model_prompts"], num),
-                key=f"remove_prompt_{num}",
+                key=f"remove_primary_prompt_{num}",
                 use_container_width=True,
             )
 
@@ -584,6 +594,35 @@ def show_correcting_agent_prompts():
         on_click=add_prompt,
         args=(ss.prompts["correcting_agent_prompts"],),
     )
+
+
+def show_docsum_prompts():
+    st.markdown(
+        "`📎 Assistant`: Here you can edit the prompts used to set up the "
+        "Document Summarisation task. Text passages from any uploaded "
+        "documents will be passed on to the primary model using these prompts. "
+        "The placeholder `{statments}` will be replaced by the text passages. "
+        "Upload documents and edit vector database settings in the "
+        "`Document Summarisation` tab."
+    )
+
+    for num, msg in enumerate(ss.prompts["docsum_prompts"]):
+        field, button = st.columns([4, 1])
+        with field:
+            ss.prompts["docsum_prompts"][num] = st.text_area(
+                label=str(num + 1),
+                value=msg,
+                label_visibility="collapsed",
+                placeholder="Enter your prompt here.",
+            )
+        with button:
+            st.button(
+                f"Remove prompt {num + 1}",
+                on_click=remove_prompt,
+                args=(ss.prompts["docsum_prompts"], num),
+                key=f"remove_prompt_{num}",
+                use_container_width=True,
+            )
 
 
 def show_tool_prompts():
@@ -783,6 +822,122 @@ def shuffle_messages(l: list, i: int):
     l.append(l.pop(3))
 
 
+def docsum_panel():
+    """
+    Upload files for document summarisation, one file at a time. Upon upload,
+    document is split and embedded into a connected vector DB using the
+    `_docsum.py` module. The top k results of similarity search of the user's
+    query will be injected into the prompt to the primary model (only once per
+    query). The panel displays a file_uploader panel, settings for the text
+    splitter (chunk size and overlap, separators), and a slider for the number
+    of results to return. Also displays the list of closest matches to the last
+    executed query.
+    """
+
+    if not ss.get("docsum"):
+        ss.docsum = DocumentSummariser(use_prompt=False)
+
+    disabled = ss.online or (not ss.docsum.use_prompt)
+
+    uploader, settings = st.columns(2)
+
+    with uploader:
+        st.markdown(
+            "### "
+            "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"
+            "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"
+            "📄 Upload Document"
+        )
+        if disabled:
+            st.warning(
+                "To use the feature, please enable it in the settings panel. →"
+            )
+        if ss.get("online"):
+            st.warning(
+                "This feature is currently not available in online mode, as it "
+                "requires connection to a vector database. Please run the app "
+                "locally to use this feature. See the [README]("
+                "https://github.com/biocypher/ChatGSE) for more info."
+            )
+        st.info(
+            "Upload documents one at a time. Upon upload, the document is "
+            "split according to the settings and the embeddings are stored in "
+            "the connected vector database."
+        )
+        uploaded_file = st.file_uploader(
+            "Upload a document for summarisation",
+            type=["txt", "pdf"],
+            label_visibility="collapsed",
+            disabled=disabled,
+        )
+        if uploaded_file:
+            if not ss.docsum.used:
+                ss.docsum.used = True
+
+            with st.spinner("Saving embeddings..."):
+                val = uploaded_file.getvalue()
+                if uploaded_file.type == "application/pdf":
+                    doc = document_from_pdf(val)
+                elif uploaded_file.type == "text/plain":
+                    doc = document_from_txt(val)
+                ss.docsum.set_document(doc)
+                ss.docsum.split_document()
+                ss.docsum.store_embeddings()
+            st.success("Embeddings saved!")
+
+    with settings:
+        st.markdown(
+            "### "
+            "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"
+            "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"
+            "🔧 Settings"
+        )
+
+        # checkbox for whether to use the docsum prompt
+        st.checkbox(
+            "Use document summarisation prompt",
+            value=ss.docsum.use_prompt,
+            on_change=toggle_docsum_prompt,
+            disabled=ss.online,
+        )
+
+        ss.docsum.chunk_size = st.slider(
+            "Chunk size",
+            min_value=100,
+            max_value=5000,
+            value=ss.docsum.chunk_size,
+            step=1,
+            disabled=disabled,
+        )
+        ss.docsum.chunk_overlap = st.slider(
+            "Overlap",
+            min_value=0,
+            max_value=1000,
+            value=ss.docsum.chunk_overlap,
+            step=1,
+            disabled=disabled,
+        )
+        # ss.docsum.separators = st.multiselect(
+        #     "Separators (defaults: new line, comma, space)",
+        #     options=ss.docsum.separators,
+        #     default=ss.docsum.separators,
+        #     disabled=disabled,
+        # )
+        ss.docsum.n_results = st.slider(
+            "Number of results to use in the prompt",
+            min_value=1,
+            max_value=20,
+            value=ss.docsum.n_results,
+            step=1,
+            disabled=disabled,
+        )
+
+
+def toggle_docsum_prompt():
+    """Toggles the use of the docsum prompt."""
+    ss.docsum.use_prompt = not ss.docsum.use_prompt
+
+
 def main():
     # NEW SESSION
     if not ss.get("mode"):
@@ -791,6 +946,7 @@ def main():
             "primary_model_prompts": PRIMARY_MODEL_PROMPTS,
             "correcting_agent_prompts": CORRECTING_AGENT_PROMPTS,
             "tool_prompts": TOOL_PROMPTS,
+            "docsum_prompts": DOCSUM_PROMPTS,
         }
 
         # CHECK ENVIRONMENT
@@ -831,18 +987,18 @@ def main():
     (
         chat_tab,
         prompts_tab,
+        docsum_tab,
         annot_tab,
         exp_design_tab,
         correct_tab,
-        docsum_tab,
     ) = st.tabs(
         [
-            "Gene Sets and Pathways",
+            "Chat",
             "Prompt Engineering",
+            "Document Summarisation",
             "Cell Type Annotation",
             "Experimental Design",
             "Correcting Agent",
-            "Document Summarisation",
         ]
     )
 
@@ -850,7 +1006,8 @@ def main():
         # WELCOME MESSAGE AND CHAT HISTORY
         st.markdown(
             "Welcome to ``ChatGSE``! "
-            ":violet[If you are on a small screen, you may need to shift-scroll to the right to see all tabs. -->]"
+            ":violet[If you are on a small screen, you may need to "
+            "shift-scroll to the right to see all tabs. -->]"
         )
 
         if ss.mode == "getting_key":
@@ -1035,7 +1192,12 @@ def main():
             prompt_save_load_reset()
             ss.prompts_box = st.selectbox(
                 "Select a prompt set",
-                ("Primary Model", "Correcting Agent", "Tools"),
+                (
+                    "Primary Model",
+                    "Correcting Agent",
+                    "Tools",
+                    "Document Summarisation",
+                ),
             )
 
             if ss.prompts_box == "Primary Model":
@@ -1046,6 +1208,9 @@ def main():
 
             elif ss.prompts_box == "Tools":
                 show_tool_prompts()
+
+            elif ss.prompts_box == "Document Summarisation":
+                show_docsum_prompts()
 
     with correct_tab:
         st.markdown(
@@ -1080,9 +1245,13 @@ def main():
                 "perform similarity search on the embeddings of the documents' "
                 "contents."
             )
-            st.markdown(
-                f"`📎 Assistant`: Document summarisation functionality {OFFLINE_FUNCTIONALITY}"
-            )
+            if ss.get("openai_api_key"):
+                docsum_panel()
+            else:
+                st.info(
+                    "Please enter your OpenAI API key to use the document "
+                    "summarisation functionality."
+                )
 
 
 if __name__ == "__main__":

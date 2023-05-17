@@ -1,3 +1,4 @@
+# ChatGSE usage statistics (for community key usage)
 # keep persistent statistics about community key usage in redis
 # adapted from https://github.com/mobarski/ask-my-pdf
 import redis

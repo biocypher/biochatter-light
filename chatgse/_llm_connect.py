@@ -1,3 +1,10 @@
+# ChatGSE LLM connectivity
+# connect to API
+# keep track of message history
+# query API
+# correct response
+# update usage stats
+
 import streamlit as st
 
 ss = st.session_state
@@ -111,6 +118,10 @@ class Conversation(ABC):
     def query(self, text: str):
         self.append_user_message(text)
 
+        if ss.get("docsum"):
+            if ss.docsum.use_prompt:
+                self._inject_context(text)
+
         msg, token_usage = self._primary_query()
 
         if not token_usage:
@@ -131,6 +142,28 @@ class Conversation(ABC):
     @abstractmethod
     def _correct_response(self, msg: str):
         pass
+
+    def _inject_context(self, text: str):
+        if not ss.docsum.used:
+            st.info(
+                "No document has been analysed yet. To use document "
+                "summarisation, please analyse at least one document first."
+            )
+            return
+
+        with st.spinner("Performing similarity search..."):
+            statements = [
+                doc.page_content for doc in ss.docsum.similarity_search(text)
+            ]
+        prompts = ss.prompts["docsum_prompts"]
+        if statements:
+            for i, prompt in enumerate(prompts):
+                if i == len(prompts) - 1:
+                    self.append_system_message(
+                        prompt.format(statements=statements)
+                    )
+                else:
+                    self.append_system_message(prompt)
 
 
 class GptConversation(Conversation):
@@ -168,6 +201,7 @@ class GptConversation(Conversation):
             )
             if user == "community":
                 self.usage_stats = get_stats(user=user)
+            ss.openai_api_key = api_key
             return True
         except openai.error.AuthenticationError as e:
             return False
