@@ -834,6 +834,11 @@ def docsum_panel():
     executed query.
     """
 
+    if not ss.get("docsum"):
+        ss.docsum = DocumentSummariser(use_prompt=False)
+
+    disabled = ss.online or (not ss.docsum.use_prompt)
+
     uploader, settings = st.columns(2)
 
     with uploader:
@@ -843,6 +848,10 @@ def docsum_panel():
             "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"
             "📄 Upload Document"
         )
+        if disabled:
+            st.warning(
+                "To use the feature, please enable it in the settings panel. →"
+            )
         if ss.get("online"):
             st.warning(
                 "This feature is currently not available in online mode, as it "
@@ -859,7 +868,7 @@ def docsum_panel():
             "Upload a document for summarisation",
             type=["txt", "pdf"],
             label_visibility="collapsed",
-            disabled=ss.online,
+            disabled=disabled,
         )
         if uploaded_file:
             if not ss.docsum.used:
@@ -877,9 +886,6 @@ def docsum_panel():
             st.success("Embeddings saved!")
 
     with settings:
-        if not ss.get("docsum"):
-            ss.docsum = DocumentSummariser(use_prompt=False)
-
         st.markdown(
             "### "
             "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"
@@ -888,13 +894,12 @@ def docsum_panel():
         )
 
         # checkbox for whether to use the docsum prompt
-        ss.docsum.use_prompt = st.checkbox(
+        st.checkbox(
             "Use document summarisation prompt",
             value=ss.docsum.use_prompt,
+            on_change=toggle_docsum_prompt,
             disabled=ss.online,
         )
-
-        disabled = ss.online or (not ss.docsum.use_prompt)
 
         ss.docsum.chunk_size = st.slider(
             "Chunk size",
@@ -926,6 +931,11 @@ def docsum_panel():
             step=1,
             disabled=disabled,
         )
+
+
+def toggle_docsum_prompt():
+    """Toggles the use of the docsum prompt."""
+    ss.docsum.use_prompt = not ss.docsum.use_prompt
 
 
 def main():
