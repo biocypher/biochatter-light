@@ -877,6 +877,10 @@ def docsum_panel():
         if submitted and uploaded_file is not None:
             if not ss.docsum.used:
                 ss.docsum.used = True
+            if not ss.get("uploaded_files"):
+                ss.uploaded_files = []
+
+            ss.uploaded_files.append(uploaded_file.name)
 
             with st.spinner("Saving embeddings..."):
                 val = uploaded_file.getvalue()
@@ -949,6 +953,22 @@ def docsum_panel():
             step=1,
             disabled=disabled,
         )
+
+        if ss.get("uploaded_files"):
+            st.markdown(
+                "### "
+                "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"
+                "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"
+                "📄 Uploaded Documents"
+            )
+            st.info(
+                "The following are the documents that have been uploaded for "
+                "embedding / prompt injection."
+            )
+            s = ""
+            for f in ss.uploaded_files:
+                s += "- " + f + "\n"
+            st.markdown(s)
 
 
 def toggle_docsum_prompt():
