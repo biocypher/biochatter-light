@@ -1228,30 +1228,27 @@ def main():
         )
 
     with docsum_tab:
-        if ss.user == "community":
-            st.markdown(f"{DEV_FUNCTIONALITY}")
+        st.markdown(
+            "While Large Language Models have access to vast amounts of "
+            "knowledge, this knowledge only includes what was present in "
+            "their training set, and thus excludes very current research "
+            "as well as research articles that are not open access. To "
+            "fill in the gaps of the model's knowledge, we include a "
+            "document summarisation approach that stores knowledge from "
+            "user-provided documents in a vector database, which can be "
+            "used to supplement the model prompt by retrieving the most "
+            "relevant contents of the provided documents. This process "
+            "builds on the unique functionality of vector databases to "
+            "perform similarity search on the embeddings of the documents' "
+            "contents."
+        )
+        if ss.get("openai_api_key"):
+            docsum_panel()
         else:
-            st.markdown(
-                "While Large Language Models have access to vast amounts of "
-                "knowledge, this knowledge only includes what was present in "
-                "their training set, and thus excludes very current research "
-                "as well as research articles that are not open access. To "
-                "fill in the gaps of the model's knowledge, we include a "
-                "document summarisation approach that stores knowledge from "
-                "user-provided documents in a vector database, which can be "
-                "used to supplement the model prompt by retrieving the most "
-                "relevant contents of the provided documents. This process "
-                "builds on the unique functionality of vector databases to "
-                "perform similarity search on the embeddings of the documents' "
-                "contents."
+            st.info(
+                "Please enter your OpenAI API key to use the document "
+                "summarisation functionality."
             )
-            if ss.get("openai_api_key"):
-                docsum_panel()
-            else:
-                st.info(
-                    "Please enter your OpenAI API key to use the document "
-                    "summarisation functionality."
-                )
 
 
 if __name__ == "__main__":
