@@ -34,6 +34,8 @@ instructions](https://milvus.io/docs/install_standalone-docker.md) to mount a
 Docker instance on your machine (using standard ports). Then, you can run the
 ChatGSE app as described below, using the document summarisation feature to
 upload documents and use similarity search to inject context into your prompts.
+Please note that if you want to run the app in a Docker container, you need to
+mount the Milvus container to the same network as the ChatGSE container.
 
 
 ## Local deployment
