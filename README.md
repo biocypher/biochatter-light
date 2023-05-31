@@ -27,21 +27,29 @@ files in the discussion
 [here](https://github.com/biocypher/ChatGSE/discussions/11)!
 
 ## 📑 Document summarisation / In-context learning
-The document summarisation feature is currently only available on local builds
-of ChatGSE (see below). It requires a connection to a vector database
-(currently only [Milvus](https://milvus.io/) is supported). Please follow [these
+You can use the document summarisation feature to upload documents and use
+similarity search to inject context into your prompts. The document
+summarisation feature is currently only available on local builds of ChatGSE
+(see below). It requires a connection to a vector database (currently only
+[Milvus](https://milvus.io/) is supported). We follow [these
 instructions](https://milvus.io/docs/install_standalone-docker.md) to mount a
-Docker instance on your machine (using standard ports). Then, you can run the
-ChatGSE app as described below, using the document summarisation feature to
-upload documents and use similarity search to inject context into your prompts.
-Please note that if you want to run the app in a Docker container, you need to
-mount the Milvus container to the same network as the ChatGSE container.
+Docker instance on your machine (using the standard ports). We provide a Docker
+compose setup to mount the Milvus containers and the ChatGSE container together:
 
+```
+git clone https://github.com/biocypher/ChatGSE.git
+cd ChatGSE
+docker compose up -d
+```
+
+This command creates three containers for Milvus and one for ChatGSE. After a
+short startup time, you can access the ChatGSE app at http://localhost:8501.
 
 ## Local deployment
 
 ### Docker
-Using docker, run the following commands to deploy a local browser app:
+Using docker, run the following commands to deploy a local browser app (without
+the additional containers for the vector database):
 
 ```
 git clone https://github.com/biocypher/ChatGSE.git
