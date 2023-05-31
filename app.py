@@ -1,6 +1,6 @@
 # ChatGSE app.py: streamlit chat app for contextualisation of biomedical results
 app_name = "chatgse"
-__version__ = "0.2.20"
+__version__ = "0.2.21"
 
 # BOILERPLATE
 import json
@@ -892,7 +892,7 @@ def docsum_panel():
 
             ss.uploaded_files.append(uploaded_file.name)
 
-            with st.spinner("Saving embeddings..."):
+            with st.spinner("Saving embeddings ..."):
                 val = uploaded_file.getvalue()
                 if uploaded_file.type == "application/pdf":
                     doc = document_from_pdf(val)
@@ -988,6 +988,13 @@ def docsum_panel():
 def toggle_docsum_prompt():
     """Toggles the use of the docsum prompt."""
     ss.docsum.use_prompt = not ss.docsum.use_prompt
+
+
+def correcting_agent_panel():
+    ss.split_correction = st.checkbox(
+        "Split the response into sentences for correction",
+        value=False,
+    )
 
 
 def main():
@@ -1103,7 +1110,7 @@ def main():
                 ss.mode = cg._get_data_input_manual()
 
             elif ss.mode == "chat":
-                with st.spinner("Thinking..."):
+                with st.spinner("Thinking ..."):
                     ss.response, ss.token_usage = cg._get_response()
 
             # DEMO LOGIC
@@ -1131,7 +1138,7 @@ def main():
                 )
 
             elif ss.mode == "demo_chat":
-                with st.spinner("Thinking..."):
+                with st.spinner("Thinking ..."):
                     ss.response, ss.token_usage = cg._get_response()
                 cg._write_and_history(
                     "📎 Assistant",
@@ -1282,9 +1289,12 @@ def main():
             "a correcting agent that automatically checks the validity of the "
             "primary model's statements, and corrects them if necessary."
         )
-        st.markdown(
-            f"`📎 Assistant`: Correction agent functionality {OFFLINE_FUNCTIONALITY}"
-        )
+        if ss.get("online"):
+            st.markdown(
+                f"`📎 Assistant`: Correction agent functionality {OFFLINE_FUNCTIONALITY}"
+            )
+        else:
+            correcting_agent_panel()
 
     with docsum_tab:
         st.markdown(
