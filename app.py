@@ -835,7 +835,16 @@ def docsum_panel():
     """
 
     if not ss.get("docsum"):
-        ss.docsum = DocumentSummariser(use_prompt=False)
+        if os.getenv("DOCKER_COMPOSE"):
+            ss.docsum = DocumentSummariser(
+                use_prompt=False,
+                connection_args={
+                    "host": "standalone",
+                    "port": "19530",
+                },
+            )
+        else:
+            ss.docsum = DocumentSummariser(use_prompt=False)
 
     disabled = ss.online or (not ss.docsum.use_prompt)
 
