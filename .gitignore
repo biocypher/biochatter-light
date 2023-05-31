@@ -6,3 +6,4 @@ chatgse-logs.txt
 .DS_Store
 input/*
 env.txt
+volumes/*
