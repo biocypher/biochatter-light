@@ -130,7 +130,13 @@ class Conversation(ABC):
             # indicates error
             return (msg, token_usage, None)
 
-        with st.spinner("Correcting..."):
+        cor_msg = (
+            "Correcting (using single sentences) ..."
+            if ss.split_correction
+            else "Correcting ..."
+        )
+
+        with st.spinner(cor_msg):
             corrections = []
             if ss.split_correction:
                 nltk.download("punkt")
@@ -169,7 +175,7 @@ class Conversation(ABC):
             )
             return
 
-        with st.spinner("Performing similarity search..."):
+        with st.spinner("Performing similarity search ..."):
             statements = [
                 doc.page_content
                 for doc in ss.docsum.similarity_search(

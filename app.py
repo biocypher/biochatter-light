@@ -892,7 +892,7 @@ def docsum_panel():
 
             ss.uploaded_files.append(uploaded_file.name)
 
-            with st.spinner("Saving embeddings..."):
+            with st.spinner("Saving embeddings ..."):
                 val = uploaded_file.getvalue()
                 if uploaded_file.type == "application/pdf":
                     doc = document_from_pdf(val)
@@ -1110,7 +1110,7 @@ def main():
                 ss.mode = cg._get_data_input_manual()
 
             elif ss.mode == "chat":
-                with st.spinner("Thinking..."):
+                with st.spinner("Thinking ..."):
                     ss.response, ss.token_usage = cg._get_response()
 
             # DEMO LOGIC
@@ -1138,7 +1138,7 @@ def main():
                 )
 
             elif ss.mode == "demo_chat":
-                with st.spinner("Thinking..."):
+                with st.spinner("Thinking ..."):
                     ss.response, ss.token_usage = cg._get_response()
                 cg._write_and_history(
                     "📎 Assistant",
