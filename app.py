@@ -866,7 +866,8 @@ def docsum_panel():
                 "This feature is currently not available in online mode, as it "
                 "requires connection to a vector database. Please run the app "
                 "locally to use this feature. See the [README]("
-                "https://github.com/biocypher/ChatGSE) for more info."
+                "https://github.com/biocypher/ChatGSE#-document-summarisation--in-context-learning)"
+                " for more info."
             )
         st.info(
             "Upload documents one at a time. Upon upload, the document is "
@@ -1010,6 +1011,9 @@ def main():
         else:
             ss.online = False
 
+        # SHOW INTRO MESSAGE
+        ss.show_intro = True
+
     # SETUP
     # check for API keys
     if not ss.get("primary_model"):
@@ -1061,7 +1065,7 @@ def main():
             "shift-scroll to the right to see all tabs. -->]"
         )
 
-        if ss.mode == "getting_key":
+        if ss.show_intro:
             show_about_section()
             cg._display_setup()
 
@@ -1071,13 +1075,16 @@ def main():
         if ss.input:
             if ss.mode == "getting_key":
                 ss.mode = cg._get_api_key(ss.input)
+                ss.show_intro = False
 
             elif ss.mode == "using_community_key":
                 ss.input = ""  # ugly
                 ss.mode = cg._check_for_api_key()
+                ss.show_intro = False
 
             elif ss.mode == "getting_name":
                 ss.mode = cg._get_user_name()
+                ss.show_intro = False
 
             elif ss.mode == "getting_context":
                 ss.mode = cg._get_context()
@@ -1103,6 +1110,7 @@ def main():
             elif ss.mode == "demo_key":
                 ss.input = ""  # ugly
                 cg._check_for_api_key()
+                ss.show_intro = False
 
             elif ss.mode == "demo_start":
                 cg._get_user_name()
