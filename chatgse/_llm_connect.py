@@ -16,6 +16,8 @@ from langchain.chat_models import ChatOpenAI
 from langchain.schema import AIMessage, HumanMessage, SystemMessage
 from langchain.llms import HuggingFaceHub
 
+import nltk
+
 from ._stats import get_stats
 
 
@@ -128,11 +130,26 @@ class Conversation(ABC):
             # indicates error
             return (msg, token_usage, None)
 
-        correction = self._correct_response(msg)
+        corrections = []
+        if ss.split_correction:
+            nltk.download("punkt")
+            tokenizer = nltk.data.load("tokenizers/punkt/english.pickle")
+            sentences = tokenizer.tokenize(msg)
+            for sentence in sentences:
+                correction = self._correct_response(sentence)
 
-        if str(correction).lower() in ["ok", "ok."]:
+                if not str(correction).lower() in ["ok", "ok."]:
+                    corrections.append(correction)
+        else:
+            correction = self._correct_response(msg)
+
+            if not str(correction).lower() in ["ok", "ok."]:
+                corrections.append(correction)
+
+        if not corrections:
             return (msg, token_usage, None)
 
+        correction = "\n".join(corrections)
         return (msg, token_usage, correction)
 
     @abstractmethod

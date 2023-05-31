@@ -21,6 +21,7 @@ tiktoken = "^0.4.0"
 pytest = "^7.3.1"
 pymilvus = "^2.2.8"
 pymupdf = "^1.22.3"
+nltk = "^3.8.1"
 
 
 [build-system]

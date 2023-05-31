@@ -990,6 +990,13 @@ def toggle_docsum_prompt():
     ss.docsum.use_prompt = not ss.docsum.use_prompt
 
 
+def correcting_agent_panel():
+    ss.split_correction = st.checkbox(
+        "Split the response into sentences for correction",
+        value=False,
+    )
+
+
 def main():
     # NEW SESSION
     if not ss.get("mode"):
@@ -1282,9 +1289,12 @@ def main():
             "a correcting agent that automatically checks the validity of the "
             "primary model's statements, and corrects them if necessary."
         )
-        st.markdown(
-            f"`📎 Assistant`: Correction agent functionality {OFFLINE_FUNCTIONALITY}"
-        )
+        if ss.get("online"):
+            st.markdown(
+                f"`📎 Assistant`: Correction agent functionality {OFFLINE_FUNCTIONALITY}"
+            )
+        else:
+            correcting_agent_panel()
 
     with docsum_tab:
         st.markdown(
