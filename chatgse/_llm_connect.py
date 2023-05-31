@@ -130,21 +130,22 @@ class Conversation(ABC):
             # indicates error
             return (msg, token_usage, None)
 
-        corrections = []
-        if ss.split_correction:
-            nltk.download("punkt")
-            tokenizer = nltk.data.load("tokenizers/punkt/english.pickle")
-            sentences = tokenizer.tokenize(msg)
-            for sentence in sentences:
-                correction = self._correct_response(sentence)
+        with st.spinner("Correcting..."):
+            corrections = []
+            if ss.split_correction:
+                nltk.download("punkt")
+                tokenizer = nltk.data.load("tokenizers/punkt/english.pickle")
+                sentences = tokenizer.tokenize(msg)
+                for sentence in sentences:
+                    correction = self._correct_response(sentence)
+
+                    if not str(correction).lower() in ["ok", "ok."]:
+                        corrections.append(correction)
+            else:
+                correction = self._correct_response(msg)
 
                 if not str(correction).lower() in ["ok", "ok."]:
                     corrections.append(correction)
-        else:
-            correction = self._correct_response(msg)
-
-            if not str(correction).lower() in ["ok", "ok."]:
-                corrections.append(correction)
 
         if not corrections:
             return (msg, token_usage, None)
