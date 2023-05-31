@@ -303,7 +303,9 @@ class ChatGSE:
     def _get_data_input(self):
         logger.info("--- Biomedical data input ---")
 
-        if not ss.get("tool_data") and not "demo" in ss.get("mode"):
+        if not (
+            ss.get("tool_data") or ss.get("tool_list")
+        ) and not "demo" in ss.get("mode"):
             msg = (
                 "No files detected. Please upload your files in the sidebar, "
                 "or press 'No' to continue without providing any files."
