@@ -997,7 +997,7 @@ def correcting_agent_panel():
     )
 
     test_correct = st.text_area(
-        "Test correction functionality here",
+        "Test correction functionality here:",
         placeholder=(
             "Enter a false statement to prompt a correction. Press [Enter] for "
             "a new line, and [CTRL+Enter] or [⌘+Enter] to submit."
