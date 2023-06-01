@@ -199,6 +199,7 @@ class ChatGSE:
                 self._history_only("📎 Assistant", msg)
 
         ss.show_community_select = False
+        ss.show_setup = False
 
         return "getting_name"
 
@@ -229,6 +230,7 @@ class ChatGSE:
             self._write_and_history("📎 Assistant", msg)
 
         ss.show_community_select = False
+        ss.show_setup = False
 
         return "getting_name"
 

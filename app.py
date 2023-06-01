@@ -1019,6 +1019,11 @@ def correcting_agent_panel():
             )
 
 
+def refresh():
+    ss.input = ""
+    st.experimental_rerun()
+
+
 def main():
     # NEW SESSION
     if not ss.get("mode"):
@@ -1040,8 +1045,9 @@ def main():
         else:
             ss.online = False
 
-        # SHOW INTRO MESSAGE
+        # SHOW INTRO MESSAGE AND SETUP INSTRUCTIONS
         ss.show_intro = True
+        ss.show_setup = True
 
     # SETUP
     # check for API keys
@@ -1096,6 +1102,8 @@ def main():
 
         if ss.show_intro:
             show_about_section()
+
+        if ss.show_setup:
             cg._display_setup()
 
         cg._display_history()
@@ -1105,15 +1113,18 @@ def main():
             if ss.mode == "getting_key":
                 ss.mode = cg._get_api_key(ss.input)
                 ss.show_intro = False
+                refresh()
 
             elif ss.mode == "using_community_key":
                 ss.input = ""  # ugly
                 ss.mode = cg._check_for_api_key()
                 ss.show_intro = False
+                refresh()
 
             elif ss.mode == "getting_name":
                 ss.mode = cg._get_user_name()
                 ss.show_intro = False
+                refresh()
 
             elif ss.mode == "getting_context":
                 ss.mode = cg._get_context()
@@ -1140,6 +1151,7 @@ def main():
                 ss.input = ""  # ugly
                 cg._check_for_api_key()
                 ss.show_intro = False
+                refresh()
 
             elif ss.mode == "demo_start":
                 cg._get_user_name()
