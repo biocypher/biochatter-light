@@ -514,9 +514,30 @@ def app_info():
 def download_chat_history(cg: ChatGSE):
     cg.update_json_history()
     st.download_button(
-        label="Download Chat History JSON",
+        label="Download Chat History",
         data=ss.json_history,
         file_name="chat_history.json",
+        mime="application/json",
+        use_container_width=True,
+    )
+
+
+def download_complete_history(cg: ChatGSE):
+    d = cg.complete_history()
+
+    if d == "{}":
+        st.download_button(
+            label="Download Message History",
+            data="",
+            use_container_width=True,
+            disabled=True,
+        )
+        return
+
+    st.download_button(
+        label="Download Message History",
+        data=d,
+        file_name="complete_history.json",
         mime="application/json",
         use_container_width=True,
     )
@@ -1034,6 +1055,7 @@ def main():
             "tool_prompts": TOOL_PROMPTS,
             "docsum_prompts": DOCSUM_PROMPTS,
         }
+        ss.split_correction = False
 
         # CHECK ENVIRONMENT
         if os.getenv("ON_STREAMLIT"):
@@ -1209,7 +1231,11 @@ def main():
                 remaining_tokens()
                 community_select()
             display_token_usage()
-            download_chat_history(cg)
+            d1, d2 = st.columns(2)
+            with d1:
+                download_chat_history(cg)
+            with d2:
+                download_complete_history(cg)
             model_select()
 
         # CHAT BOX

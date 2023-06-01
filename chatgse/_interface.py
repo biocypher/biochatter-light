@@ -87,6 +87,12 @@ class ChatGSE:
         """
         ss.json_history = json.dumps(ss.history)
 
+    def complete_history(self):
+        """
+        Write ss.messages to JSON and put it into session state.
+        """
+        return ss.conversation.get_msg_json()
+
     @staticmethod
     def _render_msg(role: str, msg: str):
         return f"`{role}`: {msg}"

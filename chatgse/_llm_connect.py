@@ -17,6 +17,7 @@ from langchain.schema import AIMessage, HumanMessage, SystemMessage
 from langchain.llms import HuggingFaceHub
 
 import nltk
+import json
 
 from ._stats import get_stats
 
@@ -193,6 +194,27 @@ class Conversation(ABC):
                     )
                 else:
                     self.append_system_message(prompt)
+
+    def get_msg_json(self):
+        """
+        Return a JSON representation (of a list of dicts) of the messages in
+        the conversation. The keys of the dicts are the roles, the values are
+        the messages.
+        """
+        d = []
+        for msg in self.messages:
+            if isinstance(msg, SystemMessage):
+                role = "system"
+            elif isinstance(msg, HumanMessage):
+                role = "user"
+            elif isinstance(msg, AIMessage):
+                role = "ai"
+            else:
+                raise ValueError(f"Unknown message type: {type(msg)}")
+
+            d.append({role: msg.content})
+
+        return json.dumps(d)
 
 
 class GptConversation(Conversation):
