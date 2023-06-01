@@ -67,7 +67,7 @@ services:
     ports:
       - "8501:8501"
     healthcheck:
-      test: ["curl", "--fail", "http://localhost:8501/_stcore/health"]
+      test: ["CMD", "curl", "--fail", "http://localhost:8501/_stcore/health"]
       interval: 1m30s
       timeout: 30s
       retries: 5
