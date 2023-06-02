@@ -72,7 +72,8 @@ conda activate chatgse
 pip install -r requirements.txt
 ```
 
-For Apple Silicon machines, this must be followed by the following commands:
+For Apple Silicon machines, this must be followed by the following commands
+(still inside the activated environment):
 
 ```
 pip uninstall grpcio
