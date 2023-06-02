@@ -41,7 +41,7 @@ class DocumentSummariser:
 
         # TODO: variable embeddings depending on model
         # for now, just use ada-002
-        if not ss.online:
+        if ss.get("online") == False:
             self.embeddings = OpenAIEmbeddings(openai_api_key=ss.openai_api_key)
         else:
             self.embeddings = None

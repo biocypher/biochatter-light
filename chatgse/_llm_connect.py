@@ -22,7 +22,7 @@ import json
 from ._stats import get_stats
 
 
-class Conversation(ABC):
+class GptConversation(ABC):
     """
 
     Use this class to set up a connection to an LLM API. Can be used to set the
@@ -217,7 +217,7 @@ class Conversation(ABC):
         return json.dumps(d)
 
 
-class GptConversation(Conversation):
+class GptConversation(GptConversation):
     def __init__(self):
         """
         Connect to OpenAI's GPT API and set up a conversation with the user.
@@ -312,7 +312,7 @@ class GptConversation(Conversation):
             )
 
 
-class BloomConversation(Conversation):
+class BloomConversation(GptConversation):
     def __init__(self):
         super().__init__()
         self.messages = []
