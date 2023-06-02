@@ -61,12 +61,21 @@ docker run -p 8501:8501 chatgse
 Note that the community key feature is not available locally, so you need to
 provide your own API key (either in the app or as an environment variable).
 
-### Poetry
-Using poetry, run the following commands to deploy a local browser app:
+### Mamba
+Local installation can be performed using Mamba (recommended) or Conda:
 
 ```
 git clone https://github.com/biocypher/ChatGSE.git
 cd ChatGSE
-poetry install
-poetry run streamlit run app.py
+mamba env create -f environment.yml
+conda activate chatgse
+pip install -r requirements.txt
 ```
+
+For Apple Silicon machines, this must be followed by the following commands:
+
+```
+pip uninstall grpcio
+mamba install grpcio
+```
+

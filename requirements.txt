@@ -1,0 +1,5 @@
+pymilvus==2.2.1
+redis==4.5
+huggingface-hub==0.14
+pymupdf==1.22
+tiktoken==0.4.*
