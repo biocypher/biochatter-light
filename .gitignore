@@ -7,3 +7,5 @@ chatgse-logs.txt
 input/*
 env.txt
 volumes/*
+.cache/
+.pytest_cache/
