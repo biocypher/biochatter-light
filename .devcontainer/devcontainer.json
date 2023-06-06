@@ -9,15 +9,17 @@
     // Features to add to the dev container. More info: https://containers.dev/features.
     // "features": {},
     // Configure tool-specific properties.
-    // "customizations": {
-    //     // Configure properties specific to VS Code.
-    //     "vscode": {
-    //         "settings": {},
-    //         "extensions": [
-    //             "GitHub.copilot"
-    //         ]
-    //     }
-    // },
+    "customizations": {
+        // Configure properties specific to VS Code.
+        "vscode": {
+            "settings": {},
+            "extensions": [
+                "GitHub.copilot-chat",
+                "GitHub.copilot-nightly",
+                "ms-azuretools.vscode-docker"
+            ]
+        }
+    },
     // Use 'forwardPorts' to make a list of ports inside the container available locally.
     // "forwardPorts": [9000],
     // Use 'portsAttributes' to set default properties for specific forwarded ports. 
