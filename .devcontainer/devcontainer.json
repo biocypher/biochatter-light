@@ -5,9 +5,13 @@
     "image": "mcr.microsoft.com/vscode/devcontainers/python:3.10",
     // Features to add to the dev container. More info: https://containers.dev/features.
     // "features": {},
+    // Environment variables (secrets) to pass into the devcontainer.
     "runArgs": [
-        "--env-file",
-        "env.txt"
+        // "--env-file", // Online mode (REDIS and community key)
+        // ".devcontainer/online.env",
+        "--env-file", // Offline mode (only API key)
+        ".devcontainer/local.env",
+        "--network=milvus"
     ],
     // Configure tool-specific properties.
     "customizations": {

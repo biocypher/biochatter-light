@@ -5,7 +5,7 @@ __pycache__
 chatgse-logs.txt
 .DS_Store
 input/*
-env.txt
+.devcontainer/*.env
 volumes/*
 .cache/
 .pytest_cache/

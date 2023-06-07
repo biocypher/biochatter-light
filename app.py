@@ -860,7 +860,7 @@ def docsum_panel():
             ss.docsum = DocumentSummariser(
                 use_prompt=False,
                 connection_args={
-                    "host": "standalone",
+                    "host": "milvus-standalone",
                     "port": "19530",
                 },
             )
