@@ -5,9 +5,6 @@
 # return x closes matches for in-context learning
 
 from typing import List, Optional
-import streamlit as st
-
-ss = st.session_state
 
 from langchain.schema import Document
 from langchain.embeddings.openai import OpenAIEmbeddings
@@ -23,6 +20,7 @@ class DocumentSummariser:
         self,
         use_prompt: bool = True,
         used: bool = False,
+        online: bool = False,
         chunk_size: int = 1000,
         chunk_overlap: int = 0,
         document: Optional[Document] = None,
@@ -31,9 +29,11 @@ class DocumentSummariser:
         model: Optional[str] = None,
         vector_db_vendor: Optional[str] = None,
         connection_args: Optional[dict] = None,
+        api_key: Optional[str] = None,
     ) -> None:
         self.use_prompt = use_prompt
         self.used = used
+        self.online = online
         self.chunk_size = chunk_size
         self.chunk_overlap = chunk_overlap
         self.separators = separators or [" ", ",", "\n"]
@@ -41,8 +41,9 @@ class DocumentSummariser:
 
         # TODO: variable embeddings depending on model
         # for now, just use ada-002
-        if ss.get("online") == False:
-            self.embeddings = OpenAIEmbeddings(openai_api_key=ss.openai_api_key)
+        # TODO API Key handling to central config
+        if self.online:
+            self.embeddings = OpenAIEmbeddings(openai_api_key=api_key)
         else:
             self.embeddings = None
 

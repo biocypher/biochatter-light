@@ -97,6 +97,14 @@ DOCSUM_PROMPTS = [
     "consistencies and inconsistencies with all other information available to "
     "you: {statements}",
 ]
+SCHEMA_PROMPTS = [
+    "The user has provided database access. The database contents are "
+    "detailed in the following YAML config.",
+    "The top-level entries in the YAML config refer to the types of "
+    "entities included in the database. Entities can additionally have a "
+    "`properties` attribute that informs of their attached information. Here "
+    "is the config: {config}"
+]
 
 WHAT_MESSAGES = [
     "A platform for the application of Large Language Models (LLMs) in biomedical research.",
@@ -859,13 +867,19 @@ def docsum_panel():
         if os.getenv("DOCKER_COMPOSE"):
             ss.docsum = DocumentSummariser(
                 use_prompt=False,
+                online=ss.get("online"),
                 connection_args={
                     "host": "milvus-standalone",
                     "port": "19530",
                 },
+                api_key=ss.get("openai_api_key"),
             )
         else:
-            ss.docsum = DocumentSummariser(use_prompt=False)
+            ss.docsum = DocumentSummariser(
+                use_prompt=False, 
+                online=ss.get("online"),
+                api_key=ss.get("openai_api_key"),
+            )
 
     disabled = ss.online or (not ss.docsum.use_prompt)
 
@@ -1054,6 +1068,7 @@ def main():
             "correcting_agent_prompts": CORRECTING_AGENT_PROMPTS,
             "tool_prompts": TOOL_PROMPTS,
             "docsum_prompts": DOCSUM_PROMPTS,
+            "schema_prompts": SCHEMA_PROMPTS,
         }
         ss.split_correction = False
 
