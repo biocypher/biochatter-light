@@ -19,10 +19,11 @@
         "vscode": {
             "settings": {},
             "extensions": [
-                "GitHub.copilot-chat",
-                "GitHub.copilot-nightly",
-                "ms-azuretools.vscode-docker"
-            ]
+				"GitHub.copilot-chat",
+				"GitHub.copilot-nightly",
+				"ms-azuretools.vscode-docker",
+				"ms-python.black-formatter"
+			]
         }
     },
     // Use 'forwardPorts' to make a list of ports inside the container available locally.
