@@ -5,6 +5,10 @@
     "image": "mcr.microsoft.com/vscode/devcontainers/python:3.10",
     // Features to add to the dev container. More info: https://containers.dev/features.
     // "features": {},
+    "runArgs": [
+        "--env-file",
+        "env.txt"
+    ],
     // Configure tool-specific properties.
     "customizations": {
         // Configure properties specific to VS Code.
