@@ -20,6 +20,9 @@ st.set_page_config(
 
 
 def local_css(file_name):
+    """
+    Load local CSS file.
+    """
     with open(file_name) as f:
         st.markdown(f"<style>{f.read()}</style>", unsafe_allow_html=True)
 
@@ -27,6 +30,8 @@ def local_css(file_name):
 local_css("style.css")
 
 ss = st.session_state
+
+# GLOBALS
 
 OPENAI_MODELS = [
     "gpt-3.5-turbo",
@@ -156,11 +161,17 @@ def update_api_keys():
 
 
 def on_submit():
+    """
+    Handles the submission of the input text.
+    """
     ss.input = ss.widget
     ss.widget = ""
 
 
 def autofocus_line():
+    """
+    Autofocuses the input line. A bit hacky, but works.
+    """
     if "counter" not in ss:
         ss["counter"] = 0
     components.html(
@@ -179,6 +190,9 @@ def autofocus_line():
 
 
 def autofocus_area():
+    """
+    Autofocuses the input area. A bit hacky, but works.
+    """
     if "counter" not in ss:
         ss["counter"] = 0
     components.html(
@@ -198,6 +212,9 @@ def autofocus_area():
 
 # COMPONENTS
 def chat_line():
+    """
+    Renders a chat line for smaller inputs.
+    """
     st.text_input(
         "Input:",
         on_change=on_submit,
@@ -208,6 +225,9 @@ def chat_line():
 
 
 def chat_box():
+    """
+    Renders a chat box for larger inputs. Used for all main chat functionality.
+    """
     st.text_area(
         "Input:",
         on_change=on_submit,
@@ -221,6 +241,12 @@ def chat_box():
 
 
 def openai_key_chat_box():
+    """
+    Field for entering the OpenAI API key. Not shown if the key is found in
+    the environment variables. If the community key is available (i.e., we
+    are running on self-hosted, connected to Redis, and have credits remaining)
+    we show a button to use the community key and a button to show a demo.
+    """
     if community_possible():
         demo, community, field = st.columns([1, 1, 3])
 
@@ -256,6 +282,10 @@ def openai_key_chat_box():
 
 
 def huggingface_key_chat_box():
+    """
+    Field for entering the Hugging Face Hub API key. Not shown if the key is
+    found in the environment variables.
+    """
     st.text_input(
         "Hugging Face Hub API Token:",
         on_change=on_submit,
@@ -265,6 +295,10 @@ def huggingface_key_chat_box():
 
 
 def file_uploader():
+    """
+    File uploader for uploading a CSV, TSV, or TXT file containing the user's
+    tool data to be used for the prompt.
+    """
     st.file_uploader(
         "Upload tool data",
         type=["csv", "tsv", "txt"],
@@ -274,6 +308,10 @@ def file_uploader():
 
 
 def data_input_buttons():
+    """
+    Buttons for asking the user if they want to upload a file containing their
+    tool data.
+    """
     c1, c2 = st.columns([1, 1])
     with c1:
         st.button(
@@ -290,16 +328,28 @@ def data_input_buttons():
 
 
 def data_input_yes():
+    """
+    Handles the user clicking the "Yes" button for uploading a file containing
+    their tool data.
+    """
     ss.mode = "getting_data_file_input"
     ss.input = "done"
 
 
 def data_input_no():
+    """
+    Handles the user clicking the "No" button for uploading a file containing
+    their tool data.
+    """
     ss.mode = "asking_for_manual_data_input"
     ss.input = "no"
 
 
 def app_header():
+    """
+    Renders the app header and a warning conditional on whether we are running
+    on streamlit cloud.
+    """
     st.markdown(
         f"""
         # 💬🧬 :red[ChatGSE] `{__version__}`
@@ -329,6 +379,9 @@ def get_remaining_tokens():
 
 
 def community_tokens_refresh_in():
+    """
+    Display the time remaining until the community tokens refresh.
+    """
     x = datetime.datetime.now()
     dt = (x.replace(hour=23, minute=59, second=59) - x).seconds
     h = dt // 3600
@@ -348,6 +401,9 @@ def remaining_tokens():
 
 
 def display_token_usage():
+    """
+    Display the token usage for the current conversation.
+    """
     with st.expander("Token usage", expanded=True):
         maximum = ss.get("token_limit", 0)
 
@@ -374,6 +430,9 @@ def display_token_usage():
 
 
 def model_select():
+    """
+    Select the primary model to use for the conversation.
+    """
     with st.expander("Model selection", expanded=False):
         if not ss.mode == "getting_key":
             st.markdown("Please reload the app to change the model.")
@@ -401,6 +460,10 @@ def model_select():
 
 
 def community_select():
+    """
+    Show buttons to select the community key or the demo mode (which also
+    uses the community key).
+    """
     if not get_remaining_tokens() > 0:
         st.warning(
             "No community tokens remaining for the day. "
@@ -416,6 +479,9 @@ def community_select():
 
 
 def use_community_key():
+    """
+    Use the community key for the conversation.
+    """
     ss.openai_api_key = os.environ["OPENAI_COMMUNITY_KEY"]
     ss.cg._history_only("📎 Assistant", "Using community key!")
     ss.user = "community"
@@ -425,6 +491,9 @@ def use_community_key():
 
 
 def demo_mode():
+    """
+    Enter the demo mode for the conversation.
+    """
     ss.openai_api_key = os.environ["OPENAI_COMMUNITY_KEY"]
     ss.cg._history_only("📎 Assistant", "Using community key!")
     ss.user = "community"
@@ -434,10 +503,16 @@ def demo_mode():
 
 
 def demo_next_button():
+    """
+    Show the "Next Step" button for the demo mode.
+    """
     st.button("Next Step", on_click=demo_next)
 
 
 def demo_next():
+    """
+    Handle demo mode logic.
+    """
     if ss.mode == "demo_key":
         ss.input = "Demo User"
         ss.mode = "demo_start"
@@ -475,6 +550,9 @@ def demo_next():
 
 
 def app_info():
+    """
+    Display the app information.
+    """
     st.markdown(
         """
         
@@ -520,6 +598,12 @@ def app_info():
 
 
 def download_chat_history(cg: ChatGSE):
+    """
+    Button to download the chat history as a JSON file.
+
+    Args:
+        cg: current ChatGSE instance
+    """
     cg.update_json_history()
     st.download_button(
         label="Download Chat History",
@@ -531,6 +615,13 @@ def download_chat_history(cg: ChatGSE):
 
 
 def download_complete_history(cg: ChatGSE):
+    """
+    Button to download the complete message history (i.e., including the
+    system prompts) as a JSON file.
+
+    Args:
+        cg: current ChatGSE instance
+    """
     d = cg.complete_history()
 
     if d == "{}":
@@ -552,6 +643,9 @@ def download_complete_history(cg: ChatGSE):
 
 
 def spacer(n=2, line=False, next_n=0):
+    """
+    Insert a spacer between two elements.
+    """
     for _ in range(n):
         st.write("")
     if line:
@@ -561,6 +655,9 @@ def spacer(n=2, line=False, next_n=0):
 
 
 def show_primary_model_prompts():
+    """
+    Prompt engineering panel: primary model.
+    """
     st.markdown(
         "`📎 Assistant`: Here you can edit the prompts used to set up the primary "
         "LLM. You can modify or remove the existing prompts, as well as add new "
@@ -593,6 +690,9 @@ def show_primary_model_prompts():
 
 
 def show_correcting_agent_prompts():
+    """
+    Prompt engineering panel: correcting agent.
+    """
     st.markdown(
         "`📎 Assistant`: Here you can edit the prompts used to set up the "
         "correcting agent. You can modify or remove the existing prompts, as "
@@ -626,6 +726,9 @@ def show_correcting_agent_prompts():
 
 
 def show_docsum_prompts():
+    """
+    Prompt engineering panel: document summarisation.
+    """
     st.markdown(
         "`📎 Assistant`: Here you can edit the prompts used to set up the "
         "Document Summarisation task. Text passages from any uploaded "
@@ -655,6 +758,9 @@ def show_docsum_prompts():
 
 
 def show_tool_prompts():
+    """
+    Prompt engineering panel: tool-specific.
+    """
     st.markdown(
         "`📎 Assistant`: Here you can edit the tool-specific prompts given to the "
         "primary LLM. You can modify the names as well as the prompts "
@@ -714,22 +820,38 @@ def show_tool_prompts():
 
 
 def add_prompt(prompt_list):
+    """
+    Add a new prompt to the given list.
+    """
     prompt_list.append("")
 
 
 def remove_prompt(prompt_list, num):
+    """
+    Remove the prompt with the given number from the given list.
+    """
     del prompt_list[num]
 
 
 def add_tool_prompt():
+    """
+    Add a new tool prompt.
+    """
     ss.prompts["tool_prompts"][""] = ""
 
 
 def remove_tool_prompt(nam):
+    """
+    Remove the tool prompt with the given name.
+    """
     ss.prompts["tool_prompts"].pop(nam)
 
 
 def prompt_save_load_reset():
+    """
+    Prompt engineering panel: save and load prompt set JSON files. Reset not
+    implemented yet.
+    """
     save, load = st.columns(2)
     with save:
         prompt_save_button()
@@ -746,6 +868,9 @@ def prompt_save_load_reset():
 
 
 def prompt_save_button():
+    """
+    Save the current prompt set as a JSON file.
+    """
     now = datetime.datetime.now()
     date = now.strftime("%Y-%m-%d_%H-%M-%S")
     st.download_button(
@@ -777,6 +902,9 @@ def load_prompt_set(uploaded_file):
 
 
 def reset_button():
+    """
+    Button to reset the entire app.
+    """
     st.button(
         "♻️ Reset App",
         on_click=reset_app,
