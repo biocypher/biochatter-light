@@ -42,7 +42,7 @@ class DocumentSummariser:
         # TODO: variable embeddings depending on model
         # for now, just use ada-002
         # TODO API Key handling to central config
-        if self.online:
+        if not self.online:
             self.embeddings = OpenAIEmbeddings(openai_api_key=api_key)
         else:
             self.embeddings = None
