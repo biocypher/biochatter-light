@@ -117,8 +117,9 @@ you can run the following command:
 docker run --env-file local.env -p 8501:8501 chatgse
 ```
 
-### Mamba
-Local installation can be performed using Poetry:
+### Poetry
+Local installation can be performed using Poetry (or other package managers
+that can work with a `pyproject.toml` file):
 
 ```
 git clone https://github.com/biocypher/ChatGSE.git
