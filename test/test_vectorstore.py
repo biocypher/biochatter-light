@@ -1,5 +1,3 @@
-import pytest
-
 from chatgse._docsum import (
     DocumentSummariser,
     Document,

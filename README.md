@@ -47,6 +47,46 @@ short startup time, you can access the ChatGSE app at http://localhost:8501.
 
 ## Local deployment
 
+### Devcontainer
+To deploy/develop the app locally, we recommend using VS Code with the included
+devcontainer setup. This requires Docker and the [Remote
+Containers](https://marketplace.visualstudio.com/items?itemName=ms-vscode-remote.remote-containers)
+extension. After cloning the repository, open the folder in VS Code and click
+the `Reopen in Container` button that appears in the bottom right corner (or
+use the command palette to find the command). This will build a Docker image
+of the app and open it in VS Code. You can then run the app by adding a
+configuration similar to this one to your launch.json:
+
+```
+
+{
+    "name": "Streamlit",
+    "type": "python",
+    "request": "launch",
+    "program": "/usr/local/bin/streamlit",
+    "console": "integratedTerminal",
+    "justMyCode": true,
+    "cwd": "${workspaceFolder}",
+    "args": [
+        "run",
+        "app.py"
+    ]
+}
+
+```
+
+Note that if you want to use the document summarisation feature or other
+connected services, you will still need to start these separately. For the
+vector DB component of the `docker-compose.yml` file, you can do it like so:
+
+```
+docker compose up -d standalone
+```
+
+Once the other docker containers are running, they should be discoverable from
+within the devcontainer. If you add your own containers, make sure that they
+use the same network as your devcontainer (e.g. `milvus`).
+
 ### Docker
 Using docker, run the following commands to deploy a local browser app (without
 the additional containers for the vector database):
@@ -61,12 +101,39 @@ docker run -p 8501:8501 chatgse
 Note that the community key feature is not available locally, so you need to
 provide your own API key (either in the app or as an environment variable).
 
-### Poetry
-Using poetry, run the following commands to deploy a local browser app:
+#### Provide your API key
+Instead of manually entering the key, you can provide it to the Docker run
+command as an environment variable. With a text file (e.g. `local.env`) that
+contains the keys:
+
+```
+OPENAI_API_KEY=sk-...
+...
+```
+
+you can run the following command: 
+
+```
+docker run --env-file local.env -p 8501:8501 chatgse
+```
+
+### Mamba
+Local installation can be performed using Poetry:
 
 ```
 git clone https://github.com/biocypher/ChatGSE.git
 cd ChatGSE
 poetry install
-poetry run streamlit run app.py
 ```
+
+For Apple Silicon machines, this must be followed by the following commands
+(inside the activated environment using `poetry shell`):
+
+```
+pip uninstall grpcio
+mamba install grpcio  # alternatively, conda
+```
+
+This step is necessary due to incompatibilities in the standard ARM grpcio
+package. Currently, only conda-forge provides a compatible version. To avoid
+this issue, you can work in a devcontainer (see above).
