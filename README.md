@@ -25,9 +25,10 @@ platform a great open-source tool, you're good. 🙂
 ## 🛠 Prompt engineering discussions
 You can discuss your favourite prompt setups and share the corresponding JSON
 files in the discussion
-[here](https://github.com/biocypher/ChatGSE/discussions/11)! You can go there
-to find inspiration for things the model can do, such as creating formatted
-markdown output to create mindmaps or other visualisations.
+[here](https://github.com/biocypher/ChatGSE/discussions/11)! You can go
+[here](https://github.com/biocypher/ChatGSE/discussions/20) to find inspiration
+for things the model can do, such as creating formatted markdown output to
+create mindmaps or other visualisations.
 
 ## 📑 Document summarisation / In-context learning
 You can use the document summarisation feature to upload documents and use
