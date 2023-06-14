@@ -196,7 +196,12 @@ class Conversation(ABC):
             )
             return
 
-        with st.spinner("Performing similarity search ..."):
+        sim_msg = (
+            f"Performing similarity search to inject {ss.docsum.n_results}"
+            " fragments ..."
+        )
+
+        with st.spinner(sim_msg):
             statements = [
                 doc.page_content
                 for doc in ss.docsum.similarity_search(
