@@ -19,7 +19,12 @@ ss = st.session_state
 
 # ENVIRONMENT VARIABLES
 def community_possible():
-    return "OPENAI_COMMUNITY_KEY" in os.environ and "REDIS_PW" in os.environ
+    return (
+        "OPENAI_COMMUNITY_KEY" in os.environ
+        and "REDIS_PW" in os.environ
+        and ss.primary_model
+        in ["gpt-3.5-turbo", "gpt-3.5-turbo-0301", "gpt-3.5-turbo-0613"]
+    )
 
 
 API_KEY_REQUIRED = "The currently selected model requires an API key."
