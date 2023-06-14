@@ -21,8 +21,27 @@ import json
 
 from ._stats import get_stats
 
+OPENAI_MODELS = [
+    "gpt-3.5-turbo",
+    "gpt-3.5-turbo-16k",
+    "gpt-3.5-turbo-0301",  # legacy 3.5-turbo, until Sep 13, 2023
+    "gpt-3.5-turbo-0613",  # updated 3.5-turbo
+    "gpt-4",
+]
 
-class GptConversation(ABC):
+HUGGINGFACE_MODELS = ["bigscience/bloom"]
+
+TOKEN_LIMITS = {
+    "gpt-3.5-turbo": 4000,
+    "gpt-3.5-turbo-16k": 16000,
+    "gpt-3.5-turbo-0301": 4000,
+    "gpt-3.5-turbo-0613": 4000,
+    "gpt-4": 8000,
+    "bigscience/bloom": 1000,
+}
+
+
+class Conversation(ABC):
     """
 
     Use this class to set up a connection to an LLM API. Can be used to set the
@@ -37,8 +56,9 @@ class GptConversation(ABC):
 
     """
 
-    def __init__(self):
+    def __init__(self, model_name: str):
         super().__init__()
+        self.model_name = model_name
         self.history = []
         self.messages = []
         self.ca_messages = []
@@ -217,17 +237,16 @@ class GptConversation(ABC):
         return json.dumps(d)
 
 
-class GptConversation(GptConversation):
-    def __init__(self):
+class GptConversation(Conversation):
+    def __init__(self, model_name: str):
         """
         Connect to OpenAI's GPT API and set up a conversation with the user.
         Also initialise a second conversational agent to provide corrections to
         the model output, if necessary.
         """
-        super().__init__()
+        super().__init__(model_name=model_name)
 
-        self.model = "gpt-3.5-turbo"
-        self.ca_model = "gpt-3.5-turbo"
+        self.ca_model_name = "gpt-3.5-turbo"
         # TODO make accessible by drop-down
 
     def set_api_key(self, api_key: str, user: str):
@@ -241,12 +260,12 @@ class GptConversation(GptConversation):
         try:
             openai.Model.list()
             self.chat = ChatOpenAI(
-                model_name=self.model,
+                model_name=self.model_name,
                 temperature=0,
                 openai_api_key=api_key,
             )
             self.ca_chat = ChatOpenAI(
-                model_name=self.ca_model,
+                model_name=self.ca_model_name,
                 temperature=0,
                 openai_api_key=api_key,
             )
@@ -271,7 +290,7 @@ class GptConversation(GptConversation):
         msg = response.generations[0][0].text
         token_usage = response.llm_output.get("token_usage")
 
-        self._update_usage_stats(self.model, token_usage)
+        self._update_usage_stats(self.model_name, token_usage)
 
         self.append_ai_message(msg)
 
@@ -296,7 +315,7 @@ class GptConversation(GptConversation):
         correction = response.generations[0][0].text
         token_usage = response.llm_output.get("token_usage")
 
-        self._update_usage_stats(self.ca_model, token_usage)
+        self._update_usage_stats(self.ca_model_name, token_usage)
 
         return correction
 
@@ -312,14 +331,15 @@ class GptConversation(GptConversation):
             )
 
 
-class BloomConversation(GptConversation):
-    def __init__(self):
-        super().__init__()
+class BloomConversation(Conversation):
+    def __init__(self, model_name: str):
+        super().__init__(model_name=model_name)
+
         self.messages = []
 
     def set_api_key(self, api_key: str, user: str):
         self.chat = HuggingFaceHub(
-            repo_id="bigscience/bloom",
+            repo_id=self.model_name,
             model_kwargs={"temperature": 1.0},  # "regular sampling"
             # as per https://huggingface.co/docs/api-inference/detailed_parameters
             huggingfacehub_api_token=api_key,

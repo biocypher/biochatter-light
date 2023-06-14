@@ -6,14 +6,25 @@ import os
 from loguru import logger
 import pandas as pd
 import streamlit as st
-from chatgse._llm_connect import GptConversation, BloomConversation
+from chatgse._llm_connect import (
+    GptConversation,
+    BloomConversation,
+    OPENAI_MODELS,
+    HUGGINGFACE_MODELS,
+    TOKEN_LIMITS,
+)
 
 ss = st.session_state
 
 
 # ENVIRONMENT VARIABLES
 def community_possible():
-    return "OPENAI_COMMUNITY_KEY" in os.environ and "REDIS_PW" in os.environ
+    return (
+        "OPENAI_COMMUNITY_KEY" in os.environ
+        and "REDIS_PW" in os.environ
+        and ss.primary_model
+        in ["gpt-3.5-turbo", "gpt-3.5-turbo-0301", "gpt-3.5-turbo-0613"]
+    )
 
 
 API_KEY_REQUIRED = "The currently selected model requires an API key."
@@ -101,7 +112,8 @@ class ChatGSE:
         ss.history.append({role: msg})
 
     def _setup_only(self, role: str, msg: str):
-        ss.setup_messages.append({role: msg})
+        # only keep the most recent setup message
+        ss.setup_messages = [{role: msg}]
 
     def _write_and_history(self, role: str, msg: str):
         logger.info(f"Writing message from {role}: {msg}")
@@ -120,12 +132,12 @@ class ChatGSE:
         if ss.get("conversation"):
             logger.warning("Conversation already exists, overwriting.")
 
-        if model_name == "gpt-3.5-turbo":
-            ss.conversation = GptConversation()
-        elif model_name == "bigscience/bloom":
-            ss.conversation = BloomConversation()
+        if model_name in OPENAI_MODELS:
+            ss.conversation = GptConversation(model_name)
+        elif model_name in HUGGINGFACE_MODELS:
+            ss.conversation = BloomConversation(model_name)
 
-    def _check_for_api_key(self, write: bool = True):
+    def _check_for_api_key(self, write: bool = True, input: str = None):
         """
         Upon app start, check for the validity of any API key in the session
         state. If there is none, or the given is invalid, ask again.
@@ -137,77 +149,82 @@ class ChatGSE:
         Returns:
             The next state to go to (either "getting_key" or "getting_name")
         """
-        if ss.primary_model == "gpt-3.5-turbo":
+        if ss.primary_model in OPENAI_MODELS:
             key = ss.get("openai_api_key")
-            ss.token_limit = 4097
-        elif ss.primary_model == "bigscience/bloom":
+        elif ss.primary_model in HUGGINGFACE_MODELS:
             key = ss.get("huggingfacehub_api_key")
-            ss.token_limit = 1000
 
-        if not key:
-            if ss.primary_model == "gpt-3.5-turbo":
-                msg = f"{API_KEY_REQUIRED} "
-                if community_possible():
-                    msg += f"{COMMUNITY_SELECT} "
-                msg += (
-                    "You can get a key by signing up "
-                    "[here](https://platform.openai.com/) and enabling "
-                    "billing. We will not store your key, and only use it for "
-                    "the requests made in this session. "
-                )
-                if community_possible():
-                    msg += (
-                        "If you use community credits, please be considerate of "
-                        "other users; if you use the platform extensively, "
-                        "please use your own key. "
-                    )
-                msg += (
-                    "Using GPT-3.5-turbo, a full conversation (4000 tokens) "
-                    f"costs about 0.01 USD. "
-                )
-                if community_possible():
-                    msg += f"{DEMO_MODE}"
-                self._setup_only("📎 Assistant", msg)
-                ss.show_community_select = True
+        ss.token_limit = TOKEN_LIMITS[ss.primary_model]
 
-            elif ss.primary_model == "bigscience/bloom":
+        if not key and input:
+            key = input
+
+        if key:
+            success = self._try_api_key(key or input)
+            if success:
+                if not ss.get("asked_for_name"):
+                    ss.asked_for_name = True
+                    msg = f"{API_KEY_SUCCESS}"
+                    if write:
+                        self._write_and_history("📎 Assistant", msg)
+                    else:
+                        self._history_only("📎 Assistant", msg)
+
+                ss.show_community_select = False
+                ss.show_setup = False
+
+                return "getting_name"
+
+            else:
                 msg = (
-                    f"{API_KEY_REQUIRED} Please enter your [HuggingFace Hub "
-                    "API key](https://huggingface.co/settings/token). You "
-                    "can get one by signing up "
-                    "[here](https://huggingface.co/). We will not store your "
-                    "key, and only use it for the requests made in this "
-                    "session. If you run the app locally, you can prevent "
-                    "this message by setting the environment variable "
-                    "`HUGGINGFACEHUB_API_TOKEN` to your key."
+                    "The API key in your environment is not valid. Please enter a "
+                    "valid key."
                 )
                 self._setup_only("📎 Assistant", msg)
 
-            return "getting_key"
+                return "getting_key"
 
-        success = self._try_api_key(key)
+        # If we get here, we either have no key, or the key is invalid.
+        if ss.primary_model in OPENAI_MODELS:
+            msg = f"{API_KEY_REQUIRED} "
+            if community_possible():
+                msg += f"{COMMUNITY_SELECT} "
+            msg += (
+                "You can get a key by signing up "
+                "[here](https://platform.openai.com/) and enabling "
+                "billing. We will not store your key, and only use it for "
+                "the requests made in this session. "
+            )
+            if community_possible():
+                msg += (
+                    "If you use community credits, please be considerate of "
+                    "other users; if you use the platform extensively, "
+                    "please use your own key. "
+                )
+            msg += (
+                "Using GPT-3.5-turbo, a full conversation (4000 tokens) "
+                f"costs about 0.01 USD. "
+            )
+            if community_possible():
+                msg += f"{DEMO_MODE}"
+            self._setup_only("📎 Assistant", msg)
+            ss.show_community_select = True
 
-        if not success:
+        elif ss.primary_model in HUGGINGFACE_MODELS:
             msg = (
-                "The API key in your environment is not valid. Please enter a "
-                "valid key."
+                f"{API_KEY_REQUIRED} Please enter your [HuggingFace Hub "
+                "API key](https://huggingface.co/settings/token). You "
+                "can get one by signing up "
+                "[here](https://huggingface.co/). We will not store your "
+                "key, and only use it for the requests made in this "
+                "session. If you run the app locally, you can prevent "
+                "this message by setting the environment variable "
+                "`HUGGINGFACEHUB_API_TOKEN` to your key."
             )
             self._setup_only("📎 Assistant", msg)
+            ss.show_setup = True
 
-            return "getting_key"
-
-        if not ss.get("asked_for_name"):
-            ss.asked_for_name = True
-            msg = f"{API_KEY_SUCCESS}"
-            if write:
-                self._write_and_history("📎 Assistant", msg)
-            else:
-                self._history_only("📎 Assistant", msg)
-
-        ss.show_community_select = False
-        ss.show_setup = False
-
-        return "getting_name"
+        return "getting_key"
 
     def _try_api_key(self, key: str = None):
         success = ss.conversation.set_api_key(
