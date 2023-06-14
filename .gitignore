@@ -9,3 +9,4 @@ input/*
 volumes/*
 .cache/
 .pytest_cache/
+chats/

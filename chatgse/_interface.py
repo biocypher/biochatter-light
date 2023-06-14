@@ -155,7 +155,6 @@ class ChatGSE:
         if key:
             success = self._try_api_key(key or input)
             if success:
-                ss.valid_api_key = True
                 if not ss.get("asked_for_name"):
                     ss.asked_for_name = True
                     msg = f"{API_KEY_SUCCESS}"

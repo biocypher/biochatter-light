@@ -1236,9 +1236,6 @@ def main():
     if not ss.get("primary_model"):
         ss["primary_model"] = "gpt-3.5-turbo"
 
-    if not ss.get("valid_api_key"):
-        ss.valid_api_key = False
-
     # INTERFACE
     if not ss.get("cg"):
         ss.cg = ChatGSE()
