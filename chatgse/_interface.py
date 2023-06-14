@@ -112,7 +112,8 @@ class ChatGSE:
         ss.history.append({role: msg})
 
     def _setup_only(self, role: str, msg: str):
-        ss.setup_messages.append({role: msg})
+        # only keep the most recent setup message
+        ss.setup_messages = [{role: msg}]
 
     def _write_and_history(self, role: str, msg: str):
         logger.info(f"Writing message from {role}: {msg}")
