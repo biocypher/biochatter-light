@@ -33,12 +33,6 @@ ss = st.session_state
 
 # GLOBALS
 
-OPENAI_MODELS = [
-    "gpt-3.5-turbo",
-    "gpt-4",
-    "davinci",
-]
-
 DEV_FUNCTIONALITY = (
     "This functionality is not available when using the community API key, as "
     "it can involve many requests to the API."
@@ -108,7 +102,7 @@ SCHEMA_PROMPTS = [
     "The top-level entries in the YAML config refer to the types of "
     "entities included in the database. Entities can additionally have a "
     "`properties` attribute that informs of their attached information. Here "
-    "is the config: {config}"
+    "is the config: {config}",
 ]
 
 WHAT_MESSAGES = [
@@ -146,6 +140,7 @@ from chatgse._docsum import (
     document_from_pdf,
     document_from_txt,
 )
+from chatgse._llm_connect import OPENAI_MODELS, HUGGINGFACE_MODELS
 
 
 # HANDLERS
@@ -164,7 +159,7 @@ def on_submit():
     """
     Handles the submission of the input text.
     """
-    ss.input = ss.widget
+    ss.input = ss.get("widget")
     ss.widget = ""
 
 
@@ -434,18 +429,18 @@ def model_select():
     Select the primary model to use for the conversation.
     """
     with st.expander("Model selection", expanded=False):
-        if not ss.mode == "getting_key":
+        if not ss.mode in ["getting_key", "getting_name"]:
             st.markdown("Please reload the app to change the model.")
             return
 
-        models = [
-            "gpt-3.5-turbo",
-            "bigscience/bloom",
-        ]
+        # concatenate OPENAI_MODELS and HUGGINGFACE_MODELS
+        models = OPENAI_MODELS + HUGGINGFACE_MODELS
         st.selectbox(
             "Primary model",
-            models,
-            key="primary_model",
+            options=models,
+            index=0,
+            on_change=_change_model,
+            key="_primary_model",
             help=(
                 "This is the model you will be talking to. "
                 "Caution: changing the model will reset your conversation."
@@ -457,6 +452,18 @@ def model_select():
                 "BLOOM support is currently experimental. Queries may return "
                 "unexpected results."
             )
+
+
+def _change_model():
+    """
+    Handles the user changing the primary model.
+    """
+    if ss.primary_model == ss._primary_model:
+        return
+
+    ss.primary_model = ss._primary_model
+    ss.mode = ""
+    ss.input = ""
 
 
 def community_select():
@@ -917,6 +924,7 @@ def reset_app():
     Reset the app to its initial state.
     """
     ss.clear()
+    ss._primary_model = "gpt-3.5-turbo"
 
 
 def show_about_section():
@@ -1004,7 +1012,7 @@ def docsum_panel():
             )
         else:
             ss.docsum = DocumentSummariser(
-                use_prompt=False, 
+                use_prompt=False,
                 online=ss.get("online"),
                 api_key=ss.get("openai_api_key"),
             )
@@ -1187,51 +1195,63 @@ def refresh():
     st.experimental_rerun()
 
 
+def _startup():
+    # USER
+    ss.user = "default"
+
+    # PROMPTS
+    ss.prompts = {
+        "primary_model_prompts": PRIMARY_MODEL_PROMPTS,
+        "correcting_agent_prompts": CORRECTING_AGENT_PROMPTS,
+        "tool_prompts": TOOL_PROMPTS,
+        "docsum_prompts": DOCSUM_PROMPTS,
+        "schema_prompts": SCHEMA_PROMPTS,
+    }
+    ss.split_correction = False
+
+    # CHECK ENVIRONMENT
+    if os.getenv("ON_STREAMLIT"):
+        ss.on_streamlit = True
+        ss.online = True
+    elif os.getenv("ON_SELFHOSTED"):
+        ss.on_selfhosted = True
+        ss.online = True
+    else:
+        ss.online = False
+
+    # do we have keys in the environment?
+    update_api_keys()
+
+    # SHOW INTRO MESSAGE AND SETUP INSTRUCTIONS
+    ss.show_intro = True
+    ss.show_setup = True
+
+
 def main():
     # NEW SESSION
     if not ss.get("mode"):
-        ss.user = "default"
-        ss.prompts = {
-            "primary_model_prompts": PRIMARY_MODEL_PROMPTS,
-            "correcting_agent_prompts": CORRECTING_AGENT_PROMPTS,
-            "tool_prompts": TOOL_PROMPTS,
-            "docsum_prompts": DOCSUM_PROMPTS,
-            "schema_prompts": SCHEMA_PROMPTS,
-        }
-        ss.split_correction = False
+        _startup()
 
-        # CHECK ENVIRONMENT
-        if os.getenv("ON_STREAMLIT"):
-            ss.on_streamlit = True
-            ss.online = True
-        elif os.getenv("ON_SELFHOSTED"):
-            ss.on_selfhosted = True
-            ss.online = True
-        else:
-            ss.online = False
-
-        # SHOW INTRO MESSAGE AND SETUP INSTRUCTIONS
-        ss.show_intro = True
-        ss.show_setup = True
-
-    # SETUP
-    # check for API keys
+    # DEFAULT MODEL
     if not ss.get("primary_model"):
-        # default model
         ss["primary_model"] = "gpt-3.5-turbo"
-        update_api_keys()
 
-    # instantiate interface
+    if not ss.get("valid_api_key"):
+        ss.valid_api_key = False
+
+    # INTERFACE
     if not ss.get("cg"):
         ss.cg = ChatGSE()
     cg = ss.cg
-    if ss.get("active_model") != ss.primary_model:
+
+    # CHANGE MODEL
+    if not ss.get("active_model") == ss.primary_model:
         cg.set_model(ss.primary_model)
         ss.active_model = ss.primary_model
-        ss.mode = cg._check_for_api_key(write=False)
+        ss.mode = cg._check_for_api_key(write=False, input=ss.input)
         # TODO: warn user that we are resetting?
 
-    # instantiate token usage
+    # TOKEN USAGE
     if not ss.get("token_usage"):
         ss.token_usage = {
             "prompt_tokens": 0,
@@ -1384,9 +1404,9 @@ def main():
         # CHAT BOX
 
         if ss.mode == "getting_key":
-            if ss.primary_model == "gpt-3.5-turbo":
+            if ss.primary_model in OPENAI_MODELS:
                 openai_key_chat_box()
-            elif ss.primary_model == "bigscience/bloom":
+            elif ss.primary_model in HUGGINGFACE_MODELS:
                 huggingface_key_chat_box()
         elif ss.mode == "getting_data_file_input":
             data_input_buttons()
