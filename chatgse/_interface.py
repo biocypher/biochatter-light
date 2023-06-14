@@ -11,6 +11,7 @@ from chatgse._llm_connect import (
     BloomConversation,
     OPENAI_MODELS,
     HUGGINGFACE_MODELS,
+    TOKEN_LIMITS,
 )
 
 ss = st.session_state
@@ -144,10 +145,10 @@ class ChatGSE:
         """
         if ss.primary_model in OPENAI_MODELS:
             key = ss.get("openai_api_key")
-            ss.token_limit = 4097
         elif ss.primary_model in HUGGINGFACE_MODELS:
             key = ss.get("huggingfacehub_api_key")
-            ss.token_limit = 1000
+
+        ss.token_limit = TOKEN_LIMITS[ss.primary_model]
 
         if not key and input:
             key = input

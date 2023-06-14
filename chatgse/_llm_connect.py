@@ -31,6 +31,15 @@ OPENAI_MODELS = [
 
 HUGGINGFACE_MODELS = ["bigscience/bloom"]
 
+TOKEN_LIMITS = {
+    "gpt-3.5-turbo": 4000,
+    "gpt-3.5-turbo-16k": 16000,
+    "gpt-3.5-turbo-0301": 4000,
+    "gpt-3.5-turbo-0613": 4000,
+    "gpt-4": 8000,
+    "bigscience/bloom": 1000,
+}
+
 
 class Conversation(ABC):
     """
