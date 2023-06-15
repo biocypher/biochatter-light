@@ -1,5 +1,5 @@
 from chatgse._docsum import (
-    DocumentSummariser,
+    DocumentEmbedder,
     Document,
     document_from_pdf,
     document_from_txt,
@@ -15,7 +15,7 @@ def test_document_summariser():
     assert isinstance(document, bytes)
 
     doc = document_from_pdf(document)
-    docsum = DocumentSummariser()
+    docsum = DocumentEmbedder()
     docsum.set_document(doc)
     docsum.split_document()
     assert isinstance(docsum.split, list)
@@ -31,7 +31,7 @@ def test_document_summariser():
 
 
 def test_load_txt():
-    docsum = DocumentSummariser()
+    docsum = DocumentEmbedder()
     text_path = "test/bc_summary.txt"
     document = docsum._load_document(text_path)
     assert isinstance(document, list)
@@ -39,7 +39,7 @@ def test_load_txt():
 
 
 def test_load_pdf():
-    docsum = DocumentSummariser()
+    docsum = DocumentEmbedder()
     pdf_path = "test/bc_summary.pdf"
     document = docsum._load_document(pdf_path)
     assert isinstance(document, list)

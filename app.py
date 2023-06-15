@@ -136,7 +136,7 @@ from chatgse._interface import ChatGSE
 from chatgse._stats import get_community_usage_cost
 from chatgse._interface import community_possible
 from chatgse._docsum import (
-    DocumentSummariser,
+    DocumentEmbedder,
     document_from_pdf,
     document_from_txt,
 )
@@ -1013,7 +1013,7 @@ def docsum_panel():
 
     if not ss.get("docsum"):
         if os.getenv("DOCKER_COMPOSE"):
-            ss.docsum = DocumentSummariser(
+            ss.docsum = DocumentEmbedder(
                 use_prompt=False,
                 online=ss.get("online"),
                 connection_args={
@@ -1023,7 +1023,7 @@ def docsum_panel():
                 api_key=ss.get("openai_api_key"),
             )
         else:
-            ss.docsum = DocumentSummariser(
+            ss.docsum = DocumentEmbedder(
                 use_prompt=False,
                 online=ss.get("online"),
                 api_key=ss.get("openai_api_key"),

@@ -15,7 +15,7 @@ from langchain.vectorstores import Milvus
 import fitz
 
 
-class DocumentSummariser:
+class DocumentEmbedder:
     def __init__(
         self,
         use_prompt: bool = True,
@@ -132,7 +132,9 @@ class DocumentSummariser:
         if self.vector_db_vendor == "milvus":
             if not self.vector_db:
                 raise ValueError("No vector store loaded")
-            return self.vector_db.similarity_search(query=query, k=k or self.n_results)
+            return self.vector_db.similarity_search(
+                query=query, k=k or self.n_results
+            )
         else:
             raise NotImplementedError(self.vector_db_vendor)
 
