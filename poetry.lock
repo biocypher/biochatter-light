@@ -185,67 +185,12 @@ lint = ["flake8 (==4.0.1)", "flake8-bugbear (==21.9.2)", "mypy (==0.910)", "pre-
 tests = ["dj-database-url", "dj-email-url", "django-cache-url", "pytest"]
 
 [[package]]
-name = "exceptiongroup"
-version = "1.1.1"
-description = "Backport of PEP 654 (exception groups)"
-category = "main"
-optional = false
-python-versions = ">=3.7"
-
-[package.extras]
-test = ["pytest (>=6)"]
-
-[[package]]
-name = "filelock"
-version = "3.12.2"
-description = "A platform independent file lock."
-category = "main"
-optional = false
-python-versions = ">=3.7"
-
-[package.extras]
-docs = ["furo (>=2023.5.20)", "sphinx (>=7.0.1)", "sphinx-autodoc-typehints (>=1.23,!=1.23.4)"]
-testing = ["covdefaults (>=2.3)", "coverage (>=7.2.7)", "diff-cover (>=7.5)", "pytest (>=7.3.1)", "pytest-cov (>=4.1)", "pytest-mock (>=3.10)", "pytest-timeout (>=2.1)"]
-
-[[package]]
 name = "frozenlist"
 version = "1.3.3"
 description = "A list-like structure which implements collections.abc.MutableSequence"
 category = "main"
 optional = false
 python-versions = ">=3.7"
-
-[[package]]
-name = "fsspec"
-version = "2023.6.0"
-description = "File-system specification"
-category = "main"
-optional = false
-python-versions = ">=3.8"
-
-[package.extras]
-abfs = ["adlfs"]
-adl = ["adlfs"]
-arrow = ["pyarrow (>=1)"]
-dask = ["dask", "distributed"]
-devel = ["pytest", "pytest-cov"]
-dropbox = ["dropbox", "dropboxdrivefs", "requests"]
-full = ["adlfs", "aiohttp (!=4.0.0a0,!=4.0.0a1)", "dask", "distributed", "dropbox", "dropboxdrivefs", "fusepy", "gcsfs", "libarchive-c", "ocifs", "panel", "paramiko", "pyarrow (>=1)", "pygit2", "requests", "s3fs", "smbprotocol", "tqdm"]
-fuse = ["fusepy"]
-gcs = ["gcsfs"]
-git = ["pygit2"]
-github = ["requests"]
-gs = ["gcsfs"]
-gui = ["panel"]
-hdfs = ["pyarrow (>=1)"]
-http = ["aiohttp (!=4.0.0a0,!=4.0.0a1)", "requests"]
-libarchive = ["libarchive-c"]
-oci = ["ocifs"]
-s3 = ["s3fs"]
-sftp = ["paramiko"]
-smb = ["smbprotocol"]
-ssh = ["paramiko"]
-tqdm = ["tqdm"]
 
 [[package]]
 name = "gitdb"
@@ -293,34 +238,6 @@ python-versions = ">=3.7"
 protobuf = ["grpcio-tools (>=1.53.0)"]
 
 [[package]]
-name = "huggingface-hub"
-version = "0.14.1"
-description = "Client library to download and publish models, datasets and other repos on the huggingface.co hub"
-category = "main"
-optional = false
-python-versions = ">=3.7.0"
-
-[package.dependencies]
-filelock = "*"
-fsspec = "*"
-packaging = ">=20.9"
-pyyaml = ">=5.1"
-requests = "*"
-tqdm = ">=4.42.1"
-typing-extensions = ">=3.7.4.3"
-
-[package.extras]
-all = ["InquirerPy (==0.3.4)", "Jinja2", "Pillow", "black (>=23.1,<24.0)", "gradio", "jedi", "mypy (==0.982)", "pytest", "pytest-cov", "pytest-env", "pytest-xdist", "ruff (>=0.0.241)", "soundfile", "types-PyYAML", "types-requests", "types-simplejson", "types-toml", "types-tqdm", "types-urllib3"]
-cli = ["InquirerPy (==0.3.4)"]
-dev = ["InquirerPy (==0.3.4)", "Jinja2", "Pillow", "black (>=23.1,<24.0)", "gradio", "jedi", "mypy (==0.982)", "pytest", "pytest-cov", "pytest-env", "pytest-xdist", "ruff (>=0.0.241)", "soundfile", "types-PyYAML", "types-requests", "types-simplejson", "types-toml", "types-tqdm", "types-urllib3"]
-fastai = ["fastai (>=2.4)", "fastcore (>=1.3.27)", "toml"]
-quality = ["black (>=23.1,<24.0)", "mypy (==0.982)", "ruff (>=0.0.241)"]
-tensorflow = ["graphviz", "pydot", "tensorflow"]
-testing = ["InquirerPy (==0.3.4)", "Jinja2", "Pillow", "gradio", "jedi", "pytest", "pytest-cov", "pytest-env", "pytest-xdist", "soundfile"]
-torch = ["torch"]
-typing = ["types-PyYAML", "types-requests", "types-simplejson", "types-toml", "types-tqdm", "types-urllib3"]
-
-[[package]]
 name = "idna"
 version = "3.4"
 description = "Internationalized Domain Names in Applications (IDNA)"
@@ -343,14 +260,6 @@ zipp = ">=0.5"
 docs = ["furo", "jaraco.packaging (>=9)", "jaraco.tidelift (>=1.4)", "rst.linker (>=1.9)", "sphinx (>=3.5)", "sphinx-lint"]
 perf = ["ipython"]
 testing = ["flake8 (<5)", "flufl.flake8", "importlib-resources (>=1.3)", "packaging", "pyfakefs", "pytest (>=6)", "pytest-black (>=0.3.7)", "pytest-checkdocs (>=2.4)", "pytest-cov", "pytest-enabler (>=1.3)", "pytest-flake8", "pytest-mypy (>=0.9.1)", "pytest-perf (>=0.9.2)"]
-
-[[package]]
-name = "iniconfig"
-version = "2.0.0"
-description = "brain-dead simple config-ini parsing"
-category = "main"
-optional = false
-python-versions = ">=3.7"
 
 [[package]]
 name = "jinja2"
@@ -626,18 +535,6 @@ docs = ["furo", "olefile", "sphinx (>=2.4)", "sphinx-copybutton", "sphinx-inline
 tests = ["check-manifest", "coverage", "defusedxml", "markdown2", "olefile", "packaging", "pyroma", "pytest", "pytest-cov", "pytest-timeout"]
 
 [[package]]
-name = "pluggy"
-version = "1.0.0"
-description = "plugin and hook calling mechanisms for python"
-category = "main"
-optional = false
-python-versions = ">=3.6"
-
-[package.extras]
-dev = ["pre-commit", "tox"]
-testing = ["pytest", "pytest-benchmark"]
-
-[[package]]
 name = "protobuf"
 version = "4.23.3"
 description = ""
@@ -744,25 +641,6 @@ description = "Persistent/Functional/Immutable data structures"
 category = "main"
 optional = false
 python-versions = ">=3.7"
-
-[[package]]
-name = "pytest"
-version = "7.3.2"
-description = "pytest: simple powerful testing with Python"
-category = "main"
-optional = false
-python-versions = ">=3.7"
-
-[package.dependencies]
-colorama = {version = "*", markers = "sys_platform == \"win32\""}
-exceptiongroup = {version = ">=1.0.0rc8", markers = "python_version < \"3.11\""}
-iniconfig = "*"
-packaging = "*"
-pluggy = ">=0.12,<2.0"
-tomli = {version = ">=1.0.0", markers = "python_version < \"3.11\""}
-
-[package.extras]
-testing = ["argcomplete", "attrs (>=19.2.0)", "hypothesis (>=3.56)", "mock", "nose", "pygments (>=2.7.2)", "requests", "setuptools", "xmlschema"]
 
 [[package]]
 name = "python-dateutil"
@@ -967,17 +845,6 @@ watchdog = {version = "*", markers = "platform_system != \"Darwin\""}
 snowflake = ["snowflake-snowpark-python"]
 
 [[package]]
-name = "tabulate"
-version = "0.9.0"
-description = "Pretty-print tabular data"
-category = "main"
-optional = false
-python-versions = ">=3.7"
-
-[package.extras]
-widechars = ["wcwidth"]
-
-[[package]]
 name = "tenacity"
 version = "8.2.2"
 description = "Retry code until it succeeds"
@@ -1010,14 +877,6 @@ description = "Python Library for Tom's Obvious, Minimal Language"
 category = "main"
 optional = false
 python-versions = ">=2.6, !=3.0.*, !=3.1.*, !=3.2.*"
-
-[[package]]
-name = "tomli"
-version = "2.0.1"
-description = "A lil' TOML parser"
-category = "main"
-optional = false
-python-versions = ">=3.7"
 
 [[package]]
 name = "toolz"
@@ -1180,7 +1039,7 @@ testing = ["big-O", "flake8 (<5)", "jaraco.functools", "jaraco.itertools", "more
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.10"
-content-hash = "a54b292c87050a9842e419f0de30d7213cbb4bada044e8b6d8d1b1c827d7c2cc"
+content-hash = "27cb1494eaab9822ee392bb06183ad96a9f83d3187deb6df16d9bdc875745348"
 
 [metadata.files]
 aiohttp = [
@@ -1401,14 +1260,6 @@ environs = [
     {file = "environs-9.5.0-py2.py3-none-any.whl", hash = "sha256:1e549569a3de49c05f856f40bce86979e7d5ffbbc4398e7f338574c220189124"},
     {file = "environs-9.5.0.tar.gz", hash = "sha256:a76307b36fbe856bdca7ee9161e6c466fd7fcffc297109a118c59b54e27e30c9"},
 ]
-exceptiongroup = [
-    {file = "exceptiongroup-1.1.1-py3-none-any.whl", hash = "sha256:232c37c63e4f682982c8b6459f33a8981039e5fb8756b2074364e5055c498c9e"},
-    {file = "exceptiongroup-1.1.1.tar.gz", hash = "sha256:d484c3090ba2889ae2928419117447a14daf3c1231d5e30d0aae34f354f01785"},
-]
-filelock = [
-    {file = "filelock-3.12.2-py3-none-any.whl", hash = "sha256:cbb791cdea2a72f23da6ac5b5269ab0a0d161e9ef0100e653b69049a7706d1ec"},
-    {file = "filelock-3.12.2.tar.gz", hash = "sha256:002740518d8aa59a26b0c76e10fb8c6e15eae825d34b6fdf670333fd7b938d81"},
-]
 frozenlist = [
     {file = "frozenlist-1.3.3-cp310-cp310-macosx_10_9_universal2.whl", hash = "sha256:ff8bf625fe85e119553b5383ba0fb6aa3d0ec2ae980295aaefa552374926b3f4"},
     {file = "frozenlist-1.3.3-cp310-cp310-macosx_10_9_x86_64.whl", hash = "sha256:dfbac4c2dfcc082fcf8d942d1e49b6aa0766c19d3358bd86e2000bf0fa4a9cf0"},
@@ -1484,10 +1335,6 @@ frozenlist = [
     {file = "frozenlist-1.3.3-cp39-cp39-win32.whl", hash = "sha256:efa568b885bca461f7c7b9e032655c0c143d305bf01c30caf6db2854a4532b38"},
     {file = "frozenlist-1.3.3-cp39-cp39-win_amd64.whl", hash = "sha256:cfe33efc9cb900a4c46f91a5ceba26d6df370ffddd9ca386eb1d4f0ad97b9ea9"},
     {file = "frozenlist-1.3.3.tar.gz", hash = "sha256:58bcc55721e8a90b88332d6cd441261ebb22342e238296bb330968952fbb3a6a"},
-]
-fsspec = [
-    {file = "fsspec-2023.6.0-py3-none-any.whl", hash = "sha256:1cbad1faef3e391fba6dc005ae9b5bdcbf43005c9167ce78c915549c352c869a"},
-    {file = "fsspec-2023.6.0.tar.gz", hash = "sha256:d0b2f935446169753e7a5c5c55681c54ea91996cc67be93c39a154fb3a2742af"},
 ]
 gitdb = [
     {file = "gitdb-4.0.10-py3-none-any.whl", hash = "sha256:c286cf298426064079ed96a9e4a9d39e7f3e9bf15ba60701e95f5492f28415c7"},
@@ -1606,10 +1453,6 @@ grpcio = [
     {file = "grpcio-1.53.0-cp39-cp39-win_amd64.whl", hash = "sha256:6beb84f83360ff29a3654f43f251ec11b809dcb5524b698d711550243debd289"},
     {file = "grpcio-1.53.0.tar.gz", hash = "sha256:a4952899b4931a6ba12951f9a141ef3e74ff8a6ec9aa2dc602afa40f63595e33"},
 ]
-huggingface-hub = [
-    {file = "huggingface_hub-0.14.1-py3-none-any.whl", hash = "sha256:9fc619170d800ff3793ad37c9757c255c8783051e1b5b00501205eb43ccc4f27"},
-    {file = "huggingface_hub-0.14.1.tar.gz", hash = "sha256:9ab899af8e10922eac65e290d60ab956882ab0bf643e3d990b1394b6b47b7fbc"},
-]
 idna = [
     {file = "idna-3.4-py3-none-any.whl", hash = "sha256:90b77e79eaa3eba6de819a0c442c0b4ceefc341a7a2ab77d7562bf49f425c5c2"},
     {file = "idna-3.4.tar.gz", hash = "sha256:814f528e8dead7d329833b91c5faa87d60bf71824cd12a7530b5526063d02cb4"},
@@ -1617,10 +1460,6 @@ idna = [
 importlib-metadata = [
     {file = "importlib_metadata-6.6.0-py3-none-any.whl", hash = "sha256:43dd286a2cd8995d5eaef7fee2066340423b818ed3fd70adf0bad5f1fac53fed"},
     {file = "importlib_metadata-6.6.0.tar.gz", hash = "sha256:92501cdf9cc66ebd3e612f1b4f0c0765dfa42f0fa38ffb319b6bd84dd675d705"},
-]
-iniconfig = [
-    {file = "iniconfig-2.0.0-py3-none-any.whl", hash = "sha256:b6a85871a79d2e3b22d2d1b94ac2824226a63c6b741c88f7ae975f18b6778374"},
-    {file = "iniconfig-2.0.0.tar.gz", hash = "sha256:2d91e135bf72d31a410b17c16da610a82cb55f6b0477d1a902134b24a455b8b3"},
 ]
 jinja2 = [
     {file = "Jinja2-3.1.2-py3-none-any.whl", hash = "sha256:6088930bfe239f0e6710546ab9c19c9ef35e29792895fed6e6e31a023a182a61"},
@@ -1965,10 +1804,6 @@ pillow = [
     {file = "Pillow-9.5.0-pp39-pypy39_pp73-win_amd64.whl", hash = "sha256:1e7723bd90ef94eda669a3c2c19d549874dd5badaeefabefd26053304abe5799"},
     {file = "Pillow-9.5.0.tar.gz", hash = "sha256:bf548479d336726d7a0eceb6e767e179fbde37833ae42794602631a070d630f1"},
 ]
-pluggy = [
-    {file = "pluggy-1.0.0-py2.py3-none-any.whl", hash = "sha256:74134bbf457f031a36d68416e1509f34bd5ccc019f0bcc952c7b909d06b37bd3"},
-    {file = "pluggy-1.0.0.tar.gz", hash = "sha256:4224373bacce55f955a878bf9cfa763c1e360858e330072059e10bad68531159"},
-]
 protobuf = [
     {file = "protobuf-4.23.3-cp310-abi3-win32.whl", hash = "sha256:514b6bbd54a41ca50c86dd5ad6488afe9505901b3557c5e0f7823a0cf67106fb"},
     {file = "protobuf-4.23.3-cp310-abi3-win_amd64.whl", hash = "sha256:cc14358a8742c4e06b1bfe4be1afbdf5c9f6bd094dff3e14edb78a1513893ff5"},
@@ -2129,10 +1964,6 @@ pyrsistent = [
     {file = "pyrsistent-0.19.3-cp39-cp39-win_amd64.whl", hash = "sha256:878433581fc23e906d947a6814336eee031a00e6defba224234169ae3d3d6a98"},
     {file = "pyrsistent-0.19.3-py3-none-any.whl", hash = "sha256:ccf0d6bd208f8111179f0c26fdf84ed7c3891982f2edaeae7422575f47e66b64"},
     {file = "pyrsistent-0.19.3.tar.gz", hash = "sha256:1a2994773706bbb4995c31a97bc94f1418314923bd1048c6d964837040376440"},
-]
-pytest = [
-    {file = "pytest-7.3.2-py3-none-any.whl", hash = "sha256:cdcbd012c9312258922f8cd3f1b62a6580fdced17db6014896053d47cddf9295"},
-    {file = "pytest-7.3.2.tar.gz", hash = "sha256:ee990a3cc55ba808b80795a79944756f315c67c12b56abd3ac993a7b8c17030b"},
 ]
 python-dateutil = [
     {file = "python-dateutil-2.8.2.tar.gz", hash = "sha256:0123cacc1627ae19ddf3c27a5de5bd67ee4586fbdd6440d9748f8abb483d3e86"},
@@ -2353,10 +2184,6 @@ streamlit = [
     {file = "streamlit-1.23.1-py2.py3-none-any.whl", hash = "sha256:02cd55a95acd20d73ff03866956ba6e98d71041ee4728dbfef05cf17069d1bb9"},
     {file = "streamlit-1.23.1.tar.gz", hash = "sha256:af95a78f9d291f12f779cf66a2bdadfafd8a46fe4fcc6ed281492640ed37bf1e"},
 ]
-tabulate = [
-    {file = "tabulate-0.9.0-py3-none-any.whl", hash = "sha256:024ca478df22e9340661486f85298cff5f6dcdba14f3813e8830015b9ed1948f"},
-    {file = "tabulate-0.9.0.tar.gz", hash = "sha256:0095b12bf5966de529c0feb1fa08671671b3368eec77d7ef7ab114be2c068b3c"},
-]
 tenacity = [
     {file = "tenacity-8.2.2-py3-none-any.whl", hash = "sha256:2f277afb21b851637e8f52e6a613ff08734c347dc19ade928e519d7d2d8569b0"},
     {file = "tenacity-8.2.2.tar.gz", hash = "sha256:43af037822bd0029025877f3b2d97cc4d7bb0c2991000a3d59d71517c5c969e0"},
@@ -2395,10 +2222,6 @@ tiktoken = [
 toml = [
     {file = "toml-0.10.2-py2.py3-none-any.whl", hash = "sha256:806143ae5bfb6a3c6e736a764057db0e6a0e05e338b5630894a5f779cabb4f9b"},
     {file = "toml-0.10.2.tar.gz", hash = "sha256:b3bda1d108d5dd99f4a20d24d9c348e91c4db7ab1b749200bded2f839ccbe68f"},
-]
-tomli = [
-    {file = "tomli-2.0.1-py3-none-any.whl", hash = "sha256:939de3e7a6161af0c887ef91b7d41a53e7c5a1ca976325f429cb46ea9bc30ecc"},
-    {file = "tomli-2.0.1.tar.gz", hash = "sha256:de526c12914f0c550d15924c62d72abc48d6fe7364aa87328337a31007fe8a4f"},
 ]
 toolz = [
     {file = "toolz-0.12.0-py3-none-any.whl", hash = "sha256:2059bd4148deb1884bb0eb770a3cde70e7f954cfbbdc2285f1f2de01fd21eb6f"},
