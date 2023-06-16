@@ -845,6 +845,17 @@ watchdog = {version = "*", markers = "platform_system != \"Darwin\""}
 snowflake = ["snowflake-snowpark-python"]
 
 [[package]]
+name = "tabulate"
+version = "0.9.0"
+description = "Pretty-print tabular data"
+category = "main"
+optional = false
+python-versions = ">=3.7"
+
+[package.extras]
+widechars = ["wcwidth"]
+
+[[package]]
 name = "tenacity"
 version = "8.2.2"
 description = "Retry code until it succeeds"
@@ -1039,7 +1050,7 @@ testing = ["big-O", "flake8 (<5)", "jaraco.functools", "jaraco.itertools", "more
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.10"
-content-hash = "27cb1494eaab9822ee392bb06183ad96a9f83d3187deb6df16d9bdc875745348"
+content-hash = "a7d50aef74452147886802d31f56320f0916bd00ee1e7de2c5432331836002e4"
 
 [metadata.files]
 aiohttp = [
@@ -2183,6 +2194,10 @@ sqlalchemy = [
 streamlit = [
     {file = "streamlit-1.23.1-py2.py3-none-any.whl", hash = "sha256:02cd55a95acd20d73ff03866956ba6e98d71041ee4728dbfef05cf17069d1bb9"},
     {file = "streamlit-1.23.1.tar.gz", hash = "sha256:af95a78f9d291f12f779cf66a2bdadfafd8a46fe4fcc6ed281492640ed37bf1e"},
+]
+tabulate = [
+    {file = "tabulate-0.9.0-py3-none-any.whl", hash = "sha256:024ca478df22e9340661486f85298cff5f6dcdba14f3813e8830015b9ed1948f"},
+    {file = "tabulate-0.9.0.tar.gz", hash = "sha256:0095b12bf5966de529c0feb1fa08671671b3368eec77d7ef7ab114be2c068b3c"},
 ]
 tenacity = [
     {file = "tenacity-8.2.2-py3-none-any.whl", hash = "sha256:2f277afb21b851637e8f52e6a613ff08734c347dc19ade928e519d7d2d8569b0"},
