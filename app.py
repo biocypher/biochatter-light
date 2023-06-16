@@ -150,9 +150,9 @@ def update_api_keys():
     updates the session state accordingly.
     """
     if "OPENAI_API_KEY" in os.environ:
-        ss["openai_api_key"] = os.environ["OPENAI_API_KEY"]
+        ss.openai_api_key = os.environ["OPENAI_API_KEY"]
     if "HUGGINGFACEHUB_API_TOKEN" in os.environ:
-        ss["huggingfacehub_api_key"] = os.environ["HUGGINGFACEHUB_API_TOKEN"]
+        ss.huggingfacehub_api_key = os.environ["HUGGINGFACEHUB_API_TOKEN"]
 
 
 def on_submit():

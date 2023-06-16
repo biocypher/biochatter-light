@@ -240,6 +240,7 @@ class ChatGSE:
         )
         if not success:
             return False
+
         return True
 
     def _get_api_key(self, key: str = None):

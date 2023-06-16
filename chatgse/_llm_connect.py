@@ -288,8 +288,9 @@ class GptConversation(Conversation):
             )
             if user == "community":
                 self.usage_stats = get_stats(user=user)
-            ss.openai_api_key = api_key
+
             return True
+
         except openai.error.AuthenticationError as e:
             return False
 
