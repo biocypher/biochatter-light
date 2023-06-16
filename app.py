@@ -233,6 +233,13 @@ def chat_box():
         ),
         label_visibility="collapsed",
     )
+    if ss.get("conversation_mode") == "both" and not ss.docsum.used:
+        st.warning(
+            "You have selected 'data and papers' as the conversation mode, but "
+            "have not yet embedded any documents. Prompt injection will only "
+            "be performed if you upload at least one document (in the "
+            "'Document Summarisation' tab)."
+        )
 
 
 def openai_key_chat_box():
@@ -1072,6 +1079,7 @@ def docsum_panel():
         if submitted and uploaded_file is not None:
             if not ss.docsum.used:
                 ss.docsum.used = True
+                ss.first_document_uploaded = True
             if not ss.get("uploaded_files"):
                 ss.uploaded_files = []
 
@@ -1086,6 +1094,9 @@ def docsum_panel():
                 ss.docsum.set_document(doc)
                 ss.docsum.split_document()
                 ss.docsum.store_embeddings()
+                ss.upload_success = True
+
+        if ss.get("upload_success"):
             st.success("Embeddings saved!")
 
         if ss.get("conversation"):
@@ -1104,6 +1115,11 @@ def docsum_panel():
                 for s in ss.conversation.current_statements:
                     out += f"- {s}\n"
                 st.markdown(out)
+            else:
+                st.info(
+                    "The search results will be displayed here once you've executed "
+                    "a query."
+                )
 
     with settings:
         st.markdown(
@@ -1122,15 +1138,24 @@ def docsum_panel():
         )
 
         ss.docsum.chunk_size = st.slider(
-            "Chunk size: how large should the embedded text fragments be?",
+            label=(
+                "Chunk size: how large should the embedded text fragments be?"
+            ),
             min_value=100,
             max_value=5000,
             value=1000,
             step=1,
             disabled=disabled,
+            help=(
+                "The larger the chunk size, the more context is provided to "
+                "the model. The lower the chunk size, the more individual "
+                "chunks can be used inside the token length limit of the "
+                "model. While the value can be changed at any time, it is "
+                "recommended to set it before uploading documents."
+            ),
         )
         ss.docsum.chunk_overlap = st.slider(
-            "Overlap: should the chunks overlap, and by how much?",
+            label="Overlap: should the chunks overlap, and by how much?",
             min_value=0,
             max_value=1000,
             value=0,
@@ -1144,7 +1169,10 @@ def docsum_panel():
         #     disabled=disabled,
         # )
         ss.docsum.n_results = st.slider(
-            "Number of results: how many chunks should be used to supplement the prompt?",
+            label=(
+                "Number of results: how many chunks should be used to "
+                "supplement the prompt?"
+            ),
             min_value=1,
             max_value=20,
             value=3,
@@ -1169,6 +1197,11 @@ def docsum_panel():
             for f in ss.uploaded_files:
                 s += "- " + f + "\n"
             st.markdown(s)
+        else:
+            st.info(
+                "Uploaded documents will be displayed here once you have "
+                "uploaded them."
+            )
 
 
 def toggle_docsum_prompt():
@@ -1246,6 +1279,62 @@ def _startup():
     ss.show_setup = True
 
 
+def mode_select():
+    data, papers, both = st.columns(3)
+
+    ss.mode = "getting_context"
+
+    with data:
+        st.button(
+            "Talk about data.",
+            use_container_width=True,
+            on_click=set_data_mode,
+        )
+
+    with papers:
+        st.button(
+            "Talk about papers / notes.",
+            use_container_width=True,
+            on_click=set_papers_mode,
+            disabled=ss.online,
+        )
+
+    with both:
+        st.button(
+            "Talk about data and papers / notes.",
+            use_container_width=True,
+            on_click=set_both_mode,
+            disabled=ss.online,
+        )
+
+    if ss.online:
+        st.info(
+            "Document summarisation is currently not available in the "
+            "online version. Please use the Docker Compose setup in our "
+            "[GitHub repository](https://github.com/biocypher/ChatGSE#-document-summarisation--in-context-learning) "
+            "to run ChatGSE locally and use this feature."
+        )
+
+
+def set_data_mode():
+    ss.conversation_mode = "data"
+    ss.cg._ask_for_context("data")
+
+
+def set_papers_mode():
+    ss.conversation_mode = "papers"
+    ss.cg._ask_for_context("papers")
+
+
+def set_both_mode():
+    ss.conversation_mode = "both"
+    ss.cg._ask_for_context("data and papers")
+
+
+def waiting_for_docsum():
+    st.info("Use the 'Document Summarisation' tab to embed documents.")
+
+
 def main():
     # NEW SESSION
     if not ss.get("mode"):
@@ -1316,7 +1405,7 @@ def main():
         cg._display_history()
 
         # CHAT BOT LOGIC
-        if ss.input:
+        if ss.input or ss.mode == "waiting_for_docsum":
             if ss.mode == "getting_key":
                 ss.mode = cg._get_api_key(ss.input)
                 ss.show_intro = False
@@ -1331,11 +1420,20 @@ def main():
             elif ss.mode == "getting_name":
                 ss.mode = cg._get_user_name()
                 ss.show_intro = False
-                refresh()
 
             elif ss.mode == "getting_context":
-                ss.mode = cg._get_context()
-                ss.mode = cg._ask_for_data_input()
+                cg._get_context()
+                if ss.conversation_mode in ["data", "both"]:
+                    ss.mode = cg._ask_for_data_input()
+                elif not ss.docsum.used:
+                    st.write("Please embed at least one document.")
+                    ss.mode = "waiting_for_docsum"
+                else:
+                    ss.mode = cg._start_chat()
+
+            elif ss.mode == "waiting_for_docsum":
+                if ss.docsum.used:
+                    ss.mode = cg._start_chat()
 
             elif ss.mode == "getting_data_file_input":
                 ss.mode = cg._get_data_input()
@@ -1430,11 +1528,15 @@ def main():
                 openai_key_chat_box()
             elif ss.primary_model in HUGGINGFACE_MODELS:
                 huggingface_key_chat_box()
+        elif ss.mode == "getting_mode":
+            mode_select()
         elif ss.mode == "getting_data_file_input":
             data_input_buttons()
         elif ss.mode in ["getting_name", "getting_context"]:
             chat_line()
             autofocus_line()
+        elif ss.mode == "waiting_for_docsum":
+            waiting_for_docsum()
         elif "demo" in ss.mode:
             demo_next_button()
         else:
@@ -1558,6 +1660,9 @@ def main():
         )
         if ss.get("openai_api_key"):
             docsum_panel()
+            if ss.get("first_document_uploaded"):
+                ss.first_document_uploaded = False
+                refresh()
         else:
             st.info(
                 "Please enter your OpenAI API key to use the document "

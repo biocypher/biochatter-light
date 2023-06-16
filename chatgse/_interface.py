@@ -47,7 +47,7 @@ API_KEY_SUCCESS = (
 PLEASE_ENTER_QUESTIONS = (
     "The model will be with you shortly. "
     "Please enter your questions below. "
-    "These can be general, such as 'explain these results', or specific. "
+    "These can be general, such as 'explain these results,' or specific. "
     "General questions will yield more general answers, while specific "
     "questions go into more detail. You can follow up on the answers with "
     "more questions."
@@ -281,10 +281,24 @@ class ChatGSE:
             name,
             name,
         )
+
+        msg = f"Hi {name}! What do you want to talk about today?"
+        self._write_and_history("📎 Assistant", msg)
+
+        return "getting_mode"
+
+    def _ask_for_context(self, mode: str):
+        logger.info("Getting mode.")
+
+        self._write_and_history(
+            ss.conversation.user_name,
+            mode,
+        )
+
         msg = (
-            f"Thank you, `{name}`! "
-            "What is the context of your inquiry? For instance, this could be a "
-            "disease, an experimental design, or a research area."
+            f"Sure, let's talk about {mode}. "
+            "What is the context of your inquiry? For instance, this could be "
+            "a disease, an experimental design, or a research area."
         )
         self._write_and_history("📎 Assistant", msg)
 
@@ -480,6 +494,21 @@ class ChatGSE:
             "Thank you for the input. " f"{PLEASE_ENTER_QUESTIONS}"
         )
         self._write_and_history("📎 Assistant", data_input_response)
+
+        return "chat"
+
+    def _start_chat(self):
+        logger.info("Starting chat.")
+
+        msg = (
+            f"You have selected `{ss.conversation.context}` as your context. "
+            f"{PLEASE_ENTER_QUESTIONS}"
+        )
+
+        self._write_and_history(
+            "📎 Assistant",
+            msg,
+        )
 
         return "chat"
 
