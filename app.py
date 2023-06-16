@@ -520,7 +520,7 @@ def demo_next_button():
     """
     Show the "Next Step" button for the demo mode.
     """
-    st.button("Next Step", on_click=demo_next)
+    st.button("Next Step", on_click=demo_next, use_container_width=True)
 
 
 def demo_next():
