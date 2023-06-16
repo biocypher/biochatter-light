@@ -1272,6 +1272,11 @@ def main():
             "total_tokens": 0,
         }
 
+    # UPDATE DOCSUM
+    if ss.get("docsum"):
+        if ss.docsum.use_prompt:
+            ss.conversation.set_docsum(ss.docsum)
+
     # TABS
     (
         chat_tab,

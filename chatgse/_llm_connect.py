@@ -16,6 +16,8 @@ from langchain.chat_models import ChatOpenAI
 from langchain.schema import AIMessage, HumanMessage, SystemMessage
 from langchain.llms import HuggingFaceHub
 
+from chatgse._docsum import DocumentEmbedder
+
 import nltk
 import json
 
@@ -61,11 +63,13 @@ class Conversation(ABC):
         model_name: str,
         prompts: dict,
         split_correction: bool = False,
+        docsum: DocumentEmbedder = None,
     ):
         super().__init__()
         self.model_name = model_name
         self.prompts = prompts
         self.split_correction = split_correction
+        self.docsum = docsum
         self.history = []
         self.messages = []
         self.ca_messages = []
@@ -82,6 +86,9 @@ class Conversation(ABC):
 
     def set_prompts(self, prompts: dict):
         self.prompts = prompts
+
+    def set_docsum(self, docsum: DocumentEmbedder):
+        self.docsum = docsum
 
     def append_ai_message(self, message: str):
         self.messages.append(
@@ -144,8 +151,8 @@ class Conversation(ABC):
     def query(self, text: str):
         self.append_user_message(text)
 
-        if ss.get("docsum"):
-            if ss.docsum.use_prompt:
+        if self.docsum:
+            if self.docsum.use_prompt:
                 self._inject_context(text)
 
         msg, token_usage = self._primary_query()
@@ -192,7 +199,7 @@ class Conversation(ABC):
         pass
 
     def _inject_context(self, text: str):
-        if not ss.docsum.used:
+        if not self.docsum.used:
             st.info(
                 "No document has been analysed yet. To use document "
                 "summarisation, please analyse at least one document first."
@@ -200,16 +207,16 @@ class Conversation(ABC):
             return
 
         sim_msg = (
-            f"Performing similarity search to inject {ss.docsum.n_results}"
+            f"Performing similarity search to inject {self.docsum.n_results}"
             " fragments ..."
         )
 
         with st.spinner(sim_msg):
             statements = [
                 doc.page_content
-                for doc in ss.docsum.similarity_search(
+                for doc in self.docsum.similarity_search(
                     text,
-                    ss.docsum.n_results,
+                    self.docsum.n_results,
                 )
             ]
         prompts = self.prompts["docsum_prompts"]
@@ -251,6 +258,7 @@ class GptConversation(Conversation):
         model_name: str,
         prompts: dict,
         split_correction: bool,
+        docsum: DocumentEmbedder = None,
     ):
         """
         Connect to OpenAI's GPT API and set up a conversation with the user.
@@ -261,6 +269,7 @@ class GptConversation(Conversation):
             model_name=model_name,
             prompts=prompts,
             split_correction=split_correction,
+            docsum=docsum,
         )
 
         self.ca_model_name = "gpt-3.5-turbo"
@@ -355,11 +364,13 @@ class BloomConversation(Conversation):
         model_name: str,
         prompts: dict,
         split_correction: bool,
+        docsum: DocumentEmbedder = None,
     ):
         super().__init__(
             model_name=model_name,
             prompts=prompts,
             split_correction=split_correction,
+            docsum=docsum,
         )
 
         self.messages = []
