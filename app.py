@@ -1,6 +1,6 @@
 # ChatGSE app.py: streamlit chat app for contextualisation of biomedical results
 app_name = "chatgse"
-__version__ = "0.2.24"
+__version__ = "0.2.25"
 
 # BOILERPLATE
 import json
