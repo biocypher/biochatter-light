@@ -133,6 +133,7 @@ HOW_MESSAGES = [
 import os
 import datetime
 from chatgse._interface import ChatGSE
+from chatgse._ontologyMapper import OntologyMapper
 from chatgse._stats import get_community_usage_cost
 from chatgse._interface import community_possible
 from chatgse._docsum import (
@@ -161,6 +162,10 @@ def on_submit():
     """
     ss.input = ss.get("widget")
     ss.widget = ""
+
+def on_ontology_submit():
+    ss.terms = ss.ontology_widget
+    ss.ontology_widget = ""
 
 
 def autofocus_line():
@@ -206,6 +211,18 @@ def autofocus_area():
 
 
 # COMPONENTS
+def ontology_box():
+    st.text_area(
+        "Input:",
+        on_change=on_ontology_submit,
+        key="ontology_widget",
+        placeholder=(
+            "Write your terms you want to map to the cell onotology here. Press [Enter] for a new line, and [CTRL+Enter] or "
+            "[⌘+Enter] to submit."
+        ),
+        label_visibility="collapsed",
+    )
+
 def chat_line():
     """
     Renders a chat line for smaller inputs.
@@ -1248,6 +1265,11 @@ def main():
     if not ss.get("primary_model"):
         ss["primary_model"] = "gpt-3.5-turbo"
 
+    #Initiate OntologyMapper:
+    if not ss.get("om"):
+        ss.om = OntologyMapper()
+    om = ss.om
+
     # INTERFACE
     if not ss.get("cg"):
         ss.cg = ChatGSE()
@@ -1275,6 +1297,7 @@ def main():
         annot_tab,
         exp_design_tab,
         correct_tab,
+        om_tab,
     ) = st.tabs(
         [
             "Chat",
@@ -1283,6 +1306,7 @@ def main():
             "Cell Type Annotation",
             "Experimental Design",
             "Correcting Agent",
+            "Ontology Mapper",
         ]
     )
 
@@ -1549,6 +1573,24 @@ def main():
             st.info(
                 "Please enter your OpenAI API key to use the document "
                 "summarisation functionality."
+            )
+    with om_tab:
+        if ss.user == "community":
+            st.markdown(f"{DEV_FUNCTIONALITY}")
+        else:
+            st.markdown(
+                "This Tab uses text2term developed by the center for computational biomedicine "
+                "of the harvard medical school. "
+            )
+
+            #Add a widget for text input
+            if ss.terms:
+                om._get_mapping()
+
+            ontology_box()
+
+            st.markdown(
+                f"`📎 Assistant`: Ontology Mapper {OFFLINE_FUNCTIONALITY}"
             )
 
 
