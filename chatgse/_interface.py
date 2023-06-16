@@ -6,7 +6,7 @@ import os
 from loguru import logger
 import pandas as pd
 import streamlit as st
-from chatgse._llm_connect import (
+from biochatter.llm_connect import (
     GptConversation,
     BloomConversation,
     OPENAI_MODELS,

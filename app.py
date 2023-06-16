@@ -133,14 +133,14 @@ HOW_MESSAGES = [
 import os
 import datetime
 from chatgse._interface import ChatGSE
-from chatgse._stats import get_community_usage_cost
 from chatgse._interface import community_possible
-from chatgse._docsum import (
+from biochatter._stats import get_community_usage_cost
+from biochatter.vectorstore import (
     DocumentEmbedder,
     document_from_pdf,
     document_from_txt,
 )
-from chatgse._llm_connect import OPENAI_MODELS, HUGGINGFACE_MODELS
+from biochatter.llm_connect import OPENAI_MODELS, HUGGINGFACE_MODELS
 
 
 # HANDLERS
@@ -1001,14 +1001,16 @@ def shuffle_messages(l: list, i: int):
 
 def docsum_panel():
     """
+
     Upload files for document summarisation, one file at a time. Upon upload,
     document is split and embedded into a connected vector DB using the
-    `_docsum.py` module. The top k results of similarity search of the user's
-    query will be injected into the prompt to the primary model (only once per
-    query). The panel displays a file_uploader panel, settings for the text
-    splitter (chunk size and overlap, separators), and a slider for the number
-    of results to return. Also displays the list of closest matches to the last
-    executed query.
+    `vectorstore.py` module of biochatter. The top k results of similarity
+    search of the user's query will be injected into the prompt to the primary
+    model (only once per query). The panel displays a file_uploader panel,
+    settings for the text splitter (chunk size and overlap, separators), and a
+    slider for the number of results to return. Also displays the list of
+    closest matches to the last executed query.
+
     """
 
     if not ss.get("docsum"):
