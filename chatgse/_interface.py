@@ -135,11 +135,13 @@ class ChatGSE:
             ss.conversation = GptConversation(
                 model_name=model_name,
                 prompts=ss.prompts,
+                split_correction=ss.split_correction,
             )
         elif model_name in HUGGINGFACE_MODELS:
             ss.conversation = BloomConversation(
                 model_name=model_name,
                 prompts=ss.prompts,
+                split_correction=ss.split_correction,
             )
 
     def _check_for_api_key(self, write: bool = True, input: str = None):

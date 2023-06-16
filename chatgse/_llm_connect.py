@@ -56,13 +56,19 @@ class Conversation(ABC):
 
     """
 
-    def __init__(self, model_name: str, prompts: dict):
+    def __init__(
+        self,
+        model_name: str,
+        prompts: dict,
+        split_correction: bool = False,
+    ):
         super().__init__()
         self.model_name = model_name
+        self.prompts = prompts
+        self.split_correction = split_correction
         self.history = []
         self.messages = []
         self.ca_messages = []
-        self.prompts = prompts
 
     def set_user_name(self, user_name: str):
         self.user_name = user_name
@@ -150,13 +156,13 @@ class Conversation(ABC):
 
         cor_msg = (
             "Correcting (using single sentences) ..."
-            if ss.split_correction
+            if self.split_correction
             else "Correcting ..."
         )
 
         with st.spinner(cor_msg):
             corrections = []
-            if ss.split_correction:
+            if self.split_correction:
                 nltk.download("punkt")
                 tokenizer = nltk.data.load("tokenizers/punkt/english.pickle")
                 sentences = tokenizer.tokenize(msg)
@@ -240,13 +246,22 @@ class Conversation(ABC):
 
 
 class GptConversation(Conversation):
-    def __init__(self, model_name: str, prompts: dict):
+    def __init__(
+        self,
+        model_name: str,
+        prompts: dict,
+        split_correction: bool,
+    ):
         """
         Connect to OpenAI's GPT API and set up a conversation with the user.
         Also initialise a second conversational agent to provide corrections to
         the model output, if necessary.
         """
-        super().__init__(model_name=model_name, prompts=prompts)
+        super().__init__(
+            model_name=model_name,
+            prompts=prompts,
+            split_correction=split_correction,
+        )
 
         self.ca_model_name = "gpt-3.5-turbo"
         # TODO make accessible by drop-down
@@ -334,8 +349,17 @@ class GptConversation(Conversation):
 
 
 class BloomConversation(Conversation):
-    def __init__(self, model_name: str, prompts: dict):
-        super().__init__(model_name=model_name, prompts=prompts)
+    def __init__(
+        self,
+        model_name: str,
+        prompts: dict,
+        split_correction: bool,
+    ):
+        super().__init__(
+            model_name=model_name,
+            prompts=prompts,
+            split_correction=split_correction,
+        )
 
         self.messages = []
 

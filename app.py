@@ -1179,6 +1179,10 @@ def correcting_agent_panel():
         value=False,
     )
 
+    if ss.get("conversation"):
+        if ss.split_correction != ss.conversation.split_correction:
+            ss.conversation.split_correction = ss.split_correction
+
     test_correct = st.text_area(
         "Test correction functionality here:",
         placeholder=(
