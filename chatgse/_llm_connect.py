@@ -56,12 +56,13 @@ class Conversation(ABC):
 
     """
 
-    def __init__(self, model_name: str):
+    def __init__(self, model_name: str, prompts: dict):
         super().__init__()
         self.model_name = model_name
         self.history = []
         self.messages = []
         self.ca_messages = []
+        self.prompts = prompts
 
     def set_user_name(self, user_name: str):
         self.user_name = user_name
@@ -69,6 +70,12 @@ class Conversation(ABC):
     @abstractmethod
     def set_api_key(self, api_key: str):
         pass
+
+    def get_prompts(self):
+        return self.prompts
+
+    def set_prompts(self, prompts: dict):
+        self.prompts = prompts
 
     def append_ai_message(self, message: str):
         self.messages.append(
@@ -95,7 +102,7 @@ class Conversation(ABC):
         """
         Set up the conversation with general prompts and a context.
         """
-        for msg in ss.prompts["primary_model_prompts"]:
+        for msg in self.prompts["primary_model_prompts"]:
             if msg:
                 self.messages.append(
                     SystemMessage(
@@ -103,7 +110,7 @@ class Conversation(ABC):
                     ),
                 )
 
-        for msg in ss.prompts["correcting_agent_prompts"]:
+        for msg in self.prompts["correcting_agent_prompts"]:
             if msg:
                 self.ca_messages.append(
                     SystemMessage(
@@ -120,23 +127,13 @@ class Conversation(ABC):
         msg = f"The user has given information on the data input: {data_input}."
         self.append_system_message(msg)
 
-    def setup_data_input_tool(self, df, tool: str):
+    def setup_data_input_tool(self, df, input_file_name: str):
         self.data_input_tool = df
 
-        if "progeny" in tool:
-            self.append_system_message(
-                ss.prompts["tool_prompts"]["progeny"].format(df=df)
-            )
-
-        elif "dorothea" in tool:
-            self.append_system_message(
-                ss.prompts["tool_prompts"]["dorothea"].format(df=df)
-            )
-
-        elif "gsea" in tool:
-            self.append_system_message(
-                ss.prompts["tool_prompts"]["gsea"].format(df=df)
-            )
+        for tool_name in self.prompts["tool_prompts"]:
+            if tool_name in input_file_name:
+                msg = self.prompts["tool_prompts"][tool_name].format(df=df)
+                self.append_system_message(msg)
 
     def query(self, text: str):
         self.append_user_message(text)
@@ -209,7 +206,7 @@ class Conversation(ABC):
                     ss.docsum.n_results,
                 )
             ]
-        prompts = ss.prompts["docsum_prompts"]
+        prompts = self.prompts["docsum_prompts"]
         if statements:
             ss.current_statements = statements
             for i, prompt in enumerate(prompts):
@@ -243,13 +240,13 @@ class Conversation(ABC):
 
 
 class GptConversation(Conversation):
-    def __init__(self, model_name: str):
+    def __init__(self, model_name: str, prompts: dict):
         """
         Connect to OpenAI's GPT API and set up a conversation with the user.
         Also initialise a second conversational agent to provide corrections to
         the model output, if necessary.
         """
-        super().__init__(model_name=model_name)
+        super().__init__(model_name=model_name, prompts=prompts)
 
         self.ca_model_name = "gpt-3.5-turbo"
         # TODO make accessible by drop-down
@@ -337,8 +334,8 @@ class GptConversation(Conversation):
 
 
 class BloomConversation(Conversation):
-    def __init__(self, model_name: str):
-        super().__init__(model_name=model_name)
+    def __init__(self, model_name: str, prompts: dict):
+        super().__init__(model_name=model_name, prompts=prompts)
 
         self.messages = []
 

@@ -1268,6 +1268,7 @@ def main():
             "total_tokens": 0,
         }
 
+    # TABS
     (
         chat_tab,
         prompts_tab,
