@@ -1086,21 +1086,22 @@ def docsum_panel():
                 ss.docsum.store_embeddings()
             st.success("Embeddings saved!")
 
-        if ss.get("current_statements"):
-            st.markdown(
-                "### "
-                "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"
-                "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"
-                "🔍 Search Results"
-            )
-            st.info(
-                "The following are the closest matches to the last executed "
-                "query."
-            )
-            out = ""
-            for s in ss.current_statements:
-                out += f"- {s}\n"
-            st.markdown(out)
+        if ss.get("conversation"):
+            if ss.conversation.current_statements:
+                st.markdown(
+                    "### "
+                    "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"
+                    "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"
+                    "🔍 Search Results"
+                )
+                st.info(
+                    "The following are the closest matches to the last executed "
+                    "query."
+                )
+                out = ""
+                for s in ss.conversation.current_statements:
+                    out += f"- {s}\n"
+                st.markdown(out)
 
     with settings:
         st.markdown(

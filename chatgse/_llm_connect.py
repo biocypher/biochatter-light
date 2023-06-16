@@ -7,8 +7,6 @@
 
 import streamlit as st
 
-ss = st.session_state
-
 from abc import ABC, abstractmethod
 import openai
 
@@ -73,6 +71,7 @@ class Conversation(ABC):
         self.history = []
         self.messages = []
         self.ca_messages = []
+        self.current_statements = []
 
     def set_user_name(self, user_name: str):
         self.user_name = user_name
@@ -221,7 +220,7 @@ class Conversation(ABC):
             ]
         prompts = self.prompts["docsum_prompts"]
         if statements:
-            ss.current_statements = statements
+            self.current_statements = statements
             for i, prompt in enumerate(prompts):
                 if i == len(prompts) - 1:
                     self.append_system_message(
