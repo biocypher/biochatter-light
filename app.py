@@ -141,6 +141,7 @@ from biochatter.vectorstore import (
     document_from_txt,
 )
 from biochatter.llm_connect import OPENAI_MODELS, HUGGINGFACE_MODELS
+from pymilvus.exceptions import MilvusException
 
 
 # HANDLERS
@@ -1077,9 +1078,6 @@ def docsum_panel():
                 "Upload", use_container_width=True
             )
         if submitted and uploaded_file is not None:
-            if not ss.docsum.used:
-                ss.docsum.used = True
-                ss.first_document_uploaded = True
             if not ss.get("uploaded_files"):
                 ss.uploaded_files = []
 
@@ -1093,8 +1091,21 @@ def docsum_panel():
                     doc = document_from_txt(val)
                 ss.docsum.set_document(doc)
                 ss.docsum.split_document()
-                ss.docsum.store_embeddings()
-                ss.upload_success = True
+                try:
+                    ss.docsum.store_embeddings()
+                    ss.upload_success = True
+                    if not ss.docsum.used:
+                        ss.docsum.used = True
+                        ss.first_document_uploaded = True
+                except MilvusException as e:
+                    st.error(
+                        "An error occurred while saving the embeddings. Please "
+                        "check if Milvus is running. For information on the "
+                        "Docker Compose setup, see the [README]("
+                        "https://github.com/biocypher/ChatGSE#-document-summarisation--in-context-learning)."
+                    )
+                    st.error(e)
+                    return
 
         if ss.get("upload_success"):
             st.success("Embeddings saved!")
