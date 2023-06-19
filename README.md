@@ -5,6 +5,12 @@ work in progress, but we are commited to open source and very open to comments,
 criticisms, and contributions! Read the [preprint
 here](https://arxiv.org/abs/2305.06488)!
 
+This repository contains only the frontend code of our streamlit app. The code
+base used for communication with the LLMs, vector databases, and other
+components of our project is developed at 
+https://github.com/biocypher/biochatter. Check there if you have your own UI
+and are looking for a way to connect it to the world of LLMs!
+
 ## 🤝 Get involved!
 To stay up to date with the project, please star the repository and watch the
 zulip community chat (free to join) at https://biocypher.zulipchat.com.
