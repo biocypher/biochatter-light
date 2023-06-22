@@ -182,6 +182,9 @@ class ChatGSE:
                 ss.show_community_select = False
                 ss.show_setup = False
 
+                if ss.primary_model in OPENAI_MODELS:
+                    ss.openai_api_key = key
+
                 return "getting_name"
 
             else:
@@ -242,6 +245,9 @@ class ChatGSE:
         )
         if not success:
             return False
+
+        if ss.primary_model in OPENAI_MODELS:
+            ss.openai_api_key = key
 
         return True
 
