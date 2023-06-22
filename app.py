@@ -1436,11 +1436,16 @@ def main():
                 cg._get_context()
                 if ss.conversation_mode in ["data", "both"]:
                     ss.mode = cg._ask_for_data_input()
-                elif not ss.docsum.used:
-                    st.write("Please embed at least one document.")
-                    ss.mode = "waiting_for_docsum"
                 else:
-                    ss.mode = cg._start_chat()
+                    if ss.get("docsum"):
+                        if not ss.docsum.used:
+                            st.write("Please embed at least one document.")
+                            ss.mode = "waiting_for_docsum"
+                        else:
+                            ss.mode = cg._start_chat()
+                    else:
+                        st.write("Please embed at least one document.")
+                        ss.mode = "waiting_for_docsum"
 
             elif ss.mode == "waiting_for_docsum":
                 if ss.docsum.used:
