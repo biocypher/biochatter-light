@@ -1,6 +1,6 @@
 # ChatGSE app.py: streamlit chat app for contextualisation of biomedical results
 app_name = "chatgse"
-__version__ = "0.2.24"
+__version__ = "0.2.29"
 
 # BOILERPLATE
 import json
@@ -137,14 +137,15 @@ import os
 import datetime
 from chatgse._interface import ChatGSE
 from chatgse._ontologyMapper import OntologyMapper
-from chatgse._stats import get_community_usage_cost
 from chatgse._interface import community_possible
-from chatgse._docsum import (
+from biochatter._stats import get_community_usage_cost
+from biochatter.vectorstore import (
     DocumentEmbedder,
     document_from_pdf,
     document_from_txt,
 )
-from chatgse._llm_connect import OPENAI_MODELS, HUGGINGFACE_MODELS
+from biochatter.llm_connect import OPENAI_MODELS, HUGGINGFACE_MODELS
+from pymilvus.exceptions import MilvusException
 
 
 # HANDLERS
@@ -154,9 +155,9 @@ def update_api_keys():
     updates the session state accordingly.
     """
     if "OPENAI_API_KEY" in os.environ:
-        ss["openai_api_key"] = os.environ["OPENAI_API_KEY"]
+        ss.openai_api_key = os.environ["OPENAI_API_KEY"]
     if "HUGGINGFACEHUB_API_TOKEN" in os.environ:
-        ss["huggingfacehub_api_key"] = os.environ["HUGGINGFACEHUB_API_TOKEN"]
+        ss.huggingfacehub_api_key = os.environ["HUGGINGFACEHUB_API_TOKEN"]
 
 
 def on_submit():
@@ -256,6 +257,13 @@ def chat_box():
         ),
         label_visibility="collapsed",
     )
+    if ss.get("conversation_mode") == "both" and not ss.docsum.used:
+        st.warning(
+            "You have selected 'data and papers' as the conversation mode, but "
+            "have not yet embedded any documents. Prompt injection will only "
+            "be performed if you upload at least one document (in the "
+            "'Document Summarisation' tab)."
+        )
 
 
 def openai_key_chat_box():
@@ -703,7 +711,7 @@ def demo_next_button():
     """
     Show the "Next Step" button for the demo mode.
     """
-    st.button("Next Step", on_click=demo_next)
+    st.button("Next Step", on_click=demo_next, use_container_width=True)
 
 
 def demo_next():
@@ -1199,14 +1207,16 @@ def shuffle_messages(l: list, i: int):
 
 def docsum_panel():
     """
+
     Upload files for document summarisation, one file at a time. Upon upload,
     document is split and embedded into a connected vector DB using the
-    `_docsum.py` module. The top k results of similarity search of the user's
-    query will be injected into the prompt to the primary model (only once per
-    query). The panel displays a file_uploader panel, settings for the text
-    splitter (chunk size and overlap, separators), and a slider for the number
-    of results to return. Also displays the list of closest matches to the last
-    executed query.
+    `vectorstore.py` module of biochatter. The top k results of similarity
+    search of the user's query will be injected into the prompt to the primary
+    model (only once per query). The panel displays a file_uploader panel,
+    settings for the text splitter (chunk size and overlap, separators), and a
+    slider for the number of results to return. Also displays the list of
+    closest matches to the last executed query.
+
     """
 
     if not ss.get("docsum"):
@@ -1266,8 +1276,6 @@ def docsum_panel():
                 "Upload", use_container_width=True
             )
         if submitted and uploaded_file is not None:
-            if not ss.docsum.used:
-                ss.docsum.used = True
             if not ss.get("uploaded_files"):
                 ss.uploaded_files = []
 
@@ -1281,24 +1289,46 @@ def docsum_panel():
                     doc = document_from_txt(val)
                 ss.docsum.set_document(doc)
                 ss.docsum.split_document()
-                ss.docsum.store_embeddings()
+                try:
+                    ss.docsum.store_embeddings()
+                    ss.upload_success = True
+                    if not ss.docsum.used:
+                        ss.docsum.used = True
+                        ss.first_document_uploaded = True
+                except MilvusException as e:
+                    st.error(
+                        "An error occurred while saving the embeddings. Please "
+                        "check if Milvus is running. For information on the "
+                        "Docker Compose setup, see the [README]("
+                        "https://github.com/biocypher/ChatGSE#-document-summarisation--in-context-learning)."
+                    )
+                    st.error(e)
+                    return
+
+        if ss.get("upload_success"):
             st.success("Embeddings saved!")
 
-        if ss.get("current_statements"):
-            st.markdown(
-                "### "
-                "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"
-                "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"
-                "🔍 Search Results"
-            )
-            st.info(
-                "The following are the closest matches to the last executed "
-                "query."
-            )
-            out = ""
-            for s in ss.current_statements:
-                out += f"- {s}\n"
-            st.markdown(out)
+        if ss.get("conversation"):
+            if ss.conversation.current_statements:
+                st.markdown(
+                    "### "
+                    "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"
+                    "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"
+                    "🔍 Search Results"
+                )
+                st.info(
+                    "The following are the closest matches to the last executed "
+                    "query."
+                )
+                out = ""
+                for s in ss.conversation.current_statements:
+                    out += f"- {s}\n"
+                st.markdown(out)
+            else:
+                st.info(
+                    "The search results will be displayed here once you've executed "
+                    "a query."
+                )
 
     with settings:
         st.markdown(
@@ -1317,15 +1347,24 @@ def docsum_panel():
         )
 
         ss.docsum.chunk_size = st.slider(
-            "Chunk size: how large should the embedded text fragments be?",
+            label=(
+                "Chunk size: how large should the embedded text fragments be?"
+            ),
             min_value=100,
             max_value=5000,
             value=1000,
             step=1,
             disabled=disabled,
+            help=(
+                "The larger the chunk size, the more context is provided to "
+                "the model. The lower the chunk size, the more individual "
+                "chunks can be used inside the token length limit of the "
+                "model. While the value can be changed at any time, it is "
+                "recommended to set it before uploading documents."
+            ),
         )
         ss.docsum.chunk_overlap = st.slider(
-            "Overlap: should the chunks overlap, and by how much?",
+            label="Overlap: should the chunks overlap, and by how much?",
             min_value=0,
             max_value=1000,
             value=0,
@@ -1339,7 +1378,10 @@ def docsum_panel():
         #     disabled=disabled,
         # )
         ss.docsum.n_results = st.slider(
-            "Number of results: how many chunks should be used to supplement the prompt?",
+            label=(
+                "Number of results: how many chunks should be used to "
+                "supplement the prompt?"
+            ),
             min_value=1,
             max_value=20,
             value=3,
@@ -1364,6 +1406,11 @@ def docsum_panel():
             for f in ss.uploaded_files:
                 s += "- " + f + "\n"
             st.markdown(s)
+        else:
+            st.info(
+                "Uploaded documents will be displayed here once you have "
+                "uploaded them."
+            )
 
 
 def toggle_docsum_prompt():
@@ -1376,6 +1423,10 @@ def correcting_agent_panel():
         "Split the response into sentences for correction",
         value=False,
     )
+
+    if ss.get("conversation"):
+        if ss.split_correction != ss.conversation.split_correction:
+            ss.conversation.split_correction = ss.split_correction
 
     test_correct = st.text_area(
         "Test correction functionality here:",
@@ -1437,6 +1488,62 @@ def _startup():
     ss.show_setup = True
 
 
+def mode_select():
+    data, papers, both = st.columns(3)
+
+    ss.mode = "getting_context"
+
+    with data:
+        st.button(
+            "Talk about data.",
+            use_container_width=True,
+            on_click=set_data_mode,
+        )
+
+    with papers:
+        st.button(
+            "Talk about papers / notes.",
+            use_container_width=True,
+            on_click=set_papers_mode,
+            disabled=ss.online,
+        )
+
+    with both:
+        st.button(
+            "Talk about data and papers / notes.",
+            use_container_width=True,
+            on_click=set_both_mode,
+            disabled=ss.online,
+        )
+
+    if ss.online:
+        st.info(
+            "Document summarisation is currently not available in the "
+            "online version. Please use the Docker Compose setup in our "
+            "[GitHub repository](https://github.com/biocypher/ChatGSE#-document-summarisation--in-context-learning) "
+            "to run ChatGSE locally and use this feature."
+        )
+
+
+def set_data_mode():
+    ss.conversation_mode = "data"
+    ss.cg._ask_for_context("data")
+
+
+def set_papers_mode():
+    ss.conversation_mode = "papers"
+    ss.cg._ask_for_context("papers")
+
+
+def set_both_mode():
+    ss.conversation_mode = "both"
+    ss.cg._ask_for_context("data and papers")
+
+
+def waiting_for_docsum():
+    st.info("Use the 'Document Summarisation' tab to embed documents.")
+
+
 def main():
     # NEW SESSION
     if not ss.get("mode"):
@@ -1471,6 +1578,12 @@ def main():
             "total_tokens": 0,
         }
 
+    # UPDATE DOCSUM
+    if ss.get("docsum"):
+        if ss.docsum.use_prompt:
+            ss.conversation.set_docsum(ss.docsum)
+
+    # TABS
     (
         chat_tab,
         prompts_tab,
@@ -1508,7 +1621,7 @@ def main():
         cg._display_history()
 
         # CHAT BOT LOGIC
-        if ss.input:
+        if ss.input or ss.mode == "waiting_for_docsum":
             if ss.mode == "getting_key":
                 ss.mode = cg._get_api_key(ss.input)
                 ss.show_intro = False
@@ -1523,11 +1636,25 @@ def main():
             elif ss.mode == "getting_name":
                 ss.mode = cg._get_user_name()
                 ss.show_intro = False
-                refresh()
 
             elif ss.mode == "getting_context":
-                ss.mode = cg._get_context()
-                ss.mode = cg._ask_for_data_input()
+                cg._get_context()
+                if ss.conversation_mode in ["data", "both"]:
+                    ss.mode = cg._ask_for_data_input()
+                else:
+                    if ss.get("docsum"):
+                        if not ss.docsum.used:
+                            st.write("Please embed at least one document.")
+                            ss.mode = "waiting_for_docsum"
+                        else:
+                            ss.mode = cg._start_chat()
+                    else:
+                        st.write("Please embed at least one document.")
+                        ss.mode = "waiting_for_docsum"
+
+            elif ss.mode == "waiting_for_docsum":
+                if ss.docsum.used:
+                    ss.mode = cg._start_chat()
 
             elif ss.mode == "getting_data_file_input":
                 ss.mode = cg._get_data_input()
@@ -1622,11 +1749,15 @@ def main():
                 openai_key_chat_box()
             elif ss.primary_model in HUGGINGFACE_MODELS:
                 huggingface_key_chat_box()
+        elif ss.mode == "getting_mode":
+            mode_select()
         elif ss.mode == "getting_data_file_input":
             data_input_buttons()
         elif ss.mode in ["getting_name", "getting_context"]:
             chat_line()
             autofocus_line()
+        elif ss.mode == "waiting_for_docsum":
+            waiting_for_docsum()
         elif "demo" in ss.mode:
             demo_next_button()
         else:
@@ -1750,6 +1881,9 @@ def main():
         )
         if ss.get("openai_api_key"):
             docsum_panel()
+            if ss.get("first_document_uploaded"):
+                ss.first_document_uploaded = False
+                refresh()
         else:
             st.info(
                 "Please enter your OpenAI API key to use the document "

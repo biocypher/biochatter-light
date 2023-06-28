@@ -6,7 +6,7 @@ import os
 from loguru import logger
 import pandas as pd
 import streamlit as st
-from chatgse._llm_connect import (
+from biochatter.llm_connect import (
     GptConversation,
     BloomConversation,
     OPENAI_MODELS,
@@ -47,12 +47,11 @@ API_KEY_SUCCESS = (
 PLEASE_ENTER_QUESTIONS = (
     "The model will be with you shortly. "
     "Please enter your questions below. "
-    "These can be general, such as 'explain these results', or specific. "
+    "These can be general, such as 'explain these results,' or specific. "
     "General questions will yield more general answers, while specific "
     "questions go into more detail. You can follow up on the answers with "
     "more questions."
 )
-KNOWN_TOOLS = ["progeny", "dorothea", "gsea"]
 
 
 class ChatGSE:
@@ -133,9 +132,19 @@ class ChatGSE:
             logger.warning("Conversation already exists, overwriting.")
 
         if model_name in OPENAI_MODELS:
-            ss.conversation = GptConversation(model_name)
+            ss.conversation = GptConversation(
+                model_name=model_name,
+                prompts=ss.prompts,
+                split_correction=ss.split_correction,
+                docsum=ss.get("docsum"),
+            )
         elif model_name in HUGGINGFACE_MODELS:
-            ss.conversation = BloomConversation(model_name)
+            ss.conversation = BloomConversation(
+                model_name=model_name,
+                prompts=ss.prompts,
+                split_correction=ss.split_correction,
+                docsum=ss.get("docsum"),
+            )
 
     def _check_for_api_key(self, write: bool = True, input: str = None):
         """
@@ -172,6 +181,9 @@ class ChatGSE:
 
                 ss.show_community_select = False
                 ss.show_setup = False
+
+                if ss.primary_model in OPENAI_MODELS:
+                    ss.openai_api_key = key
 
                 return "getting_name"
 
@@ -233,6 +245,10 @@ class ChatGSE:
         )
         if not success:
             return False
+
+        if ss.primary_model in OPENAI_MODELS:
+            ss.openai_api_key = key
+
         return True
 
     def _get_api_key(self, key: str = None):
@@ -271,10 +287,24 @@ class ChatGSE:
             name,
             name,
         )
+
+        msg = f"Hi {name}! What do you want to talk about today?"
+        self._write_and_history("📎 Assistant", msg)
+
+        return "getting_mode"
+
+    def _ask_for_context(self, mode: str):
+        logger.info("Getting mode.")
+
+        self._write_and_history(
+            ss.conversation.user_name,
+            mode,
+        )
+
         msg = (
-            f"Thank you, `{name}`! "
-            "What is the context of your inquiry? For instance, this could be a "
-            "disease, an experimental design, or a research area."
+            f"Sure, let's talk about {mode}. "
+            "What is the context of your inquiry? For instance, this could be "
+            "a disease, an experimental design, or a research area."
         )
         self._write_and_history("📎 Assistant", msg)
 
@@ -290,6 +320,7 @@ class ChatGSE:
 
     def _ask_for_data_input(self):
         if not ss.get("tool_data"):
+            known_tools = list(ss.prompts["tool_prompts"].keys())
             msg1 = (
                 f"You have selected `{ss.conversation.context}` as your "
                 "context. Do you want to provide input files from analytic "
@@ -298,7 +329,7 @@ class ChatGSE:
                 "the sidebar and press 'Yes' once you are finished. I will "
                 "recognise methods if their names are mentioned in the file "
                 "name. These are the tools I am familiar with: "
-                f"{', '.join([f'`{name}`' for name in KNOWN_TOOLS])}. Please "
+                f"{', '.join([f'`{name}`' for name in known_tools])}. Please "
                 "keep in mind that all data you provide will count towards the "
                 f"token usage of your conversation prompt. The limit of the "
                 f"currently active model is {ss.token_limit}."
@@ -327,6 +358,8 @@ class ChatGSE:
 
     def _get_data_input(self):
         logger.info("--- Biomedical data input ---")
+
+        known_tools = list(ss.prompts["tool_prompts"].keys())
 
         if not (
             ss.get("tool_data") or ss.get("tool_list")
@@ -392,11 +425,12 @@ class ChatGSE:
             ss.history.append({"tool": df.to_markdown()})
             logger.info("<Tool data displayed.>")
 
-            if not any([tool in fl.name for tool in KNOWN_TOOLS]):
+            if not any([tool in fl.name for tool in known_tools]):
+                kt = ", ".join([f"`{name}`" for name in known_tools])
                 self._write_and_history(
                     "📎 Assistant",
                     f"Sorry, `{tool}` is not among the tools I know "
-                    f"({KNOWN_TOOLS}). Please provide information about the "
+                    f"({kt}). Please provide information about the "
                     "data below (what are rows and columns, what are the "
                     "values, etc.). Please try to be as specific as possible.",
                 )
@@ -466,6 +500,21 @@ class ChatGSE:
             "Thank you for the input. " f"{PLEASE_ENTER_QUESTIONS}"
         )
         self._write_and_history("📎 Assistant", data_input_response)
+
+        return "chat"
+
+    def _start_chat(self):
+        logger.info("Starting chat.")
+
+        msg = (
+            f"You have selected `{ss.conversation.context}` as your context. "
+            f"{PLEASE_ENTER_QUESTIONS}"
+        )
+
+        self._write_and_history(
+            "📎 Assistant",
+            msg,
+        )
 
         return "chat"
 
