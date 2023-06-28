@@ -155,6 +155,44 @@ def update_api_keys():
     if "HUGGINGFACEHUB_API_TOKEN" in os.environ:
         ss.huggingfacehub_api_key = os.environ["HUGGINGFACEHUB_API_TOKEN"]
 
+    if "OPENAI_API_TYPE" in os.environ:
+        if os.environ["OPENAI_API_TYPE"] == "azure":
+            set_azure_mode()
+
+
+def set_azure_mode():
+    if not "OPENAI_MODEL" in os.environ:
+        raise ValueError(
+            "OPENAI_MODEL must be set to use Azure API. Please use it to set "
+            "the model name, e.g. OPENAI_MODEL=gpt-3.5-turbo"
+        )
+
+    if not "OPENAI_API_VERSION" in os.environ:
+        raise ValueError(
+            "OPENAI_API_VERSION must be set to use Azure API. Please use it to "
+            "set the API version, e.g. OPENAI_API_VERSION=2023-03-15-preview"
+        )
+
+    if not "OPENAI_API_BASE" in os.environ:
+        raise ValueError(
+            "OPENAI_API_BASE must be set to use Azure API. Please use it to "
+            "set the API base, e.g. "
+            "OPENAI_API_BASE=https://your-resource-name.openai.azure.com"
+        )
+
+    if not "OPENAI_API_KEY" in os.environ:
+        raise ValueError(
+            "OPENAI_API_KEY must be set to use Azure API, e.g. "
+            "OPENAI_API_KEY=sk-1234567890abcdef1234567890abcdef"
+        )
+
+    ss.openai_api_type = "azure"
+    ss.openai_api_version = os.environ["OPENAI_API_VERSION"]
+    ss.openai_api_base = os.environ["OPENAI_API_BASE"]
+    ss.openai_api_key = os.environ["OPENAI_API_KEY"]
+    # check for key validity?
+    ss.mode = "getting_name"
+
 
 def on_submit():
     """
