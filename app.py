@@ -339,8 +339,8 @@ def ontology_file_uploader():
     tool data to be used for the prompt.
     """
     st.file_uploader(
-        "IMPORTANT: only the following coulumn names are extracted: {}".format(
-            ss.coulumn_Names
+        "IMPORTANT: only the following column names are extracted: {}".format(
+            ss.column_names
         ),
         type=["csv", "tsv", "txt"],
         key="ontology_tool_data",

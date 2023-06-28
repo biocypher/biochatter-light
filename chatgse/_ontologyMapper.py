@@ -17,8 +17,8 @@ class OntologyMapper:
     def __init__(self):
         if "terms" not in ss:
             ss.terms = ""
-        if "coulumn_Names" not in ss:
-            ss.coulumn_Names = [
+        if "column_names" not in ss:
+            ss.column_names = [
                 "celltypes",
                 "cell",
                 "cells",
@@ -72,8 +72,8 @@ class OntologyMapper:
             # Extract the possible filenames and drop the NAN values and the punctuation:
 
             for df in dataframes:
-                for name in ss.coulumn_Names:
-                    # check if coulumn name exists
+                for name in ss.column_names:
+                    # check if column name exists
                     if name in df.columns:
                         # drop nans
                         df = df.dropna(subset=name)
