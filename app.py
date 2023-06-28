@@ -166,8 +166,9 @@ def on_submit():
     ss.input = ss.get("widget")
     ss.widget = ""
 
+
 def on_ontology_submit():
-    ss.terms = ss.ontology_widget
+    ss.terms = ss.get("ontology_widget")
     ss.ontology_widget = ""
     ss.map = True
 
@@ -221,11 +222,12 @@ def ontology_box():
         on_change=on_ontology_submit,
         key="ontology_widget",
         placeholder=(
-            "Write your terms you want to map to the cell onotology here. Press [Enter] for a new line, and [CTRL+Enter] or "
-            "[⌘+Enter] to submit."
+            "Write the terms you want to map to the cell ontology here. Press "
+            "[Enter] for a new line, and [CTRL+Enter] or [⌘+Enter] to submit."
         ),
         label_visibility="collapsed",
     )
+
 
 def chat_line():
     """
@@ -322,139 +324,172 @@ def file_uploader():
         accept_multiple_files=True,
     )
 
+
 def ontology_file_uploader():
     """
     Ontology File uploader for uploading a CSV, TSV, or TXT file containing the user's
     tool data to be used for the prompt.
     """
     st.file_uploader(
-        "IMPORTANT: only the following coulumn names are extracted: {}".format(ss.coulumn_Names),
+        "IMPORTANT: only the following coulumn names are extracted: {}".format(
+            ss.coulumn_Names
+        ),
         type=["csv", "tsv", "txt"],
         key="ontology_tool_data",
         accept_multiple_files=True,
     )
+
 
 def map_terms_button():
     """
     Buttons for starting the mapping process.
     """
     st.button(
-            "Map Terms",
-            on_click=on_ontology_submit,
-            use_container_width=True,
-        )
-    
+        "Map Terms",
+        on_click=on_ontology_submit,
+        use_container_width=True,
+    )
+
 
 def pick_mappings():
     """
     Creates a row where the term and 3 chosable mappings are shown:
-    
+
     """
 
-    #load the ontology_mapping_file:
-    #check is it exists
+    # load the ontology_mapping_file:
+    # check is it exists
     ontology_mapper_file_exists()
-    #load file:
+    # load file:
     with open(ONTOLOGY_MAPPER_PATH) as f:
         j_object = json.load(f)
-        
+
         for term in ss.term_list:
             mapped_terms = ss.mapped_term_list[ss.term_list.index(term)]
 
-            #replace the list of possibilities, with the value of the json file, 
-            #when possibility was choosen more than MAPPING_THRESHOLD
-            if (term in j_object and j_object[term][list(j_object[term].keys())[0]] >= MAPPING_THRESHOLD):
+            # replace the list of possibilities, with the value of the json file,
+            # when possibility was choosen more than MAPPING_THRESHOLD
+            if (
+                term in j_object
+                and j_object[term][list(j_object[term].keys())[0]]
+                >= MAPPING_THRESHOLD
+            ):
                 mapped_terms = [mapped_terms[0]]
 
-            if (len(mapped_terms) == 1):
-                
-                c1, c2 = st.columns([1,2])
+            if len(mapped_terms) == 1:
+                c1, c2 = st.columns([1, 2])
 
                 with c1:
-                    if(type(mapped_terms[0]) is str):
+                    if type(mapped_terms[0]) is str:
                         st.markdown("# {}".format(term))
                     else:
                         st.markdown("**{}**".format(term))
                 with c2:
-                    if(type(mapped_terms[0]) is str):
+                    if type(mapped_terms[0]) is str:
                         st.markdown("# {}".format(mapped_terms[0]))
                     else:
-                        st.markdown("**{} - Accuracy: {}**".format(mapped_terms[0][0], mapped_terms[0][1]))
+                        st.markdown(
+                            "**{} - Accuracy: {}**".format(
+                                mapped_terms[0][0], mapped_terms[0][1]
+                            )
+                        )
 
             else:
                 c1, c2, c3, c4 = st.columns([1, 2, 2, 2])
-            
+
                 with c1:
                     st.markdown("**{}**".format(term))
                 with c2:
                     st.button(
-                        "{}  \n Accuracy: {}".format(mapped_terms[0][0], mapped_terms[0][1]),
+                        "{}  \n Accuracy: {}".format(
+                            mapped_terms[0][0], mapped_terms[0][1]
+                        ),
                         on_click=term_picked,
-                        args=(term, 0, ),
+                        args=(
+                            term,
+                            0,
+                        ),
                         use_container_width=True,
                         key="{}_1".format(term),
                     )
                 with c3:
                     st.button(
-                        "{}  \n Accuracy: {}".format(mapped_terms[1][0], mapped_terms[1][1]),
+                        "{}  \n Accuracy: {}".format(
+                            mapped_terms[1][0], mapped_terms[1][1]
+                        ),
                         on_click=term_picked,
-                        args=(term, 1, ),
+                        args=(
+                            term,
+                            1,
+                        ),
                         use_container_width=True,
                         key="{}_2".format(term),
                     )
                 with c4:
                     st.button(
-                        "{}  \n Accuracy: {}".format(mapped_terms[2][0], mapped_terms[2][1]),
+                        "{}  \n Accuracy: {}".format(
+                            mapped_terms[2][0], mapped_terms[2][1]
+                        ),
                         on_click=term_picked,
-                        args=(term, 2,),
+                        args=(
+                            term,
+                            2,
+                        ),
                         use_container_width=True,
                         key="{}_3".format(term),
                     )
 
+
 def term_picked(term, selectedButton):
-    #pick the one that was selected:
+    # pick the one that was selected:
     index = ss.term_list.index(term)
     ss.mapped_term_list[index] = [ss.mapped_term_list[index][selectedButton]]
 
-    #add value to json file:
+    # add value to json file:
     with open(ONTOLOGY_MAPPER_PATH) as f:
         j_object = json.load(f)
-    
-    #getting the mapped word --> selected is 0 because we are deleting the list in row 415    
+
+    # getting the mapped word --> selected is 0 because we are deleting the list in row 415
     mapped_word = ss.mapped_term_list[index][0][0]
     if term in j_object:
-        #itterating value when it exists
+        # itterating value when it exists
         if mapped_word in j_object[term]:
             j_object[term][mapped_word] = j_object[term][mapped_word] + 1
-            #sort the values so that we can check easier for the threshold
-            j_object[term] = dict(sorted(j_object[term].items(), key=lambda item: item[1], reverse=True))
-            
-        #creating second mapping word
+            # sort the values so that we can check easier for the threshold
+            j_object[term] = dict(
+                sorted(
+                    j_object[term].items(),
+                    key=lambda item: item[1],
+                    reverse=True,
+                )
+            )
+
+        # creating second mapping word
         else:
             j_object[term][mapped_word] = 1
 
-
     else:
         j_object[term] = {mapped_word: 1}
-        
-    #save changes:
-    with open(ONTOLOGY_MAPPER_PATH, 'w') as f:
+
+    # save changes:
+    with open(ONTOLOGY_MAPPER_PATH, "w") as f:
         json.dump(j_object, f)
+
 
 def clear_mappings_button():
     """
     Buttons for starting the mapping process.
     """
     st.button(
-            "Clear mappings",
-            on_click=clear_mappings,
-            use_container_width=True,
-        )
-    
+        "Clear mappings",
+        on_click=clear_mappings,
+        use_container_width=True,
+    )
+
+
 def clear_mappings():
     ss.term_list = []
     ss.mapped_term_list = []
-
 
 
 def data_input_buttons():
@@ -1058,7 +1093,7 @@ def prompt_save_button():
 def ontology_mapper_file_exists():
     if not os.path.exists(ONTOLOGY_MAPPER_PATH):
         print("File not exists. Will be created ...")
-        with open(ONTOLOGY_MAPPER_PATH, 'w') as outfile:  
+        with open(ONTOLOGY_MAPPER_PATH, "w") as outfile:
             json.dump({}, outfile)
     print("File exists")
 
@@ -1411,7 +1446,7 @@ def main():
     if not ss.get("primary_model"):
         ss["primary_model"] = "gpt-3.5-turbo"
 
-    #Initiate OntologyMapper:
+    # Initiate OntologyMapper:
     if not ss.get("om"):
         ss.om = OntologyMapper()
     om = ss.om
@@ -1729,29 +1764,28 @@ def main():
                 "of the harvard medical school. "
             )
 
-            #Add a widget for text input
+            # Add a widget for text input
             if ss.map:
-                #reset the map parameter:
+                # reset the map parameter:
                 ss.map = False
 
                 om._get_mapping()
-                
-                #show the options:
-                #Add caption:
+
+                # show the options:
+                # Add caption:
                 ss.term_list.insert(0, "Term to Map")
                 ss.mapped_term_list.insert(0, ["Mapping results"])
 
-            if ss.term_list:        
+            if ss.term_list:
                 pick_mappings()
-                
-                #clear mapping button
+
+                # clear mapping button
                 clear_mappings_button()
 
-            #TODO: Question --> ontology_widget only has data in, when pressing enter in the text box???
+            # TODO: Question --> ontology_widget only has data in, when pressing enter in the text box???
             ontology_file_uploader()
             ontology_box()
             map_terms_button()
-            
 
             st.markdown(
                 f"`📎 Assistant`: Ontology Mapper {OFFLINE_FUNCTIONALITY}"
