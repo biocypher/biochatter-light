@@ -22,8 +22,7 @@ def community_possible():
     return (
         "OPENAI_COMMUNITY_KEY" in os.environ
         and "REDIS_PW" in os.environ
-        and ss.primary_model
-        in ["gpt-3.5-turbo", "gpt-3.5-turbo-0301", "gpt-3.5-turbo-0613"]
+        and ss.primary_model == "gpt-3.5-turbo"
     )
 
 
@@ -131,7 +130,17 @@ class ChatGSE:
         if ss.get("conversation"):
             logger.warning("Conversation already exists, overwriting.")
 
-        if model_name in OPENAI_MODELS:
+        if ss.get("openai_api_type") == "azure":
+            ss.conversation = GptConversation(
+                model_name=model_name,
+                prompts=ss.prompts,
+                split_correction=ss.split_correction,
+                docsum=ss.get("docsum"),
+                version=ss.get("openai_api_version"),
+                base=ss.get("openai_api_base"),
+            )
+
+        elif model_name in OPENAI_MODELS:
             ss.conversation = GptConversation(
                 model_name=model_name,
                 prompts=ss.prompts,
