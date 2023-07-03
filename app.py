@@ -161,10 +161,16 @@ def update_api_keys():
 
 
 def set_azure_mode():
+    if not "OPENAI_DEPLOYMENT" in os.environ:
+        raise ValueError(
+            "OPENAI_DEPLOYMENT must be set to use Azure API. Please use it to "
+            "set the deployment name, e.g. OPENAI_DEPLOYMENT=your-deployment-name"
+        )
+
     if not "OPENAI_MODEL" in os.environ:
         raise ValueError(
             "OPENAI_MODEL must be set to use Azure API. Please use it to set "
-            "the model name, e.g. OPENAI_MODEL=gpt-3.5-turbo"
+            "the model name, e.g. OPENAI_MODEL=gpt-35-turbo"
         )
 
     if not "OPENAI_API_VERSION" in os.environ:
@@ -187,6 +193,7 @@ def set_azure_mode():
         )
 
     ss.openai_api_type = "azure"
+    ss.openai_deployment_name = os.environ["OPENAI_DEPLOYMENT_NAME"]
     ss.openai_api_version = os.environ["OPENAI_API_VERSION"]
     ss.openai_api_base = os.environ["OPENAI_API_BASE"]
     ss.openai_api_key = os.environ["OPENAI_API_KEY"]
