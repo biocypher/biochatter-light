@@ -8,6 +8,7 @@ import pandas as pd
 import streamlit as st
 from biochatter.llm_connect import (
     GptConversation,
+    AzureGptConversation,
     BloomConversation,
     OPENAI_MODELS,
     HUGGINGFACE_MODELS,
@@ -131,7 +132,8 @@ class ChatGSE:
             logger.warning("Conversation already exists, overwriting.")
 
         if ss.get("openai_api_type") == "azure":
-            ss.conversation = GptConversation(
+            ss.conversation = AzureGptConversation(
+                deployment_name=ss.get("openai_deployment_name"),
                 model_name=model_name,
                 prompts=ss.prompts,
                 split_correction=ss.split_correction,
