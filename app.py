@@ -137,8 +137,7 @@ from chatgse._interface import community_possible
 from biochatter._stats import get_community_usage_cost
 from biochatter.vectorstore import (
     DocumentEmbedder,
-    document_from_pdf,
-    document_from_txt,
+    DocumentReader,
 )
 from biochatter.llm_connect import OPENAI_MODELS, HUGGINGFACE_MODELS
 from pymilvus.exceptions import MilvusException
@@ -1130,10 +1129,11 @@ def docsum_panel():
 
             with st.spinner("Saving embeddings ..."):
                 val = uploaded_file.getvalue()
+                reader = DocumentReader()
                 if uploaded_file.type == "application/pdf":
-                    doc = document_from_pdf(val)
+                    doc = reader.document_from_pdf(val)
                 elif uploaded_file.type == "text/plain":
-                    doc = document_from_txt(val)
+                    doc = reader.document_from_txt(val)
                 ss.docsum.set_document(doc)
                 ss.docsum.split_document()
                 try:
