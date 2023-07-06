@@ -1,6 +1,6 @@
 # ChatGSE app.py: streamlit chat app for contextualisation of biomedical results
 app_name = "chatgse"
-__version__ = "0.2.29"
+__version__ = "0.2.30"
 
 # BOILERPLATE
 import json
@@ -137,8 +137,7 @@ from chatgse._interface import community_possible
 from biochatter._stats import get_community_usage_cost
 from biochatter.vectorstore import (
     DocumentEmbedder,
-    document_from_pdf,
-    document_from_txt,
+    DocumentReader,
 )
 from biochatter.llm_connect import OPENAI_MODELS, HUGGINGFACE_MODELS
 from pymilvus.exceptions import MilvusException
@@ -154,6 +153,51 @@ def update_api_keys():
         ss.openai_api_key = os.environ["OPENAI_API_KEY"]
     if "HUGGINGFACEHUB_API_TOKEN" in os.environ:
         ss.huggingfacehub_api_key = os.environ["HUGGINGFACEHUB_API_TOKEN"]
+
+    if "OPENAI_API_TYPE" in os.environ:
+        if os.environ["OPENAI_API_TYPE"] == "azure":
+            set_azure_mode()
+
+
+def set_azure_mode():
+    if not "OPENAI_DEPLOYMENT" in os.environ:
+        raise ValueError(
+            "OPENAI_DEPLOYMENT must be set to use Azure API. Please use it to "
+            "set the deployment name, e.g. OPENAI_DEPLOYMENT=your-deployment-name"
+        )
+
+    if not "OPENAI_MODEL" in os.environ:
+        raise ValueError(
+            "OPENAI_MODEL must be set to use Azure API. Please use it to set "
+            "the model name, e.g. OPENAI_MODEL=gpt-35-turbo"
+        )
+
+    if not "OPENAI_API_VERSION" in os.environ:
+        raise ValueError(
+            "OPENAI_API_VERSION must be set to use Azure API. Please use it to "
+            "set the API version, e.g. OPENAI_API_VERSION=2023-03-15-preview"
+        )
+
+    if not "OPENAI_API_BASE" in os.environ:
+        raise ValueError(
+            "OPENAI_API_BASE must be set to use Azure API. Please use it to "
+            "set the API base, e.g. "
+            "OPENAI_API_BASE=https://your-resource-name.openai.azure.com"
+        )
+
+    if not "OPENAI_API_KEY" in os.environ:
+        raise ValueError(
+            "OPENAI_API_KEY must be set to use Azure API, e.g. "
+            "OPENAI_API_KEY=sk-1234567890abcdef1234567890abcdef"
+        )
+
+    ss.openai_api_type = "azure"
+    ss.openai_deployment_name = os.environ["OPENAI_DEPLOYMENT_NAME"]
+    ss.openai_api_version = os.environ["OPENAI_API_VERSION"]
+    ss.openai_api_base = os.environ["OPENAI_API_BASE"]
+    ss.openai_api_key = os.environ["OPENAI_API_KEY"]
+    # check for key validity?
+    ss.mode = "getting_name"
 
 
 def on_submit():
@@ -1085,10 +1129,11 @@ def docsum_panel():
 
             with st.spinner("Saving embeddings ..."):
                 val = uploaded_file.getvalue()
+                reader = DocumentReader()
                 if uploaded_file.type == "application/pdf":
-                    doc = document_from_pdf(val)
+                    doc = reader.document_from_pdf(val)
                 elif uploaded_file.type == "text/plain":
-                    doc = document_from_txt(val)
+                    doc = reader.document_from_txt(val)
                 ss.docsum.set_document(doc)
                 ss.docsum.split_document()
                 try:
