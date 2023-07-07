@@ -251,7 +251,8 @@ class ChatGSE:
 
     def _try_api_key(self, key: str = None):
         success = ss.conversation.set_api_key(
-            key
+            key,
+            ss.user,
         )
         if not success:
             return False
