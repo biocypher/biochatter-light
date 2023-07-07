@@ -160,10 +160,10 @@ def update_api_keys():
 
 
 def set_azure_mode():
-    if not "OPENAI_DEPLOYMENT" in os.environ:
+    if not "OPENAI_DEPLOYMENT_NAME" in os.environ:
         raise ValueError(
-            "OPENAI_DEPLOYMENT must be set to use Azure API. Please use it to "
-            "set the deployment name, e.g. OPENAI_DEPLOYMENT=your-deployment-name"
+            "OPENAI_DEPLOYMENT_NAME must be set to use Azure API. Please use it to "
+            "set the deployment name, e.g. OPENAI_DEPLOYMENT_NAME=your-deployment-name"
         )
 
     if not "OPENAI_MODEL" in os.environ:
