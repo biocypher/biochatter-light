@@ -804,7 +804,7 @@ def show_docsum_prompts():
         "`📎 Assistant`: Here you can edit the prompts used to set up the "
         "Document Summarisation task. Text passages from any uploaded "
         "documents will be passed on to the primary model using these prompts. "
-        "The placeholder `{statments}` will be replaced by the text passages. "
+        "The placeholder `{statements}` will be replaced by the text passages. "
         "Upload documents and edit vector database settings in the "
         "`Document Summarisation` tab."
     )
