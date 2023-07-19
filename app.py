@@ -1,6 +1,6 @@
 # ChatGSE app.py: streamlit chat app for contextualisation of biomedical results
 app_name = "chatgse"
-__version__ = "0.2.30"
+__version__ = "0.2.31"
 
 # BOILERPLATE
 import json
@@ -1193,6 +1193,18 @@ def docsum_panel():
             disabled=ss.online,
         )
 
+        st.checkbox(
+            "Split by characters (instead of tokens)",
+            ss.docsum.split_by_characters,
+            on_change=toggle_split_by_characters,
+            disabled=disabled,
+            help=(
+                "Deactivate this to split the input text by tokens instead of "
+                "characters. Be mindful that this results in much longer "
+                "fragments, so it could be useful to reduce the chunk size."
+            ),
+        )
+
         ss.docsum.chunk_size = st.slider(
             label=(
                 "Chunk size: how large should the embedded text fragments be?"
@@ -1263,6 +1275,11 @@ def docsum_panel():
 def toggle_docsum_prompt():
     """Toggles the use of the docsum prompt."""
     ss.docsum.use_prompt = not ss.docsum.use_prompt
+
+
+def toggle_split_by_characters():
+    """Toggles the splitting of the input text by characters vs tokens."""
+    ss.docsum.split_by_characters = not ss.docsum.split_by_characters
 
 
 def correcting_agent_panel():
