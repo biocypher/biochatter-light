@@ -11,3 +11,4 @@ volumes/*
 .pytest_cache/
 chats/
 volumes/
+*.env
