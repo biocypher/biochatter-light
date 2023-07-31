@@ -166,10 +166,10 @@ def set_azure_mode():
             "set the deployment name, e.g. OPENAI_DEPLOYMENT_NAME=your-deployment-name"
         )
 
-    if not "OPENAI_MODEL" in os.environ:
+    if not "OPENAI_MODEL_NAME" in os.environ:
         raise ValueError(
-            "OPENAI_MODEL must be set to use Azure API. Please use it to set "
-            "the model name, e.g. OPENAI_MODEL=gpt-35-turbo"
+            "OPENAI_MODEL_NAME must be set to use Azure API. Please use it to set "
+            "the model name, e.g. OPENAI_MODEL_NAME=gpt-35-turbo"
         )
 
     if not "OPENAI_API_VERSION" in os.environ:
