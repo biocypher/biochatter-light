@@ -827,6 +827,12 @@ def show_docsum_prompts():
                 use_container_width=True,
             )
 
+    st.button(
+        "Add New Prompt",
+        on_click=add_prompt,
+        args=(ss.prompts["docsum_prompts"],),
+    )
+
 
 def show_tool_prompts():
     """
@@ -877,9 +883,7 @@ def show_tool_prompts():
             )
 
         if nunam != nam:
-            ss.prompts["tool_prompts"][nunam] = ss.prompts["tool_prompts"].pop(
-                nam
-            )
+            ss.prompts["tool_prompts"][nunam] = ss.prompts["tool_prompts"].pop(nam)
             st.experimental_rerun()
         elif numsg != msg:
             ss.prompts["tool_prompts"][nunam] = numsg
@@ -1095,9 +1099,7 @@ def docsum_panel():
             "📄 Upload Document"
         )
         if disabled:
-            st.warning(
-                "To use the feature, please enable it in the settings panel. →"
-            )
+            st.warning("To use the feature, please enable it in the settings panel. →")
         if ss.get("online"):
             st.warning(
                 "This feature is currently not available in online mode, as it "
@@ -1118,9 +1120,7 @@ def docsum_panel():
                 label_visibility="collapsed",
                 disabled=disabled,
             )
-            submitted = st.form_submit_button(
-                "Upload", use_container_width=True
-            )
+            submitted = st.form_submit_button("Upload", use_container_width=True)
         if submitted and uploaded_file is not None:
             if not ss.get("uploaded_files"):
                 ss.uploaded_files = []
@@ -1206,9 +1206,7 @@ def docsum_panel():
         )
 
         ss.docsum.chunk_size = st.slider(
-            label=(
-                "Chunk size: how large should the embedded text fragments be?"
-            ),
+            label=("Chunk size: how large should the embedded text fragments be?"),
             min_value=100,
             max_value=5000,
             value=1000,
@@ -1310,9 +1308,7 @@ def correcting_agent_panel():
         if str(correction).lower() in ["ok", "ok."]:
             st.success("The model found no correction to be required.")
         else:
-            st.error(
-                f"The model found the following correction: `{correction}`"
-            )
+            st.error(f"The model found the following correction: `{correction}`")
 
 
 def refresh():
@@ -1637,9 +1633,7 @@ def main():
                 "annotation with minimal human input (see e.g. [this arXiv "
                 "preprint](https://www.biorxiv.org/content/10.1101/2023.04.16.537094v1))."
             )
-            st.markdown(
-                f"`📎 Assistant`: Cell type annotation {OFFLINE_FUNCTIONALITY}"
-            )
+            st.markdown(f"`📎 Assistant`: Cell type annotation {OFFLINE_FUNCTIONALITY}")
 
     with exp_design_tab:
         st.markdown(
