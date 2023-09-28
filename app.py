@@ -132,6 +132,7 @@ HOW_MESSAGES = [
 # IMPORTS
 import os
 import datetime
+import pandas as pd
 from chatgse._interface import ChatGSE
 from chatgse._interface import community_possible
 from biochatter._stats import get_community_usage_cost
@@ -141,6 +142,7 @@ from biochatter.vectorstore import (
 )
 from biochatter.llm_connect import OPENAI_MODELS, HUGGINGFACE_MODELS
 from pymilvus.exceptions import MilvusException
+import neo4j_utils as nu
 
 
 # HANDLERS
@@ -1315,13 +1317,174 @@ def genetics_panel():
     gene, patient = st.tabs(["Gene view", "Patient view"])
 
     with gene:
-        st.text_input("Enter gene name:", key="gene_name")
-
-        # if input, show table
-        # if not input, show info
+        gene_panel()
 
     with patient:
         st.text_input("Enter patient ID:", key="patient_id")
+
+
+def gene_panel():
+    gene_name = st.text_input("Enter gene name:")
+
+    # if input, show table
+    if gene_name:
+        # get data
+        cn_df, vn_df = _get_gene_data(gene_name)
+
+        # show tables (no row numbers)
+        st.markdown("#### Copy Number Alterations")
+        st.dataframe(cn_df, hide_index=False)
+        st.markdown("#### Sequence Variants")
+        st.dataframe(vn_df, hide_index=False)
+
+
+def _get_gene_data(gene_name):
+    """
+    Get gene data from the API.
+    """
+    if not ss.get("neodriver"):
+        ss.neodriver = nu.Driver(
+            db_name="neo4j",
+            db_uri="bolt://localhost:7687",
+        )
+
+    gene_id = "hgnc:" + gene_name
+
+    result = ss.neodriver.query(
+        "MATCH (g:Gene) "
+        "WHERE g.id = $gene_id "
+        "OPTIONAL MATCH (g)<-[cn:SampleToGeneCopyNumberAlteration]-(cns:Sample)"
+        "OPTIONAL MATCH (g)<-[vn:VariantToGeneAssociation]-(v:SequenceVariant)<-[ss:SampleToVariantAssociation]-(vns:Sample)"
+        "RETURN g, cns, v, vns, "
+        "cn.id, cn.breaksInGene, cn.nMajor, cn.nMinor, cn.purifiedBaf, cn.purifiedLogR, cn.minPurifiedLogR, cn.maxPurifiedLogR, cn.purifiedLoh, "
+        "vn.id, "
+        "ss.id ",
+        gene_id=gene_id,
+    )
+
+    patterns = result[0]
+    # header: gene information (should be the same gene in all rows)
+    gene = patterns[0]["g"]
+    read_name = str(gene["id"]).replace("hgnc:", "")
+    st.markdown(
+        f"""
+                ### Gene: {read_name} ({gene['ID']})
+                chr: {gene['chr']}, start: {gene['start']}, end: {gene['end']}
+                """
+    )
+    # format result as dataframe
+    # for each pattern, create row(s) in dataframe
+    cn_df = pd.DataFrame(
+        columns=[
+            "alteration_id",
+            "breaks_in_gene",
+            "n_major",
+            "n_minor",
+            "purified_baf",
+            "purified_logr",
+            "min_purified_logr",
+            "max_purified_logr",
+            "purified_loh",
+            "sample_id",
+        ]
+    )
+    vn_df = pd.DataFrame(
+        columns=[
+            "alteration_id",
+            "mane",
+            "cadd_phred",
+            "aa_mane",
+            "func_mane",
+            "ex_func_mane",
+            "clnsig",
+            "clnrevstat",
+            "gnomad_max",
+            "ref",
+            "alt",
+            "pos",
+            "cosmic_total_occ",
+            "sample_id",
+        ]
+    )
+    for pattern in patterns:
+        # get copy numbers
+        if pattern.get("cn.id") is not None:
+            if pattern["cn.id"] in cn_df["alteration_id"]:
+                pass
+            else:
+                cn_id = pattern["cn.id"]
+                cn_breaks = pattern["cn.breaksInGene"]
+                cn_n_major = pattern["cn.nMajor"]
+                cn_n_minor = pattern["cn.nMinor"]
+                cn_purified_baf = pattern["cn.purifiedBaf"]
+                cn_purified_logr = pattern["cn.purifiedLogR"]
+                cn_min_purified_logr = pattern["cn.minPurifiedLogR"]
+                cn_max_purified_logr = pattern["cn.maxPurifiedLogR"]
+                cn_purified_loh = pattern["cn.purifiedLoh"]
+                cns = pattern["cns"]["id"]
+                cn_df = cn_df.append(
+                    {
+                        "alteration_id": cn_id,
+                        "breaks_in_gene": cn_breaks,
+                        "n_major": cn_n_major,
+                        "n_minor": cn_n_minor,
+                        "purified_baf": cn_purified_baf,
+                        "purified_logr": cn_purified_logr,
+                        "min_purified_logr": cn_min_purified_logr,
+                        "max_purified_logr": cn_max_purified_logr,
+                        "purified_loh": cn_purified_loh,
+                        "sample_id": cns,
+                    },
+                    ignore_index=True,
+                )
+        # get variants
+        if pattern.get("vn.id") is not None:
+            if pattern["vn.id"] in list(vn_df["alteration_id"]):
+                pass
+            else:
+                vn_id = pattern["vn.id"]
+                v_mane = pattern["v"]["Gene.MANE"]
+                v_cadd = pattern["v"]["CADD_phred"]
+                aa_mane = pattern["v"]["AAChange.MANE"]
+                func_mane = pattern["v"]["Func.MANE"]
+                ex_func_mane = pattern["v"]["ExonicFunc.MANE"]
+                v_clnsig = pattern["v"]["CLNSIG"]
+                v_clnrevstat = pattern["v"]["CLNREVSTAT"]
+                v_gnomad_max = pattern["v"]["gnomAD_genome_max"]
+                v_ref = pattern["v"]["REF"]
+                v_alt = pattern["v"]["ALT"]
+                v_pos = pattern["v"]["POS"]
+                v_totocc = pattern["v"]["COSMIC_TOTAL_OCC"]
+                vns = pattern["vns"]["id"]
+                vn_df = vn_df.append(
+                    {
+                        "alteration_id": vn_id,
+                        "mane": v_mane,
+                        "cadd_phred": v_cadd,
+                        "aa_mane": aa_mane,
+                        "func_mane": func_mane,
+                        "ex_func_mane": ex_func_mane,
+                        "clnsig": v_clnsig,
+                        "clnrevstat": v_clnrevstat,
+                        "gnomad_max": v_gnomad_max,
+                        "ref": v_ref,
+                        "alt": v_alt,
+                        "pos": v_pos,
+                        "cosmic_total_occ": v_totocc,
+                        "sample_id": vns,
+                    },
+                    ignore_index=True,
+                )
+
+    # aggregate cn_df grouping samples in new column "sample_ids", drop
+    # "sample_id" and duplicate rows
+    cn_df["sample_ids"] = cn_df.groupby("alteration_id")["sample_id"].transform(
+        lambda x: ",".join(x)
+    )
+    cn_df = cn_df.drop(columns=["sample_id"])
+    cn_df = cn_df.drop_duplicates()
+
+    return cn_df, vn_df
 
 
 def refresh():
