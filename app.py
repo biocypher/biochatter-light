@@ -1311,6 +1311,19 @@ def correcting_agent_panel():
             st.error(f"The model found the following correction: `{correction}`")
 
 
+def genetics_panel():
+    gene, patient = st.tabs(["Gene view", "Patient view"])
+
+    with gene:
+        st.text_input("Enter gene name:", key="gene_name")
+
+        # if input, show table
+        # if not input, show info
+
+    with patient:
+        st.text_input("Enter patient ID:", key="patient_id")
+
+
 def refresh():
     ss.input = ""
     st.experimental_rerun()
@@ -1443,17 +1456,19 @@ def main():
         chat_tab,
         prompts_tab,
         docsum_tab,
+        correct_tab,
         annot_tab,
         exp_design_tab,
-        correct_tab,
+        genetics_tab,
     ) = st.tabs(
         [
             "Chat",
             "Prompt Engineering",
             "Document Summarisation",
+            "Correcting Agent",
             "Cell Type Annotation",
             "Experimental Design",
-            "Correcting Agent",
+            "Genetics Annotation",
         ]
     )
 
@@ -1740,6 +1755,14 @@ def main():
                 "Please enter your OpenAI API key to use the document "
                 "summarisation functionality."
             )
+
+    with genetics_tab:
+        if ss.get("online"):
+            st.markdown(
+                f"`📎 Assistant`: Genetics annotation functionality {OFFLINE_FUNCTIONALITY}"
+            )
+        else:
+            genetics_panel()
 
 
 if __name__ == "__main__":
