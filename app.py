@@ -1331,6 +1331,13 @@ def gene_panel():
         # get data
         cn_df, vn_df = _get_gene_data(gene_name)
 
+        # genomespy link
+        st.markdown(
+            f"[GenomeSpy](https://genomespy.app/decider/gene/{gene_name}) "
+            f"({gene_name}) "
+            f"({cn_df.shape[0]} CNAs, {vn_df.shape[0]} variants)"
+        )
+
         # show tables (no row numbers)
         st.markdown("#### Copy Number Alterations")
         st.dataframe(cn_df, hide_index=False)
