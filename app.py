@@ -1561,8 +1561,8 @@ def kg_panel():
             on_change=_rerun_query,
         )
 
-        if result:
-            st.write(result)
+        if result[0]:
+            st.write(result[0])
 
 
 def _rerun_query():
