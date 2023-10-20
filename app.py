@@ -1522,8 +1522,19 @@ def kg_panel():
     Allow connecting to a BioCypher knowledge graph and querying by asking the
     LLM to answer questions about the graph.
     """
-    question = st.text_input("Enter your question here:")
+    # drop down: query language
+    query_language = st.selectbox(
+        "Query language:",
+        options=["Cypher", "SQL", "SPARQL"],
+        index=0,
+    )
 
+    question = st.text_input(
+        "Enter your question here:",
+        value="How many people named Donald are in the database?",
+    )
+
+    # TODO get schema from graph (when connecting) or upload
     # TODO ask about the schema more generally, without generating a query?
 
     if question:
@@ -1531,14 +1542,7 @@ def kg_panel():
             st.write("No model loaded. Please load a model first.")
             return
 
-        # drop down: query language
-        query_language = st.selectbox(
-            "Query language:",
-            options=["Cypher", "SQL", "SPARQL"],
-            index=0,
-        )
-
-        # manual schema info file TODO get from graph or upload
+        # manual schema info file
         prompt_engine = BioCypherPromptEngine(
             schema_config_or_info_path="schema_info.yaml",
         )
