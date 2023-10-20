@@ -141,6 +141,7 @@ from biochatter.vectorstore import (
     DocumentReader,
 )
 from biochatter.llm_connect import OPENAI_MODELS, HUGGINGFACE_MODELS
+from biochatter.prompts import BioCypherPromptEngine
 from pymilvus.exceptions import MilvusException
 import neo4j_utils as nu
 
@@ -1516,6 +1517,38 @@ def _get_gene_data(gene_name):
     return cn_df, vn_df
 
 
+def kg_panel():
+    """
+    Allow connecting to a BioCypher knowledge graph and querying by asking the
+    LLM to answer questions about the graph.
+    """
+    question = st.text_input("Enter your question here:")
+
+    # TODO ask about the schema more generally, without generating a query?
+
+    if question:
+        if not ss.get("conversation"):
+            st.write("No model loaded. Please load a model first.")
+            return
+
+        # drop down: query language
+        query_language = st.selectbox(
+            "Query language:",
+            options=["Cypher", "SQL", "SPARQL"],
+            index=0,
+        )
+
+        # manual schema info file TODO get from graph or upload
+        prompt_engine = BioCypherPromptEngine(
+            schema_config_or_info_path="schema_info.yaml",
+        )
+
+        # get query
+        query = prompt_engine.generate_query(question, query_language)
+
+        st.write(query)
+
+
 def refresh():
     ss.input = ""
     st.experimental_rerun()
@@ -1652,6 +1685,7 @@ def main():
         annot_tab,
         exp_design_tab,
         genetics_tab,
+        kg_tab,
     ) = st.tabs(
         [
             "Chat",
@@ -1661,6 +1695,7 @@ def main():
             "Cell Type Annotation",
             "Experimental Design",
             "Genetics Annotation",
+            "Knowledge Graph",
         ]
     )
 
@@ -1955,6 +1990,14 @@ def main():
             )
         else:
             genetics_panel()
+
+    with kg_tab:
+        if ss.get("online"):
+            st.markdown(
+                f"`📎 Assistant`: Knowledge graph functionality {OFFLINE_FUNCTIONALITY}"
+            )
+        else:
+            kg_panel()
 
 
 if __name__ == "__main__":

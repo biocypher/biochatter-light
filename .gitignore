@@ -12,3 +12,4 @@ volumes/*
 chats/
 volumes/
 *.env
+schema_info.yaml
