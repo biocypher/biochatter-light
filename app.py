@@ -1531,7 +1531,7 @@ def kg_panel():
 
     question = st.text_input(
         "Enter your question here:",
-        value="How many people named Donald are in the database?",
+        # value="How many people named Donald are in the database?",
     )
 
     # TODO get schema from graph (when connecting) or upload
@@ -1548,9 +1548,29 @@ def kg_panel():
         )
 
         # get query
-        query = prompt_engine.generate_query(question, query_language)
+        with st.spinner("Generating query ..."):
+            query = prompt_engine.generate_query(question, query_language)
 
-        st.write(query)
+        if query_language == "Cypher":
+            result = _run_neo4j_query(query)
+
+        if result:
+            st.write(result)
+
+
+def _run_neo4j_query(query):
+    """
+    Run cypher query against the Neo4j database.
+    """
+    if not ss.get("neodriver"):
+        ss.neodriver = nu.Driver(
+            db_name="neo4j",
+            db_uri="bolt://localhost:7687",
+        )
+
+    result = ss.neodriver.query(query)
+
+    return result
 
 
 def refresh():
