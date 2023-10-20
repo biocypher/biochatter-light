@@ -886,7 +886,9 @@ def show_tool_prompts():
             )
 
         if nunam != nam:
-            ss.prompts["tool_prompts"][nunam] = ss.prompts["tool_prompts"].pop(nam)
+            ss.prompts["tool_prompts"][nunam] = ss.prompts["tool_prompts"].pop(
+                nam
+            )
             st.experimental_rerun()
         elif numsg != msg:
             ss.prompts["tool_prompts"][nunam] = numsg
@@ -1102,7 +1104,9 @@ def docsum_panel():
             "📄 Upload Document"
         )
         if disabled:
-            st.warning("To use the feature, please enable it in the settings panel. →")
+            st.warning(
+                "To use the feature, please enable it in the settings panel. →"
+            )
         if ss.get("online"):
             st.warning(
                 "This feature is currently not available in online mode, as it "
@@ -1123,7 +1127,9 @@ def docsum_panel():
                 label_visibility="collapsed",
                 disabled=disabled,
             )
-            submitted = st.form_submit_button("Upload", use_container_width=True)
+            submitted = st.form_submit_button(
+                "Upload", use_container_width=True
+            )
         if submitted and uploaded_file is not None:
             if not ss.get("uploaded_files"):
                 ss.uploaded_files = []
@@ -1209,7 +1215,9 @@ def docsum_panel():
         )
 
         ss.docsum.chunk_size = st.slider(
-            label=("Chunk size: how large should the embedded text fragments be?"),
+            label=(
+                "Chunk size: how large should the embedded text fragments be?"
+            ),
             min_value=100,
             max_value=5000,
             value=1000,
@@ -1311,7 +1319,9 @@ def correcting_agent_panel():
         if str(correction).lower() in ["ok", "ok."]:
             st.success("The model found no correction to be required.")
         else:
-            st.error(f"The model found the following correction: `{correction}`")
+            st.error(
+                f"The model found the following correction: `{correction}`"
+            )
 
 
 def genetics_panel():
@@ -1527,6 +1537,7 @@ def kg_panel():
         "Query language:",
         options=["Cypher", "SQL", "SPARQL"],
         index=0,
+        on_change=_regenerate_query,
     )
 
     question = st.text_input(
@@ -1547,12 +1558,27 @@ def kg_panel():
         # generate query if not modified
         if ss.get("generate_query"):
             with st.spinner("Generating query ..."):
-                ss.current_query = prompt_engine.generate_query(
-                    question, query_language
-                )
+                if query_language == "Cypher":
+                    ss.current_query = prompt_engine.generate_query(
+                        question, query_language
+                    )
+                    result = _run_neo4j_query(ss.current_query)
 
-        if query_language == "Cypher":
-            result = _run_neo4j_query(ss.current_query)
+                elif query_language == "SQL":
+                    result = [
+                        (
+                            "Here would be a result if we had an SQL "
+                            "implementation."
+                        )
+                    ]
+
+                elif query_language == "SPARQL":
+                    result = [
+                        (
+                            "Here would be a result if we had a SPARQL "
+                            "implementation."
+                        )
+                    ]
 
         st.text_area(
             "Generated query (modify to rerun):",
@@ -1921,7 +1947,9 @@ def main():
                 "annotation with minimal human input (see e.g. [this arXiv "
                 "preprint](https://www.biorxiv.org/content/10.1101/2023.04.16.537094v1))."
             )
-            st.markdown(f"`📎 Assistant`: Cell type annotation {OFFLINE_FUNCTIONALITY}")
+            st.markdown(
+                f"`📎 Assistant`: Cell type annotation {OFFLINE_FUNCTIONALITY}
+            ")
 
     with exp_design_tab:
         st.markdown(
