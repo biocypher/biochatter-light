@@ -1531,6 +1531,7 @@ def kg_panel():
 
     question = st.text_input(
         "Enter your question here:",
+        on_change=_regenerate_query,
         # value="How many people named Donald are in the database?",
     )
 
@@ -1538,24 +1539,44 @@ def kg_panel():
     # TODO ask about the schema more generally, without generating a query?
 
     if question:
-        if not ss.get("conversation"):
-            st.write("No model loaded. Please load a model first.")
-            return
-
         # manual schema info file
         prompt_engine = BioCypherPromptEngine(
             schema_config_or_info_path="schema_info.yaml",
         )
 
-        # get query
-        with st.spinner("Generating query ..."):
-            query = prompt_engine.generate_query(question, query_language)
+        # generate query if not modified
+        if ss.get("generate_query"):
+            with st.spinner("Generating query ..."):
+                ss.current_query = prompt_engine.generate_query(
+                    question, query_language
+                )
 
         if query_language == "Cypher":
-            result = _run_neo4j_query(query)
+            result = _run_neo4j_query(ss.current_query)
+
+        st.text_area(
+            "Generated query (modify to rerun):",
+            key="current_query",
+            height=200,
+            on_change=_rerun_query,
+        )
 
         if result:
             st.write(result)
+
+
+def _rerun_query():
+    """
+    Rerun the query using the modified query.
+    """
+    ss.generate_query = False
+
+
+def _regenerate_query():
+    """
+    Regenerate the query using the new question.
+    """
+    ss.generate_query = True
 
 
 def _run_neo4j_query(query):
@@ -1591,6 +1612,7 @@ def _startup():
         "schema_prompts": SCHEMA_PROMPTS,
     }
     ss.split_correction = False
+    ss.generate_query = True
 
     # CHECK ENVIRONMENT
     if os.getenv("ON_STREAMLIT"):
