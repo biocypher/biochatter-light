@@ -1379,11 +1379,7 @@ def _get_gene_data(gene_name):
     """
     Get gene data from the API.
     """
-    if not ss.get("neodriver"):
-        ss.neodriver = nu.Driver(
-            db_name="neo4j",
-            db_uri="bolt://localhost:7687",
-        )
+    _connect_to_neo4j()
 
     gene_id = "hgnc:" + gene_name
 
@@ -1532,6 +1528,14 @@ def kg_panel():
     Allow connecting to a BioCypher knowledge graph and querying by asking the
     LLM to answer questions about the graph.
     """
+    ip, port = st.columns(2)
+    with ip:
+        st.text_input(
+            "Enter the database IP address:", value="localhost", key="db_ip"
+        )
+    with port:
+        st.text_input("Enter the database port:", value="7687", key="db_port")
+
     # drop down: query language
     query_language = st.selectbox(
         "Query language:",
@@ -1540,55 +1544,71 @@ def kg_panel():
         on_change=_regenerate_query,
     )
 
-    question = st.text_input(
-        "Enter your question here:",
-        on_change=_regenerate_query,
-        # value="How many people named Donald are in the database?",
-    )
+    # try connecting (only neo4j for now)
+    success = _connect_to_neo4j()
 
-    # TODO get schema from graph (when connecting) or upload
-    # TODO ask about the schema more generally, without generating a query?
+    if not success:
+        st.error(
+            "Could not connect to the database. Please check your connection "
+            "settings."
+        )
+        st.button("Retry", on_click=_connect_to_neo4j, use_container_width=True)
 
-    if question:
-        # manual schema info file
-        prompt_engine = BioCypherPromptEngine(
-            schema_config_or_info_path="schema_info.yaml",
+    else:
+        st.success(
+            f"Connected to Neo4j database at {ss.get('db_ip')}:{ss.get('db_port')}."
+        )
+        question = st.text_input(
+            "Enter your question here:",
+            on_change=_regenerate_query,
+            # value="How many people named Donald are in the database?",
         )
 
-        # generate query if not modified
-        if ss.get("generate_query"):
-            with st.spinner("Generating query ..."):
-                if query_language == "Cypher":
-                    ss.current_query = prompt_engine.generate_query(
-                        question, query_language
+        # TODO get schema from graph (when connecting) or upload
+        # TODO ask about the schema more generally, without generating a query?
+
+        if question:
+            # manual schema info file
+            prompt_engine = BioCypherPromptEngine(
+                schema_config_or_info_path="schema_info.yaml",
+            )
+
+            # generate query if not modified
+            if ss.get("generate_query"):
+                with st.spinner("Generating query ..."):
+                    if query_language == "Cypher":
+                        ss.current_query = prompt_engine.generate_query(
+                            question, query_language
+                        )
+
+            if query_language == "Cypher":
+                result = _run_neo4j_query(ss.current_query)
+
+            elif query_language == "SQL":
+                result = [
+                    (
+                        "Here would be a result if we had an SQL "
+                        "implementation."
                     )
-                    result = _run_neo4j_query(ss.current_query)
+                ]
 
-                elif query_language == "SQL":
-                    result = [
-                        (
-                            "Here would be a result if we had an SQL "
-                            "implementation."
-                        )
-                    ]
+            elif query_language == "SPARQL":
+                result = [
+                    (
+                        "Here would be a result if we had a SPARQL "
+                        "implementation."
+                    )
+                ]
 
-                elif query_language == "SPARQL":
-                    result = [
-                        (
-                            "Here would be a result if we had a SPARQL "
-                            "implementation."
-                        )
-                    ]
+            st.text_area(
+                "Generated query (modify to rerun):",
+                key="current_query",
+                height=200,
+                on_change=_rerun_query,
+            )
 
-        st.text_area(
-            "Generated query (modify to rerun):",
-            key="current_query",
-            height=200,
-            on_change=_rerun_query,
-        )
-
-        if result[0]:
-            st.write(result[0])
+            if result[0]:
+                st.write(result[0])
 
 
 def _rerun_query():
@@ -1605,15 +1625,28 @@ def _regenerate_query():
     ss.generate_query = True
 
 
+def _connect_to_neo4j():
+    """
+    Connect to the Neo4j database.
+    """
+    db_uri = "bolt://" + ss.get("db_ip") + ":" + ss.get("db_port")
+    ss.neodriver = nu.Driver(
+        db_name=ss.get("db_name") or "neo4j",
+        db_uri=db_uri,
+    )
+
+    # return True if connected, False if no DB found
+    if ss.get("neodriver").status == "no connection":
+        return False
+    else:
+        return True
+
+
 def _run_neo4j_query(query):
     """
     Run cypher query against the Neo4j database.
     """
-    if not ss.get("neodriver"):
-        ss.neodriver = nu.Driver(
-            db_name="neo4j",
-            db_uri="bolt://localhost:7687",
-        )
+    _connect_to_neo4j()
 
     result = ss.neodriver.query(query)
 
@@ -1948,8 +1981,9 @@ def main():
                 "preprint](https://www.biorxiv.org/content/10.1101/2023.04.16.537094v1))."
             )
             st.markdown(
-                f"`📎 Assistant`: Cell type annotation {OFFLINE_FUNCTIONALITY}
-            ")
+                "`📎 Assistant`: Cell type annotation "
+                f"{OFFLINE_FUNCTIONALITY}"
+            )
 
     with exp_design_tab:
         st.markdown(
