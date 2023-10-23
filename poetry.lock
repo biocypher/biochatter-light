@@ -75,7 +75,7 @@ tests-no-zope = ["cloudpickle", "hypothesis", "mypy (>=1.1.1)", "pympler", "pyte
 
 [[package]]
 name = "biochatter"
-version = "0.1.14"
+version = "0.1.15"
 description = "Backend library for conversational AI in biomedicine"
 category = "main"
 optional = false
@@ -1405,8 +1405,8 @@ attrs = [
     {file = "attrs-23.1.0.tar.gz", hash = "sha256:6279836d581513a26f1bf235f9acd333bc9115683f14f7e8fae46c98fc50e015"},
 ]
 biochatter = [
-    {file = "biochatter-0.1.14-py3-none-any.whl", hash = "sha256:ad88bbe4fa177fc24dc8f77760844c90c3c2a15c0bfbd4422731d81e3d44f7b7"},
-    {file = "biochatter-0.1.14.tar.gz", hash = "sha256:1830a4e12a7243a9e0182ec9b4826de7146bf50a8e7935d6bf334f455781eac9"},
+    {file = "biochatter-0.1.15-py3-none-any.whl", hash = "sha256:b3c9ddaa71251fc6620d351eff6de8399dcafdd92bebc373fb6f752052d142ad"},
+    {file = "biochatter-0.1.15.tar.gz", hash = "sha256:18dea376838a01028d499d159c7c6d25af7de36c9c6cbf66ab813117dd2293a3"},
 ]
 blinker = [
     {file = "blinker-1.6.2-py3-none-any.whl", hash = "sha256:c3d739772abb7bc2860abf5f2ec284223d9ad5c76da018234f6f50d6f31ab1f0"},
