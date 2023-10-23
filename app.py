@@ -1628,26 +1628,26 @@ def kg_panel():
             # generate query if not modified
             if ss.get("generate_query"):
                 with st.spinner("Generating query ..."):
-                    if dbms_type == "Cypher":
+                    if dbms_type == "Neo4j":
                         ss.current_query = prompt_engine.generate_query(
                             question, dbms_type
                         )
 
-            if dbms_type == "Cypher":
+            if dbms_type == "Neo4j":
                 result = _run_neo4j_query(ss.current_query)
 
-            elif dbms_type == "SQL":
+            elif dbms_type == "PostgreSQL":
                 result = [
                     (
-                        "Here would be a result if we had an SQL "
+                        "Here would be a result if we had a PostgreSQL "
                         "implementation."
                     )
                 ]
 
-            elif dbms_type == "SPARQL":
+            elif dbms_type == "ArangoDB":
                 result = [
                     (
-                        "Here would be a result if we had a SPARQL "
+                        "Here would be a result if we had an ArangoDB "
                         "implementation."
                     )
                 ]
@@ -1660,7 +1660,12 @@ def kg_panel():
             )
 
             if result[0]:
+                st.markdown("### Results")
                 st.write(result[0])
+
+        if ss.get("schema_dict"):
+            st.markdown("### Schema Info")
+            st.write(ss.schema_dict)
 
 
 def _rerun_query():
