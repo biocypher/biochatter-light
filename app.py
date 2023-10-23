@@ -10,6 +10,7 @@ from streamlit.runtime.uploaded_file_manager import (
     UploadedFile,
     UploadedFileRec,
 )
+import yaml
 
 st.set_page_config(
     page_title="ChatGSE",
@@ -1596,15 +1597,19 @@ def kg_panel():
             type=["yaml"],
         )
         if schema_file:
-            ss.schema_file = schema_file
-            st.success("File uploaded!")
+            try:
+                ss.schema_dict = yaml.safe_load(schema_file)
+                st.success("File uploaded!")
+            except yaml.YAMLError as e:
+                st.error("Could not load file. Please try again.")
+                st.error(e)
 
-        if not ss.get("schema_file"):
+        if not ss.get("schema_dict"):
             st.error(
                 "Please upload a schema configuration or info file to continue."
             )
 
-    if success and ss.get("schema_file"):
+    if success and ss.get("schema_dict"):
         question = st.text_input(
             "Enter your question here:",
             on_change=_regenerate_query,
@@ -1617,7 +1622,7 @@ def kg_panel():
         if question:
             # manual schema info file
             prompt_engine = BioCypherPromptEngine(
-                schema_config_or_info_path="schema_info.yaml",
+                schema_config_or_info_dict=ss.schema_dict,
             )
 
             # generate query if not modified
