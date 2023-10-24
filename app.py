@@ -1659,8 +1659,8 @@ def kg_panel():
                 on_change=_rerun_query,
             )
 
+            st.markdown("### Results")
             if result[0]:
-                st.markdown("### Results")
                 st.write(result[0])
 
         if ss.get("schema_dict"):
