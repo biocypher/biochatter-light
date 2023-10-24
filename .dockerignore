@@ -1,0 +1,11 @@
+.cache/
+.devcontainer/
+.pytest_cache/
+.streamlit/
+.venv/
+.vscode/
+chats/
+input/
+test/
+volumes/
+azure.env
