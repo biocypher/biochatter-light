@@ -1599,12 +1599,17 @@ def kg_panel():
         if schema_file:
             try:
                 ss.schema_dict = yaml.safe_load(schema_file)
+                ss.schema_from = "file"
                 st.success("File uploaded!")
             except yaml.YAMLError as e:
                 st.error("Could not load file. Please try again.")
                 st.error(e)
 
-        if not ss.get("schema_dict"):
+        if ss.get("schema_dict"):
+            st.success(
+                f"Schema configuration loaded from {ss.get('schema_from')}!"
+            )
+        else:
             st.error(
                 "Please upload a schema configuration or info file to continue."
             )
@@ -1696,7 +1701,21 @@ def _connect_to_neo4j():
     if ss.get("neodriver").status == "no connection":
         return False
     else:
+        _find_schema_info_node()
         return True
+
+
+def _find_schema_info_node():
+    """
+    Look for a schema info node in the connected BioCypher graph and load the
+    schema info if present.
+    """
+    result = ss.neodriver.query("MATCH (n:Schema_info) RETURN n LIMIT 1")
+
+    if result[0]:
+        schema_info_node = result[0][0]["n"]
+        ss.schema_dict = json.loads(schema_info_node["schema_info"])
+        ss.schema_from = "graph"
 
 
 def _run_neo4j_query(query):
