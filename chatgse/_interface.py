@@ -136,6 +136,7 @@ class ChatGSE:
                 deployment_name=ss.get("openai_deployment_name"),
                 model_name=model_name,
                 prompts=ss.prompts,
+                correct=ss.correct,
                 split_correction=ss.split_correction,
                 docsum=ss.get("docsum"),
                 version=ss.get("openai_api_version"),
@@ -146,6 +147,7 @@ class ChatGSE:
             ss.conversation = GptConversation(
                 model_name=model_name,
                 prompts=ss.prompts,
+                correct=ss.correct,
                 split_correction=ss.split_correction,
                 docsum=ss.get("docsum"),
             )
@@ -153,6 +155,7 @@ class ChatGSE:
             ss.conversation = BloomConversation(
                 model_name=model_name,
                 prompts=ss.prompts,
+                correct=ss.correct,
                 split_correction=ss.split_correction,
                 docsum=ss.get("docsum"),
             )

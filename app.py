@@ -1293,14 +1293,20 @@ def toggle_split_by_characters():
 
 
 def correcting_agent_panel():
+    ss.correct = st.checkbox(
+        "Use the correcting agent to catch and correct false information",
+        value=ss.correct,
+    )
     ss.split_correction = st.checkbox(
         "Split the response into sentences for correction",
-        value=False,
+        value=ss.split_correction,
     )
 
     if ss.get("conversation"):
         if ss.split_correction != ss.conversation.split_correction:
             ss.conversation.split_correction = ss.split_correction
+        if ss.correct != ss.conversation.correct:
+            ss.conversation.correct = ss.correct
 
     test_correct = st.text_area(
         "Test correction functionality here:",
@@ -1746,6 +1752,7 @@ def _startup():
         "docsum_prompts": DOCSUM_PROMPTS,
         "schema_prompts": SCHEMA_PROMPTS,
     }
+    ss.correct = True
     ss.split_correction = False
     ss.generate_query = True
 
