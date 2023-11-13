@@ -57,6 +57,67 @@ short startup time, you can access the ChatGSE app at http://localhost:8501.
 
 ## Local deployment
 
+### Docker
+
+The simplest way to deply ChatGSE on your machine is using the Docker image we
+provide on Docker Hub. You can run it using the following command:
+
+```
+docker run -p 8501:8501 biocypher/chatgse
+```
+
+You can also build the image yourself from this repository (without the
+additional containers for the vector database):
+
+```
+git clone https://github.com/biocypher/ChatGSE.git
+cd ChatGSE
+docker build -t chatgse .
+docker run -p 8501:8501 chatgse
+```
+
+Note that the community key feature is not available locally, so you need to
+provide your own API key (either in the app or as an environment variable).
+
+#### Provide your API key
+Instead of manually entering the key, you can provide it to the Docker run
+command as an environment variable. You can designate the variable in your
+environment directly (`export OPENAI_API_KEY=sk-...`), or start the container
+with a text file (e.g. `local.env`) that contains the keys:
+
+```
+OPENAI_API_KEY=sk-...
+...
+```
+
+you can run the following command: 
+
+```
+docker run --env-file local.env -p 8501:8501 chatgse
+```
+
+### Poetry
+Local installation can be performed using Poetry (or other package managers
+that can work with a `pyproject.toml` file):
+
+```
+git clone https://github.com/biocypher/ChatGSE.git
+cd ChatGSE
+poetry install
+```
+
+For Apple Silicon machines, this must be followed by the following commands
+(inside the activated environment using `poetry shell`):
+
+```
+pip uninstall grpcio
+mamba install grpcio  # alternatively, conda
+```
+
+This step is necessary due to incompatibilities in the standard ARM grpcio
+package. Currently, only conda-forge provides a compatible version. To avoid
+this issue, you can work in a devcontainer (see above).
+
 ### Devcontainer
 To deploy/develop the app locally, we recommend using VS Code with the included
 devcontainer setup. This requires Docker and the [Remote
@@ -97,54 +158,3 @@ Once the other docker containers are running, they should be discoverable from
 within the devcontainer. If you add your own containers, make sure that they
 use the same network as your devcontainer (e.g. `milvus`).
 
-### Docker
-Using docker, run the following commands to deploy a local browser app (without
-the additional containers for the vector database):
-
-```
-git clone https://github.com/biocypher/ChatGSE.git
-cd ChatGSE
-docker build -t chatgse .
-docker run -p 8501:8501 chatgse
-```
-
-Note that the community key feature is not available locally, so you need to
-provide your own API key (either in the app or as an environment variable).
-
-#### Provide your API key
-Instead of manually entering the key, you can provide it to the Docker run
-command as an environment variable. With a text file (e.g. `local.env`) that
-contains the keys:
-
-```
-OPENAI_API_KEY=sk-...
-...
-```
-
-you can run the following command: 
-
-```
-docker run --env-file local.env -p 8501:8501 chatgse
-```
-
-### Poetry
-Local installation can be performed using Poetry (or other package managers
-that can work with a `pyproject.toml` file):
-
-```
-git clone https://github.com/biocypher/ChatGSE.git
-cd ChatGSE
-poetry install
-```
-
-For Apple Silicon machines, this must be followed by the following commands
-(inside the activated environment using `poetry shell`):
-
-```
-pip uninstall grpcio
-mamba install grpcio  # alternatively, conda
-```
-
-This step is necessary due to incompatibilities in the standard ARM grpcio
-package. Currently, only conda-forge provides a compatible version. To avoid
-this issue, you can work in a devcontainer (see above).
