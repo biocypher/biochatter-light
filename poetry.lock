@@ -132,7 +132,7 @@ tests-no-zope = ["cloudpickle", "hypothesis", "mypy (>=1.1.1)", "pympler", "pyte
 
 [[package]]
 name = "biochatter"
-version = "0.3.1"
+version = "0.3.2"
 description = "Backend library for conversational AI in biomedicine"
 category = "main"
 optional = false
@@ -2233,7 +2233,7 @@ neo4j = ["neo4j-utils"]
 [metadata]
 lock-version = "1.1"
 python-versions = ">=3.10,<3.12"
-content-hash = "64b5ac01f3827fe339e0f6c3b8aec5b21f474874087d8617e84afc169ada6c01"
+content-hash = "23b1b57034ba8b2ba7e72d571b638744d4ad518a502c83da19cbf7e34e64a9e8"
 
 [metadata.files]
 addict = [
@@ -2361,8 +2361,8 @@ attrs = [
     {file = "attrs-23.1.0.tar.gz", hash = "sha256:6279836d581513a26f1bf235f9acd333bc9115683f14f7e8fae46c98fc50e015"},
 ]
 biochatter = [
-    {file = "biochatter-0.3.1-py3-none-any.whl", hash = "sha256:9e317b3e14d1d0670d850f3bcc3ef0c3673e230adf5201e89465848c75c91b8f"},
-    {file = "biochatter-0.3.1.tar.gz", hash = "sha256:81ac6c6a0aecf154fdfc1f5e17fbfc20180f263da116619c41b643b093e2b6df"},
+    {file = "biochatter-0.3.2-py3-none-any.whl", hash = "sha256:34b74693b48d2a283f9dcb5d66f4a7e5bb478cd895db6cfe691c8389c5d690e2"},
+    {file = "biochatter-0.3.2.tar.gz", hash = "sha256:45b43266b0f05e56b1f95b872254d2a66701dbbc24040abec910654920e38fa9"},
 ]
 blinker = [
     {file = "blinker-1.6.2-py3-none-any.whl", hash = "sha256:c3d739772abb7bc2860abf5f2ec284223d9ad5c76da018234f6f50d6f31ab1f0"},
