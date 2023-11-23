@@ -1717,7 +1717,7 @@ full = ["httpx (>=0.22.0)", "itsdangerous", "jinja2", "python-multipart", "pyyam
 
 [[package]]
 name = "streamlit"
-version = "1.27.0"
+version = "1.28.2"
 description = "A faster way to build and share data apps"
 category = "main"
 optional = false
@@ -1733,23 +1733,23 @@ importlib-metadata = ">=1.4,<7"
 numpy = ">=1.19.3,<2"
 packaging = ">=16.8,<24"
 pandas = ">=1.3.0,<3"
-pillow = ">=7.1.0,<10"
+pillow = ">=7.1.0,<11"
 protobuf = ">=3.20,<5"
 pyarrow = ">=6.0"
 pydeck = ">=0.8.0b4,<1"
 python-dateutil = ">=2.7.3,<3"
-requests = ">=2.18,<3"
+requests = ">=2.27,<3"
 rich = ">=10.14.0,<14"
 tenacity = ">=8.1.0,<9"
 toml = ">=0.10.1,<2"
 tornado = ">=6.0.3,<7"
-typing-extensions = ">=4.1.0,<5"
+typing-extensions = ">=4.3.0,<5"
 tzlocal = ">=1.1,<6"
 validators = ">=0.2,<1"
 watchdog = {version = ">=2.1.5", markers = "platform_system != \"Darwin\""}
 
 [package.extras]
-snowflake = ["snowflake-snowpark-python"]
+snowflake = ["snowflake-connector-python (>=2.8.0)", "snowflake-snowpark-python (>=0.9.0)"]
 
 [[package]]
 name = "stringcase"
@@ -4269,8 +4269,8 @@ starlette = [
     {file = "starlette-0.32.0.post1.tar.gz", hash = "sha256:e54e2b7e2fb06dff9eac40133583f10dfa05913f5a85bf26f427c7a40a9a3d02"},
 ]
 streamlit = [
-    {file = "streamlit-1.27.0-py2.py3-none-any.whl", hash = "sha256:7488d4e22689d04f40449a1de521ba252ae95a5fbb5f5c606df16a4e16048b47"},
-    {file = "streamlit-1.27.0.tar.gz", hash = "sha256:59a704195bbc669c794ddfcc3818480d9b9c2a282c02b48aa6e6de4b1c38d0a0"},
+    {file = "streamlit-1.28.2-py2.py3-none-any.whl", hash = "sha256:cc144c4741a1bd850ccd13f1ef18fad170718242dd7930f4ae36e238d08ecd22"},
+    {file = "streamlit-1.28.2.tar.gz", hash = "sha256:c144168881bf7bd6d6017a9bfde585b52d20087b10b2d5c85d376ef6d52aa8ee"},
 ]
 stringcase = [
     {file = "stringcase-1.2.0.tar.gz", hash = "sha256:48a06980661908efe8d9d34eab2b6c13aefa2163b3ced26972902e3bdfd87008"},
