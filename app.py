@@ -1921,6 +1921,13 @@ def main():
                 ss.show_intro = False
 
             elif ss.mode == "getting_context":
+                # TODO: Sometimes the app goes from mode select straight into
+                # context, and then obviously the conversation mode is not set
+                # yet. It only happens if this is the first break point. If
+                # something is debugged before, or if something is pressed in
+                # the app before entering the name (such as one of the panels at
+                # the top), it works fine.
+
                 cg._get_context()
                 if ss.conversation_mode in ["data", "both"]:
                     ss.mode = cg._ask_for_data_input()
