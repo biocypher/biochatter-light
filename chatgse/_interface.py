@@ -138,7 +138,7 @@ class ChatGSE:
                 prompts=ss.prompts,
                 correct=ss.correct,
                 split_correction=ss.split_correction,
-                docsum=ss.get("docsum"),
+                rag_agent=ss.get("rag_agent"),
                 version=ss.get("openai_api_version"),
                 base=ss.get("openai_api_base"),
             )
@@ -149,7 +149,7 @@ class ChatGSE:
                 prompts=ss.prompts,
                 correct=ss.correct,
                 split_correction=ss.split_correction,
-                docsum=ss.get("docsum"),
+                rag_agent=ss.get("rag_agent"),
             )
         elif model_name in HUGGINGFACE_MODELS:
             ss.conversation = BloomConversation(
@@ -157,7 +157,7 @@ class ChatGSE:
                 prompts=ss.prompts,
                 correct=ss.correct,
                 split_correction=ss.split_correction,
-                docsum=ss.get("docsum"),
+                rag_agent=ss.get("rag_agent"),
             )
 
     def _check_for_api_key(self, write: bool = True, input: str = None):

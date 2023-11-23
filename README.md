@@ -14,7 +14,7 @@ and are looking for a way to connect it to the world of LLMs!
 ## 🤝 Get involved!
 To stay up to date with the project, please star the repository and watch the
 zulip community chat (free to join) at https://biocypher.zulipchat.com.
-ChatGSE-related discussion happens in the `#chatgse` stream.
+ChatGSE-related discussion happens in the `#biochatter and chatgse` stream.
 
 We are very happy about contributions from the community, large and small!
 If you would like to contribute to the platform's development, please refer to
@@ -36,12 +36,13 @@ files in the discussion
 for things the model can do, such as creating formatted markdown output to
 create mindmaps or other visualisations.
 
-## 📑 Document summarisation / In-context learning
-You can use the document summarisation feature to upload documents and use
-similarity search to inject context into your prompts. The document
-summarisation feature is currently only available on local builds of ChatGSE
-(see below). It requires a connection to a vector database (currently only
-[Milvus](https://milvus.io/) is supported). We follow [these
+## 📑 Retrieval Augmented Generation / In-context learning
+
+You can use the Retrieval Augmented Generation (RAG) feature to upload documents
+and use similarity search to inject context into your prompts. The RAG feature
+is currently only available on local builds of ChatGSE (see below). It requires
+a connection to a vector database (currently only [Milvus](https://milvus.io/)
+is supported). We follow [these
 instructions](https://milvus.io/docs/install_standalone-docker.md) to mount a
 Docker instance on your machine (using the standard ports). We provide a Docker
 compose setup to mount the Milvus containers and the ChatGSE container together:
@@ -146,7 +147,7 @@ configuration similar to this one to your launch.json:
 
 ```
 
-Note that if you want to use the document summarisation feature or other
+Note that if you want to use the Retrieval Augmented Generation feature or other
 connected services, you will still need to start these separately. For the
 vector DB component of the `docker-compose.yml` file, you can do it like so:
 

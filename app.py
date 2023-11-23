@@ -90,7 +90,7 @@ TOOL_PROMPTS = {
         "bioinformatics method gsea. Here are the data: {df}"
     ),
 }
-DOCSUM_PROMPTS = [
+RAG_PROMPTS = [
     "The user has provided additional background information from scientific "
     "articles.",
     "Take the following statements into account and specifically comment on "
@@ -282,12 +282,12 @@ def chat_box():
         ),
         label_visibility="collapsed",
     )
-    if ss.get("conversation_mode") == "both" and not ss.docsum.used:
+    if ss.get("conversation_mode") == "both" and not ss.rag_agent.used:
         st.warning(
             "You have selected 'data and papers' as the conversation mode, but "
             "have not yet embedded any documents. Prompt injection will only "
             "be performed if you upload at least one document (in the "
-            "'Document Summarisation' tab)."
+            "'Retrieval Augmented Generation' tab)."
         )
 
 
@@ -665,7 +665,7 @@ def app_info():
         function as JSON). Additionally, OpenAI provide a `gpt-3.5-turbo-16k`
         model with increased token limit of 16000 per conversation. This model
         is slightly more expensive, but can be useful for longer conversations,
-        particularly when including the document summarisation / prompt
+        particularly when including the Retrieval Augmented Generation / prompt
         injection feature.
 
         """
@@ -800,23 +800,23 @@ def show_correcting_agent_prompts():
     )
 
 
-def show_docsum_prompts():
+def show_rag_agent_prompts():
     """
-    Prompt engineering panel: document summarisation.
+    Prompt engineering panel: Retrieval Augmented Generation.
     """
     st.markdown(
         "`📎 Assistant`: Here you can edit the prompts used to set up the "
-        "Document Summarisation task. Text passages from any uploaded "
+        "Retrieval Augmented Generation task. Text passages from any uploaded "
         "documents will be passed on to the primary model using these prompts. "
         "The placeholder `{statements}` will be replaced by the text passages. "
         "Upload documents and edit vector database settings in the "
-        "`Document Summarisation` tab."
+        "`Retrieval Augmented Generation` tab."
     )
 
-    for num, msg in enumerate(ss.prompts["docsum_prompts"]):
+    for num, msg in enumerate(ss.prompts["rag_agent_prompts"]):
         field, button = st.columns([4, 1])
         with field:
-            ss.prompts["docsum_prompts"][num] = st.text_area(
+            ss.prompts["rag_agent_prompts"][num] = st.text_area(
                 label=str(num + 1),
                 value=msg,
                 label_visibility="collapsed",
@@ -826,7 +826,7 @@ def show_docsum_prompts():
             st.button(
                 f"Remove prompt {num + 1}",
                 on_click=remove_prompt,
-                args=(ss.prompts["docsum_prompts"], num),
+                args=(ss.prompts["rag_agent_prompts"], num),
                 key=f"remove_prompt_{num}",
                 use_container_width=True,
             )
@@ -834,7 +834,7 @@ def show_docsum_prompts():
     st.button(
         "Add New Prompt",
         on_click=add_prompt,
-        args=(ss.prompts["docsum_prompts"],),
+        args=(ss.prompts["rag_agent_prompts"],),
     )
 
 
@@ -1061,11 +1061,11 @@ def shuffle_messages(l: list, i: int):
     l.append(l.pop(3))
 
 
-def docsum_panel():
+def rag_agent_panel():
     """
 
-    Upload files for document summarisation, one file at a time. Upon upload,
-    document is split and embedded into a connected vector DB using the
+    Upload files for Retrieval Augmented Generation, one file at a time. Upon
+    upload, document is split and embedded into a connected vector DB using the
     `vectorstore.py` module of biochatter. The top k results of similarity
     search of the user's query will be injected into the prompt to the primary
     model (only once per query). The panel displays a file_uploader panel,
@@ -1075,25 +1075,20 @@ def docsum_panel():
 
     """
 
-    if not ss.get("docsum"):
+    if not ss.get("rag_agent"):
+        ss.rag_agent = DocumentEmbedder(
+            use_prompt=False,
+            online=ss.get("online"),
+            api_key=ss.get("openai_api_key"),
+            embedding_collection_name="chatgse_embeddings",
+            metadata_collection_name="chatgse_metadata",
+        )
         if os.getenv("DOCKER_COMPOSE"):
-            ss.docsum = DocumentEmbedder(
-                use_prompt=False,
-                online=ss.get("online"),
-                connection_args={
-                    "host": "milvus-standalone",
-                    "port": "19530",
-                },
-                api_key=ss.get("openai_api_key"),
-            )
+            ss.rag_agent.connect(host="milvus-standalone", port="19530")
         else:
-            ss.docsum = DocumentEmbedder(
-                use_prompt=False,
-                online=ss.get("online"),
-                api_key=ss.get("openai_api_key"),
-            )
+            ss.rag_agent.connect(host="localhost", port="19530")
 
-    disabled = ss.online or (not ss.docsum.use_prompt)
+    disabled = ss.online or (not ss.rag_agent.use_prompt)
 
     uploader, settings = st.columns(2)
 
@@ -1113,7 +1108,7 @@ def docsum_panel():
                 "This feature is currently not available in online mode, as it "
                 "requires connection to a vector database. Please run the app "
                 "locally to use this feature. See the [README]("
-                "https://github.com/biocypher/ChatGSE#-document-summarisation--in-context-learning)"
+                "https://github.com/biocypher/ChatGSE#-retrieval-augmented-generation--in-context-learning)"
                 " for more info."
             )
         st.info(
@@ -1123,7 +1118,7 @@ def docsum_panel():
         )
         with st.form("Upload Document", clear_on_submit=True):
             uploaded_file = st.file_uploader(
-                "Upload a document for summarisation",
+                "Upload a document for Retrieval Augmented Generation",
                 type=["txt", "pdf"],
                 label_visibility="collapsed",
                 disabled=disabled,
@@ -1144,20 +1139,18 @@ def docsum_panel():
                     doc = reader.document_from_pdf(val)
                 elif uploaded_file.type == "text/plain":
                     doc = reader.document_from_txt(val)
-                ss.docsum.set_document(doc)
-                ss.docsum.split_document()
                 try:
-                    ss.docsum.store_embeddings()
+                    ss.rag_agent.save_document(doc)
                     ss.upload_success = True
-                    if not ss.docsum.used:
-                        ss.docsum.used = True
+                    if not ss.rag_agent.used:
+                        ss.rag_agent.used = True
                         ss.first_document_uploaded = True
                 except MilvusException as e:
                     st.error(
                         "An error occurred while saving the embeddings. Please "
                         "check if Milvus is running. For information on the "
                         "Docker Compose setup, see the [README]("
-                        "https://github.com/biocypher/ChatGSE#-document-summarisation--in-context-learning)."
+                        "https://github.com/biocypher/ChatGSE#-retrieval-augmented-generation--in-context-learning)."
                     )
                     st.error(e)
                     return
@@ -1195,17 +1188,17 @@ def docsum_panel():
             "🔧 Settings"
         )
 
-        # checkbox for whether to use the docsum prompt
+        # checkbox for whether to use the rag_agent prompt
         st.checkbox(
-            "Use document summarisation to inject search results into the prompt",
-            value=ss.docsum.use_prompt,
-            on_change=toggle_docsum_prompt,
+            "Use Retrieval Augmented Generation to inject search results into the prompt",
+            value=ss.rag_agent.use_prompt,
+            on_change=toggle_rag_agent_prompt,
             disabled=ss.online,
         )
 
         st.checkbox(
             "Split by characters (instead of tokens)",
-            ss.docsum.split_by_characters,
+            ss.rag_agent.split_by_characters,
             on_change=toggle_split_by_characters,
             disabled=disabled,
             help=(
@@ -1215,7 +1208,7 @@ def docsum_panel():
             ),
         )
 
-        ss.docsum.chunk_size = st.slider(
+        ss.rag_agent.chunk_size = st.slider(
             label=(
                 "Chunk size: how large should the embedded text fragments be?"
             ),
@@ -1232,7 +1225,7 @@ def docsum_panel():
                 "recommended to set it before uploading documents."
             ),
         )
-        ss.docsum.chunk_overlap = st.slider(
+        ss.rag_agent.chunk_overlap = st.slider(
             label="Overlap: should the chunks overlap, and by how much?",
             min_value=0,
             max_value=1000,
@@ -1240,13 +1233,13 @@ def docsum_panel():
             step=1,
             disabled=disabled,
         )
-        # ss.docsum.separators = st.multiselect(
+        # ss.rag_agent.separators = st.multiselect(
         #     "Separators (defaults: new line, comma, space)",
-        #     options=ss.docsum.separators,
-        #     default=ss.docsum.separators,
+        #     options=ss.rag_agent.separators,
+        #     default=ss.rag_agent.separators,
         #     disabled=disabled,
         # )
-        ss.docsum.n_results = st.slider(
+        ss.rag_agent.n_results = st.slider(
             label=(
                 "Number of results: how many chunks should be used to "
                 "supplement the prompt?"
@@ -1282,14 +1275,14 @@ def docsum_panel():
             )
 
 
-def toggle_docsum_prompt():
-    """Toggles the use of the docsum prompt."""
-    ss.docsum.use_prompt = not ss.docsum.use_prompt
+def toggle_rag_agent_prompt():
+    """Toggles the use of the rag_agent prompt."""
+    ss.rag_agent.use_prompt = not ss.rag_agent.use_prompt
 
 
 def toggle_split_by_characters():
     """Toggles the splitting of the input text by characters vs tokens."""
-    ss.docsum.split_by_characters = not ss.docsum.split_by_characters
+    ss.rag_agent.split_by_characters = not ss.rag_agent.split_by_characters
 
 
 def correcting_agent_panel():
@@ -1749,7 +1742,7 @@ def _startup():
         "primary_model_prompts": PRIMARY_MODEL_PROMPTS,
         "correcting_agent_prompts": CORRECTING_AGENT_PROMPTS,
         "tool_prompts": TOOL_PROMPTS,
-        "docsum_prompts": DOCSUM_PROMPTS,
+        "rag_agent_prompts": RAG_PROMPTS,
         "schema_prompts": SCHEMA_PROMPTS,
     }
     ss.correct = True
@@ -1804,9 +1797,9 @@ def mode_select():
 
     if ss.online:
         st.info(
-            "Document summarisation is currently not available in the "
+            "Retrieval Augmented Generation is currently not available in the "
             "online version. Please use the Docker Compose setup in our "
-            "[GitHub repository](https://github.com/biocypher/ChatGSE#-document-summarisation--in-context-learning) "
+            "[GitHub repository](https://github.com/biocypher/ChatGSE#-retrieval-augmented-generation--in-context-learning) "
             "to run ChatGSE locally and use this feature."
         )
 
@@ -1826,8 +1819,8 @@ def set_both_mode():
     ss.cg._ask_for_context("data and papers")
 
 
-def waiting_for_docsum():
-    st.info("Use the 'Document Summarisation' tab to embed documents.")
+def waiting_for_rag_agent():
+    st.info("Use the 'Retrieval Augmented Generation' tab to embed documents.")
 
 
 def main():
@@ -1859,16 +1852,16 @@ def main():
             "total_tokens": 0,
         }
 
-    # UPDATE DOCSUM
-    if ss.get("docsum"):
-        if ss.docsum.use_prompt:
-            ss.conversation.set_docsum(ss.docsum)
+    # UPDATE RAG AGENT
+    if ss.get("rag_agent"):
+        if ss.rag_agent.use_prompt:
+            ss.conversation.set_rag_agent(ss.rag_agent)
 
     # TABS
     (
         chat_tab,
         prompts_tab,
-        docsum_tab,
+        rag_agent_tab,
         correct_tab,
         annot_tab,
         exp_design_tab,
@@ -1878,7 +1871,7 @@ def main():
         [
             "Chat",
             "Prompt Engineering",
-            "Document Summarisation",
+            "Retrieval Augmented Generation",
             "Correcting Agent",
             "Cell Type Annotation",
             "Experimental Design",
@@ -1904,7 +1897,7 @@ def main():
         cg._display_history()
 
         # CHAT BOT LOGIC
-        if ss.input or ss.mode == "waiting_for_docsum":
+        if ss.input or ss.mode == "waiting_for_rag_agent":
             if ss.mode == "getting_key":
                 ss.mode = cg._get_api_key(ss.input)
                 ss.show_intro = False
@@ -1921,22 +1914,29 @@ def main():
                 ss.show_intro = False
 
             elif ss.mode == "getting_context":
+                # TODO: Sometimes the app goes from mode select straight into
+                # context, and then obviously the conversation mode is not set
+                # yet. It only happens if this is the first break point. If
+                # something is debugged before, or if something is pressed in
+                # the app before entering the name (such as one of the panels at
+                # the top), it works fine.
+
                 cg._get_context()
                 if ss.conversation_mode in ["data", "both"]:
                     ss.mode = cg._ask_for_data_input()
                 else:
-                    if ss.get("docsum"):
-                        if not ss.docsum.used:
+                    if ss.get("rag_agent"):
+                        if not ss.rag_agent.used:
                             st.write("Please embed at least one document.")
-                            ss.mode = "waiting_for_docsum"
+                            ss.mode = "waiting_for_rag_agent"
                         else:
                             ss.mode = cg._start_chat()
                     else:
                         st.write("Please embed at least one document.")
-                        ss.mode = "waiting_for_docsum"
+                        ss.mode = "waiting_for_rag_agent"
 
-            elif ss.mode == "waiting_for_docsum":
-                if ss.docsum.used:
+            elif ss.mode == "waiting_for_rag_agent":
+                if ss.rag_agent.used:
                     ss.mode = cg._start_chat()
 
             elif ss.mode == "getting_data_file_input":
@@ -2039,8 +2039,8 @@ def main():
         elif ss.mode in ["getting_name", "getting_context"]:
             chat_line()
             autofocus_line()
-        elif ss.mode == "waiting_for_docsum":
-            waiting_for_docsum()
+        elif ss.mode == "waiting_for_rag_agent":
+            waiting_for_rag_agent()
         elif "demo" in ss.mode:
             demo_next_button()
         else:
@@ -2114,7 +2114,7 @@ def main():
                     "Primary Model",
                     "Correcting Agent",
                     "Tools",
-                    "Document Summarisation",
+                    "Retrieval Augmented Generation",
                 ),
             )
 
@@ -2127,8 +2127,8 @@ def main():
             elif ss.prompts_box == "Tools":
                 show_tool_prompts()
 
-            elif ss.prompts_box == "Document Summarisation":
-                show_docsum_prompts()
+            elif ss.prompts_box == "Retrieval Augmented Generation":
+                show_rag_agent_prompts()
 
     with correct_tab:
         st.markdown(
@@ -2148,14 +2148,14 @@ def main():
         else:
             correcting_agent_panel()
 
-    with docsum_tab:
+    with rag_agent_tab:
         st.markdown(
             "While Large Language Models have access to vast amounts of "
             "knowledge, this knowledge only includes what was present in "
             "their training set, and thus excludes very current research "
             "as well as research articles that are not open access. To "
             "fill in the gaps of the model's knowledge, we include a "
-            "document summarisation approach that stores knowledge from "
+            "Retrieval Augmented Generation approach that stores knowledge from "
             "user-provided documents in a vector database, which can be "
             "used to supplement the model prompt by retrieving the most "
             "relevant contents of the provided documents. This process "
@@ -2164,14 +2164,14 @@ def main():
             "contents."
         )
         if ss.get("openai_api_key"):
-            docsum_panel()
+            rag_agent_panel()
             if ss.get("first_document_uploaded"):
                 ss.first_document_uploaded = False
                 refresh()
         else:
             st.info(
-                "Please enter your OpenAI API key to use the document "
-                "summarisation functionality."
+                "Please enter your OpenAI API key to use the "
+                "Retrieval Augmented Generation functionality."
             )
 
     with genetics_tab:
