@@ -1064,8 +1064,8 @@ def shuffle_messages(l: list, i: int):
 def rag_agent_panel():
     """
 
-    Upload files for Retrieval Augmented Generation, one file at a time. Upon upload,
-    document is split and embedded into a connected vector DB using the
+    Upload files for Retrieval Augmented Generation, one file at a time. Upon
+    upload, document is split and embedded into a connected vector DB using the
     `vectorstore.py` module of biochatter. The top k results of similarity
     search of the user's query will be injected into the prompt to the primary
     model (only once per query). The panel displays a file_uploader panel,
@@ -1076,22 +1076,17 @@ def rag_agent_panel():
     """
 
     if not ss.get("rag_agent"):
+        ss.rag_agent = DocumentEmbedder(
+            use_prompt=False,
+            online=ss.get("online"),
+            api_key=ss.get("openai_api_key"),
+            embedding_collection_name="chatgse_embeddings",
+            metadata_collection_name="chatgse_metadata",
+        )
         if os.getenv("DOCKER_COMPOSE"):
-            ss.rag_agent = DocumentEmbedder(
-                use_prompt=False,
-                online=ss.get("online"),
-                connection_args={
-                    "host": "milvus-standalone",
-                    "port": "19530",
-                },
-                api_key=ss.get("openai_api_key"),
-            )
+            ss.rag_agent.connect(host="milvus-standalone", port="19530")
         else:
-            ss.rag_agent = DocumentEmbedder(
-                use_prompt=False,
-                online=ss.get("online"),
-                api_key=ss.get("openai_api_key"),
-            )
+            ss.rag_agent.connect(host="localhost", port="19530")
 
     disabled = ss.online or (not ss.rag_agent.use_prompt)
 
@@ -1144,10 +1139,8 @@ def rag_agent_panel():
                     doc = reader.document_from_pdf(val)
                 elif uploaded_file.type == "text/plain":
                     doc = reader.document_from_txt(val)
-                ss.rag_agent.set_document(doc)
-                ss.rag_agent.split_document()
                 try:
-                    ss.rag_agent.store_embeddings()
+                    ss.rag_agent.save_document(doc)
                     ss.upload_success = True
                     if not ss.rag_agent.used:
                         ss.rag_agent.used = True
