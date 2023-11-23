@@ -14,7 +14,7 @@ and are looking for a way to connect it to the world of LLMs!
 ## 🤝 Get involved!
 To stay up to date with the project, please star the repository and watch the
 zulip community chat (free to join) at https://biocypher.zulipchat.com.
-ChatGSE-related discussion happens in the `#chatgse` stream.
+ChatGSE-related discussion happens in the `#biochatter and chatgse` stream.
 
 We are very happy about contributions from the community, large and small!
 If you would like to contribute to the platform's development, please refer to
