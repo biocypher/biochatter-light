@@ -1075,20 +1075,25 @@ def rag_agent_panel():
 
     """
 
-    if not ss.get("rag_agent"):
-        ss.rag_agent = DocumentEmbedder(
-            use_prompt=False,
-            online=ss.get("online"),
-            api_key=ss.get("openai_api_key"),
-            embedding_collection_name="chatgse_embeddings",
-            metadata_collection_name="chatgse_metadata",
-        )
-        if os.getenv("DOCKER_COMPOSE"):
-            ss.rag_agent.connect(host="milvus-standalone", port="19530")
-        else:
-            ss.rag_agent.connect(host="localhost", port="19530")
+    if ss.use_rag_agent:
+        if not ss.get("rag_agent"):
+            if os.getenv("DOCKER_COMPOSE"):
+                # running in same docker compose as chatgse
+                connection_args = {"host": "milvus-standalone", "port": "19530"}
+            else:
+                # running on host machine from the milvus docker compose
+                connection_args = {"host": "localhost", "port": "19530"}
 
-    disabled = ss.online or (not ss.rag_agent.use_prompt)
+            ss.rag_agent = DocumentEmbedder(
+                use_prompt=False,
+                online=ss.get("online"),
+                api_key=ss.get("openai_api_key"),
+                embedding_collection_name="chatgse_embeddings",
+                metadata_collection_name="chatgse_metadata",
+                connection_args=connection_args,
+            )
+
+    disabled = ss.online or (not ss.use_rag_agent)
 
     uploader, settings = st.columns(2)
 
@@ -1191,65 +1196,67 @@ def rag_agent_panel():
         # checkbox for whether to use the rag_agent prompt
         st.checkbox(
             "Use Retrieval Augmented Generation to inject search results into the prompt",
-            value=ss.rag_agent.use_prompt,
+            value=ss.use_rag_agent,
             on_change=toggle_rag_agent_prompt,
             disabled=ss.online,
         )
 
-        st.checkbox(
-            "Split by characters (instead of tokens)",
-            ss.rag_agent.split_by_characters,
-            on_change=toggle_split_by_characters,
-            disabled=disabled,
-            help=(
-                "Deactivate this to split the input text by tokens instead of "
-                "characters. Be mindful that this results in much longer "
-                "fragments, so it could be useful to reduce the chunk size."
-            ),
-        )
+        # only show those if we have a rag_agent
+        if ss.get("rag_agent"):
+            st.checkbox(
+                "Split by characters (instead of tokens)",
+                ss.rag_agent.split_by_characters,
+                on_change=toggle_split_by_characters,
+                disabled=disabled,
+                help=(
+                    "Deactivate this to split the input text by tokens instead of "
+                    "characters. Be mindful that this results in much longer "
+                    "fragments, so it could be useful to reduce the chunk size."
+                ),
+            )
 
-        ss.rag_agent.chunk_size = st.slider(
-            label=(
-                "Chunk size: how large should the embedded text fragments be?"
-            ),
-            min_value=100,
-            max_value=5000,
-            value=1000,
-            step=1,
-            disabled=disabled,
-            help=(
-                "The larger the chunk size, the more context is provided to "
-                "the model. The lower the chunk size, the more individual "
-                "chunks can be used inside the token length limit of the "
-                "model. While the value can be changed at any time, it is "
-                "recommended to set it before uploading documents."
-            ),
-        )
-        ss.rag_agent.chunk_overlap = st.slider(
-            label="Overlap: should the chunks overlap, and by how much?",
-            min_value=0,
-            max_value=1000,
-            value=0,
-            step=1,
-            disabled=disabled,
-        )
-        # ss.rag_agent.separators = st.multiselect(
-        #     "Separators (defaults: new line, comma, space)",
-        #     options=ss.rag_agent.separators,
-        #     default=ss.rag_agent.separators,
-        #     disabled=disabled,
-        # )
-        ss.rag_agent.n_results = st.slider(
-            label=(
-                "Number of results: how many chunks should be used to "
-                "supplement the prompt?"
-            ),
-            min_value=1,
-            max_value=20,
-            value=3,
-            step=1,
-            disabled=disabled,
-        )
+            ss.rag_agent.chunk_size = st.slider(
+                label=(
+                    "Chunk size: how large should the embedded text fragments be?"
+                ),
+                min_value=100,
+                max_value=5000,
+                value=1000,
+                step=1,
+                disabled=disabled,
+                help=(
+                    "The larger the chunk size, the more context is provided to "
+                    "the model. The lower the chunk size, the more individual "
+                    "chunks can be used inside the token length limit of the "
+                    "model. While the value can be changed at any time, it is "
+                    "recommended to set it before uploading documents."
+                ),
+            )
+            ss.rag_agent.chunk_overlap = st.slider(
+                label="Overlap: should the chunks overlap, and by how much?",
+                min_value=0,
+                max_value=1000,
+                value=0,
+                step=1,
+                disabled=disabled,
+            )
+            # ss.rag_agent.separators = st.multiselect(
+            #     "Separators (defaults: new line, comma, space)",
+            #     options=ss.rag_agent.separators,
+            #     default=ss.rag_agent.separators,
+            #     disabled=disabled,
+            # )
+            ss.rag_agent.n_results = st.slider(
+                label=(
+                    "Number of results: how many chunks should be used to "
+                    "supplement the prompt?"
+                ),
+                min_value=1,
+                max_value=20,
+                value=3,
+                step=1,
+                disabled=disabled,
+            )
 
         if ss.get("uploaded_files"):
             st.markdown(
@@ -1277,7 +1284,7 @@ def rag_agent_panel():
 
 def toggle_rag_agent_prompt():
     """Toggles the use of the rag_agent prompt."""
-    ss.rag_agent.use_prompt = not ss.rag_agent.use_prompt
+    ss.use_rag_agent = not ss.use_rag_agent
 
 
 def toggle_split_by_characters():
@@ -1736,6 +1743,7 @@ def refresh():
 def _startup():
     # USER
     ss.user = "default"
+    ss.use_rag_agent = False
 
     # PROMPTS
     ss.prompts = {
