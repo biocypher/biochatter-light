@@ -10,8 +10,10 @@ from biochatter.llm_connect import (
     GptConversation,
     AzureGptConversation,
     BloomConversation,
+    XinferenceConversation,
     OPENAI_MODELS,
     HUGGINGFACE_MODELS,
+    XINFERENCE_MODELS,
     TOKEN_LIMITS,
 )
 
@@ -154,6 +156,14 @@ class ChatGSE:
         elif model_name in HUGGINGFACE_MODELS:
             ss.conversation = BloomConversation(
                 model_name=model_name,
+                prompts=ss.prompts,
+                correct=ss.correct,
+                split_correction=ss.split_correction,
+                rag_agent=ss.get("rag_agent"),
+            )
+        elif model_name in XINFERENCE_MODELS:
+            ss.conversation = XinferenceConversation(
+                base_url=ss.get("xinference_base_url"),
                 prompts=ss.prompts,
                 correct=ss.correct,
                 split_correction=ss.split_correction,
