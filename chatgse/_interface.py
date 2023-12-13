@@ -186,6 +186,8 @@ class ChatGSE:
             key = ss.get("openai_api_key")
         elif ss.primary_model in HUGGINGFACE_MODELS:
             key = ss.get("huggingfacehub_api_key")
+        elif ss.primary_model in XINFERENCE_MODELS:
+            key = ss.get("xinference_api_key")
 
         ss.token_limit = TOKEN_LIMITS[ss.primary_model]
 
@@ -263,10 +265,14 @@ class ChatGSE:
         return "getting_key"
 
     def _try_api_key(self, key: str = None):
-        success = ss.conversation.set_api_key(
-            key,
-            ss.user,
-        )
+        if ss.get("primary_model") in XINFERENCE_MODELS:
+            # TODO fix after is consistent in BioChatter
+            success = ss.conversation.set_api_key()
+        else:
+            success = ss.conversation.set_api_key(
+                key,
+                ss.user,
+            )
         if not success:
             return False
 

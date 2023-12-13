@@ -141,7 +141,11 @@ from biochatter.vectorstore import (
     DocumentEmbedder,
     DocumentReader,
 )
-from biochatter.llm_connect import OPENAI_MODELS, HUGGINGFACE_MODELS
+from biochatter.llm_connect import (
+    OPENAI_MODELS,
+    HUGGINGFACE_MODELS,
+    XINFERENCE_MODELS,
+)
 from biochatter.prompts import BioCypherPromptEngine
 from pymilvus.exceptions import MilvusException
 import neo4j_utils as nu
@@ -490,7 +494,7 @@ def model_select():
             return
 
         # concatenate OPENAI_MODELS and HUGGINGFACE_MODELS
-        models = OPENAI_MODELS + HUGGINGFACE_MODELS
+        models = OPENAI_MODELS + HUGGINGFACE_MODELS + XINFERENCE_MODELS
         st.selectbox(
             "Primary model",
             options=models,
@@ -507,6 +511,17 @@ def model_select():
             st.warning(
                 "BLOOM support is currently experimental. Queries may return "
                 "unexpected results."
+            )
+        elif ss.primary_model == "custom-endpoint":
+            # ask for base url of endpoint, target is ss.xinference_base_url,
+            # default value is also ss.xinference_base_url
+            ss.xinference_base_url = st.text_input(
+                "Base URL:",
+                value=ss.xinference_base_url,
+                help=(
+                    "Please enter the base URL of your custom XInference "
+                    "endpoint."
+                ),
             )
 
 
@@ -1743,7 +1758,12 @@ def refresh():
 def _startup():
     # USER
     ss.user = "default"
+
+    # SETTINGS
     ss.use_rag_agent = False
+    # TODO these are for testing, change later
+    ss.xinference_base_url = "http://llm.biocypher.org"
+    ss.xinference_api_key = "none"
 
     # PROMPTS
     ss.prompts = {
