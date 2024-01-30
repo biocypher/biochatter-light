@@ -1,4 +1,4 @@
-# 💬🧬 ChatGSE
+# 💬🧬 BioChatter Light
 Gene set interpretation and more, assisted by large language models. Find the
 deployed app at https://chat.biocypher.org. We are currently ***heavily***
 work in progress, but we are commited to open source and very open to comments,
@@ -14,7 +14,7 @@ and are looking for a way to connect it to the world of LLMs!
 ## 🤝 Get involved!
 To stay up to date with the project, please star the repository and watch the
 zulip community chat (free to join) at https://biocypher.zulipchat.com.
-ChatGSE-related discussion happens in the `#biochatter and chatgse` stream.
+Related discussion happens in the `#biochatter and chatgse` stream.
 
 We are very happy about contributions from the community, large and small!
 If you would like to contribute to the platform's development, please refer to
