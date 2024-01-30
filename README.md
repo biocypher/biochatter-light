@@ -9,7 +9,10 @@ This repository contains only the frontend code of our streamlit app. The code
 base used for communication with the LLMs, vector databases, and other
 components of our project is developed at 
 https://github.com/biocypher/biochatter. Check there if you have your own UI
-and are looking for a way to connect it to the world of LLMs!
+and are looking for a way to connect it to the world of LLMs! If you are
+looking for a full-featured client-server web application, check out
+https://github.com/biocypher/biochatter-server and
+https://github.com/biocypher/chatgse-next.
 
 ## 🤝 Get involved!
 To stay up to date with the project, please star the repository and watch the
