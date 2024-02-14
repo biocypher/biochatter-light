@@ -34,8 +34,8 @@ platform a great open-source tool, you're good. 🙂
 ## 🛠 Prompt engineering discussions
 You can discuss your favourite prompt setups and share the corresponding JSON
 files in the discussion
-[here](https://github.com/biocypher/ChatGSE/discussions/11)! You can go
-[here](https://github.com/biocypher/ChatGSE/discussions/20) to find inspiration
+[here](https://github.com/biocypher/biochatter-light/discussions/11)! You can go
+[here](https://github.com/biocypher/biochatter-light/discussions/20) to find inspiration
 for things the model can do, such as creating formatted markdown output to
 create mindmaps or other visualisations.
 
@@ -51,7 +51,7 @@ Docker instance on your machine (using the standard ports). We provide a Docker
 compose setup to mount the Milvus containers and the ChatGSE container together:
 
 ```
-git clone https://github.com/biocypher/ChatGSE.git
+git clone https://github.com/biocypher/biochatter-light.git
 cd ChatGSE
 docker compose up -d
 ```
@@ -74,7 +74,7 @@ You can also build the image yourself from this repository (without the
 additional containers for the vector database):
 
 ```
-git clone https://github.com/biocypher/ChatGSE.git
+git clone https://github.com/biocypher/biochatter-light.git
 cd ChatGSE
 docker build -t chatgse .
 docker run -p 8501:8501 chatgse
@@ -105,7 +105,7 @@ Local installation can be performed using Poetry (or other package managers
 that can work with a `pyproject.toml` file):
 
 ```
-git clone https://github.com/biocypher/ChatGSE.git
+git clone https://github.com/biocypher/biochatter-light.git
 cd ChatGSE
 poetry install
 ```

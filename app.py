@@ -42,7 +42,7 @@ DEV_FUNCTIONALITY = (
 OFFLINE_FUNCTIONALITY = (
     "functionality is currently under development and not yet available in the "
     "online version of BioChatter Light. Please check back later or check the [GitHub "
-    "Repository](https://github.com/biocypher/ChatGSE) for running the app "
+    "Repository](https://github.com/biocypher/biochatter-light) for running the app "
     "locally."
 )
 
@@ -1061,7 +1061,7 @@ def show_about_section():
         "limited functionality. For more information on our vision of the "
         "platform, please see [our preprint](https://arxiv.org/abs/2305.06488)! "
         "If you'd like to contribute to the project, please find us on "
-        "[GitHub](https://github.com/biocypher/ChatGSE) or "
+        "[GitHub](https://github.com/biocypher/biochatter-light) or "
         "[Zulip](https://biocypher.zulipchat.com). We'd love to hear from you!"
     )
 
@@ -1128,7 +1128,7 @@ def rag_agent_panel():
                 "This feature is currently not available in online mode, as it "
                 "requires connection to a vector database. Please run the app "
                 "locally to use this feature. See the [README]("
-                "https://github.com/biocypher/ChatGSE#-retrieval-augmented-generation--in-context-learning)"
+                "https://github.com/biocypher/biochatter-light#-retrieval-augmented-generation--in-context-learning)"
                 " for more info."
             )
         st.info(
@@ -1170,7 +1170,7 @@ def rag_agent_panel():
                         "An error occurred while saving the embeddings. Please "
                         "check if Milvus is running. For information on the "
                         "Docker Compose setup, see the [README]("
-                        "https://github.com/biocypher/ChatGSE#-retrieval-augmented-generation--in-context-learning)."
+                        "https://github.com/biocypher/biochatter-light#-retrieval-augmented-generation--in-context-learning)."
                     )
                     st.error(e)
                     return
@@ -1827,7 +1827,7 @@ def mode_select():
         st.info(
             "Retrieval Augmented Generation is currently not available in the "
             "online version. Please use the Docker Compose setup in our "
-            "[GitHub repository](https://github.com/biocypher/ChatGSE#-retrieval-augmented-generation--in-context-learning) "
+            "[GitHub repository](https://github.com/biocypher/biochatter-light#-retrieval-augmented-generation--in-context-learning) "
             "to run ChatGSE locally and use this feature."
         )
 
