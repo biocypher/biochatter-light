@@ -134,7 +134,7 @@ HOW_MESSAGES = [
 import os
 import datetime
 import pandas as pd
-from biochatter_light._interface import ChatGSE
+from biochatter_light._interface import BioChatterLight
 from biochatter_light._interface import community_possible
 from biochatter._stats import get_community_usage_cost
 from biochatter.vectorstore import (
@@ -687,7 +687,7 @@ def app_info():
     )
 
 
-def download_chat_history(cg: ChatGSE):
+def download_chat_history(cg: BioChatterLight):
     """
     Button to download the chat history as a JSON file.
 
@@ -704,7 +704,7 @@ def download_chat_history(cg: ChatGSE):
     )
 
 
-def download_complete_history(cg: ChatGSE):
+def download_complete_history(cg: BioChatterLight):
     """
     Button to download the complete message history (i.e., including the
     system prompts) as a JSON file.
@@ -1862,7 +1862,7 @@ def main():
 
     # INTERFACE
     if not ss.get("cg"):
-        ss.cg = ChatGSE()
+        ss.cg = BioChatterLight()
     cg = ss.cg
 
     # CHANGE MODEL

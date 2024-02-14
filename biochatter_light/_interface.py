@@ -56,7 +56,7 @@ PLEASE_ENTER_QUESTIONS = (
 )
 
 
-class ChatGSE:
+class BioChatterLight:
     def __init__(self):
         if "input" not in ss:
             ss.input = ""
