@@ -141,6 +141,7 @@ from biochatter.vectorstore import (
     DocumentEmbedder,
     DocumentReader,
 )
+from biochatter.rag_agent import RagAgent
 from biochatter.llm_connect import (
     OPENAI_MODELS,
     HUGGINGFACE_MODELS,
@@ -148,6 +149,7 @@ from biochatter.llm_connect import (
 )
 from biochatter.prompts import BioCypherPromptEngine
 from pymilvus.exceptions import MilvusException
+from langchain.embeddings import OpenAIEmbeddings
 import neo4j_utils as nu
 
 
@@ -286,7 +288,7 @@ def chat_box():
         ),
         label_visibility="collapsed",
     )
-    if ss.get("conversation_mode") == "both" and not ss.rag_agent.used:
+    if ss.get("conversation_mode") == "both" and not ss.get("embedder_used"):
         st.warning(
             "You have selected 'data and papers' as the conversation mode, but "
             "have not yet embedded any documents. Prompt injection will only "
@@ -1091,22 +1093,34 @@ def rag_agent_panel():
     """
 
     if ss.use_rag_agent:
-        if not ss.get("rag_agent"):
-            if os.getenv("DOCKER_COMPOSE"):
-                # running in same docker compose as biochatter-light
-                connection_args = {"host": "milvus-standalone", "port": "19530"}
-            else:
-                # running on host machine from the milvus docker compose
-                connection_args = {"host": "localhost", "port": "19530"}
+        if os.getenv("DOCKER_COMPOSE"):
+            # running in same docker compose as biochatter-light
+            connection_args = {"host": "milvus-standalone", "port": "19530"}
+        else:
+            # running on host machine from the milvus docker compose
+            connection_args = {"host": "localhost", "port": "19530"}
 
-            ss.rag_agent = DocumentEmbedder(
-                use_prompt=False,
-                online=ss.get("online"),
-                api_key=ss.get("openai_api_key"),
-                embedding_collection_name="biochatter-light_embeddings",
-                metadata_collection_name="biochatter-light_metadata",
+        embedding_func = OpenAIEmbeddings(
+            api_key=ss.get("openai_api_key"),
+            model="text-embedding-ada-002",
+        )
+
+        ss.conversation.set_rag_agent(
+            RagAgent(
+                mode="vectorstore",
+                model_name="gpt-3.5-turbo",
+                connection_args=connection_args,
+                use_prompt=True,
+                embedding_func=embedding_func,
+                n_results=3,
+            )
+        )
+
+        if not ss.get("embedder"):
+            ss.embedder = DocumentEmbedder(
                 connection_args=connection_args,
             )
+            ss.embedder.connect()
 
     disabled = ss.online or (not ss.use_rag_agent)
 
@@ -1160,10 +1174,10 @@ def rag_agent_panel():
                 elif uploaded_file.type == "text/plain":
                     doc = reader.document_from_txt(val)
                 try:
-                    ss.rag_agent.save_document(doc)
+                    ss.embedder.save_document(doc)
                     ss.upload_success = True
-                    if not ss.rag_agent.used:
-                        ss.rag_agent.used = True
+                    if not ss.get("embedder_used"):
+                        ss.embedder_used = True
                         ss.first_document_uploaded = True
                 except MilvusException as e:
                     st.error(
@@ -1217,10 +1231,10 @@ def rag_agent_panel():
         )
 
         # only show those if we have a rag_agent
-        if ss.get("rag_agent"):
+        if len(ss.conversation.rag_agents) > 0:
             st.checkbox(
                 "Split by characters (instead of tokens)",
-                ss.rag_agent.split_by_characters,
+                ss.embedder.split_by_characters,
                 on_change=toggle_split_by_characters,
                 disabled=disabled,
                 help=(
@@ -1230,7 +1244,7 @@ def rag_agent_panel():
                 ),
             )
 
-            ss.rag_agent.chunk_size = st.slider(
+            ss.embedder.chunk_size = st.slider(
                 label=(
                     "Chunk size: how large should the embedded text fragments be?"
                 ),
@@ -1247,7 +1261,7 @@ def rag_agent_panel():
                     "recommended to set it before uploading documents."
                 ),
             )
-            ss.rag_agent.chunk_overlap = st.slider(
+            ss.embedder.chunk_overlap = st.slider(
                 label="Overlap: should the chunks overlap, and by how much?",
                 min_value=0,
                 max_value=1000,
@@ -1261,7 +1275,7 @@ def rag_agent_panel():
             #     default=ss.rag_agent.separators,
             #     disabled=disabled,
             # )
-            ss.rag_agent.n_results = st.slider(
+            ss.conversation.rag_agents[0].n_results = st.slider(
                 label=(
                     "Number of results: how many chunks should be used to "
                     "supplement the prompt?"
@@ -1953,18 +1967,14 @@ def main():
                 if ss.conversation_mode in ["data", "both"]:
                     ss.mode = bcl._ask_for_data_input()
                 else:
-                    if ss.get("rag_agent"):
-                        if not ss.rag_agent.used:
-                            st.write("Please embed at least one document.")
-                            ss.mode = "waiting_for_rag_agent"
-                        else:
-                            ss.mode = bcl._start_chat()
-                    else:
+                    if not ss.get("embedder_used"):
                         st.write("Please embed at least one document.")
                         ss.mode = "waiting_for_rag_agent"
+                    else:
+                        ss.mode = bcl._start_chat()
 
             elif ss.mode == "waiting_for_rag_agent":
-                if ss.rag_agent.used:
+                if ss.get("embedder_used"):
                     ss.mode = bcl._start_chat()
 
             elif ss.mode == "getting_data_file_input":
