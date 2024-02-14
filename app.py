@@ -134,8 +134,8 @@ HOW_MESSAGES = [
 import os
 import datetime
 import pandas as pd
-from chatgse._interface import ChatGSE
-from chatgse._interface import community_possible
+from biochatter_light._interface import ChatGSE
+from biochatter_light._interface import community_possible
 from biochatter._stats import get_community_usage_cost
 from biochatter.vectorstore import (
     DocumentEmbedder,
