@@ -1,4 +1,4 @@
-# ChatGSE user interface class
+# biochatter-light user interface class
 # manage the different roles / stages of conversation
 
 import json
@@ -566,10 +566,10 @@ class BioChatterLight:
         self._write_and_history(ss.conversation.user_name, ss.input)
 
         if correction:
-            self._write_and_history("💬🧬 ChatGSE", response)
+            self._write_and_history("💬🧬 BioChatter Light", response)
             self._write_and_history("🕵️ Correcting agent", correction)
 
         else:
-            self._write_and_history("💬🧬 ChatGSE", response)
+            self._write_and_history("💬🧬 BioChatter Light", response)
 
         return response, token_usage

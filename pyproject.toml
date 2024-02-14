@@ -1,5 +1,5 @@
 [tool.poetry]
-name = "chatgse"
+name = "biochatter-light"
 version = "0.3.2"
 description = "Gene set interpretation assisted by Large Language Models and more"
 authors = ["Sebastian Lobentanzer <sebastian.lobentanzer@gmail.com>"]

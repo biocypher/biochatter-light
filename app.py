@@ -1,5 +1,5 @@
 # BioChatter Light app.py: streamlit chat app for contextualisation of biomedical results
-app_name = "chatgse"
+app_name = "biochatter-light"
 __version__ = "0.3.2"
 
 # BOILERPLATE
@@ -636,7 +636,7 @@ def app_info():
         
         BioChatter Light is developed by [Sebastian
         Lobentanzer](https://slobentanzer.github.io); you can find the source
-        code on [GitHub](https://github.com/biocypher/chatgse).
+        code on [GitHub](https://github.com/biocypher/biochatter-light).
 
         BioChatter Light is a tool to rapidly contextualise common end results of
         biomedical analyses. It works by setting up a topic-constrained
@@ -692,7 +692,7 @@ def download_chat_history(bcl: BioChatterLight):
     Button to download the chat history as a JSON file.
 
     Args:
-        bcl: current ChatGSE instance
+        bcl: current biochatter-light instance
     """
     bcl.update_json_history()
     st.download_button(
@@ -710,7 +710,7 @@ def download_complete_history(bcl: BioChatterLight):
     system prompts) as a JSON file.
 
     Args:
-        bcl: current ChatGSE instance
+        bcl: current biochatter-light instance
     """
     d = bcl.complete_history()
 
@@ -973,7 +973,7 @@ def prompt_save_button():
         "Save Full Prompt Set (JSON)",
         data=save_prompt_set(),
         use_container_width=True,
-        file_name=f"ChatGSE_prompt_set-{date}.json",
+        file_name=f"biochatter-light_prompt_set-{date}.json",
     )
 
 
@@ -1093,7 +1093,7 @@ def rag_agent_panel():
     if ss.use_rag_agent:
         if not ss.get("rag_agent"):
             if os.getenv("DOCKER_COMPOSE"):
-                # running in same docker compose as chatgse
+                # running in same docker compose as biochatter-light
                 connection_args = {"host": "milvus-standalone", "port": "19530"}
             else:
                 # running on host machine from the milvus docker compose
@@ -1103,8 +1103,8 @@ def rag_agent_panel():
                 use_prompt=False,
                 online=ss.get("online"),
                 api_key=ss.get("openai_api_key"),
-                embedding_collection_name="chatgse_embeddings",
-                metadata_collection_name="chatgse_metadata",
+                embedding_collection_name="biochatter-light_embeddings",
+                metadata_collection_name="biochatter-light_metadata",
                 connection_args=connection_args,
             )
 
@@ -1828,7 +1828,7 @@ def mode_select():
             "Retrieval Augmented Generation is currently not available in the "
             "online version. Please use the Docker Compose setup in our "
             "[GitHub repository](https://github.com/biocypher/biochatter-light#-retrieval-augmented-generation--in-context-learning) "
-            "to run ChatGSE locally and use this feature."
+            "to run BioChatter Light locally and use this feature."
         )
 
 
@@ -1911,7 +1911,7 @@ def main():
     with chat_tab:
         # WELCOME MESSAGE AND CHAT HISTORY
         st.markdown(
-            "Welcome to ``ChatGSE``! "
+            "Welcome to ``BioChatter Light``! "
             ":violet[If you are on a small screen, you may need to "
             "shift-scroll to the right to see all tabs. -->]"
         )
