@@ -1,6 +1,6 @@
 # biochatter-light app.py: streamlit frontend for biochatter
 app_name = "biochatter-light"
-__version__ = "0.3.2"
+__version__ = "0.4.0"
 
 # BOILERPLATE
 import json

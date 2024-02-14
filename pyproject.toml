@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "biochatter-light"
-version = "0.3.2"
+version = "0.4.0"
 description = "A lightweight frontend in pure Python for biochatter"
 authors = ["Sebastian Lobentanzer <sebastian.lobentanzer@gmail.com>"]
 license = "MIT"
