@@ -5,7 +5,6 @@
 .venv/
 .vscode/
 chats/
-input/
 test/
 volumes/
 azure.env
