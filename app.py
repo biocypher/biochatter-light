@@ -1,6 +1,6 @@
 # BioChatter Light app.py: streamlit chat app for contextualisation of biomedical results
 app_name = "biochatter-light"
-__version__ = "0.3.2"
+__version__ = "0.3.3"
 
 # BOILERPLATE
 import json
