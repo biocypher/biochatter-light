@@ -561,7 +561,7 @@ def use_community_key():
     Use the community key for the conversation.
     """
     ss.openai_api_key = os.environ["OPENAI_COMMUNITY_KEY"]
-    ss.cg._history_only("📎 Assistant", "Using community key!")
+    ss.bcl._history_only("📎 Assistant", "Using community key!")
     ss.user = "community"
     ss.mode = "using_community_key"
     ss.show_community_select = False
@@ -573,7 +573,7 @@ def demo_mode():
     Enter the demo mode for the conversation.
     """
     ss.openai_api_key = os.environ["OPENAI_COMMUNITY_KEY"]
-    ss.cg._history_only("📎 Assistant", "Using community key!")
+    ss.bcl._history_only("📎 Assistant", "Using community key!")
     ss.user = "community"
     ss.show_community_select = False
     ss.input = "Demo User"
@@ -687,14 +687,14 @@ def app_info():
     )
 
 
-def download_chat_history(cg: BioChatterLight):
+def download_chat_history(bcl: BioChatterLight):
     """
     Button to download the chat history as a JSON file.
 
     Args:
-        cg: current ChatGSE instance
+        bcl: current ChatGSE instance
     """
-    cg.update_json_history()
+    bcl.update_json_history()
     st.download_button(
         label="Download Chat History",
         data=ss.json_history,
@@ -704,15 +704,15 @@ def download_chat_history(cg: BioChatterLight):
     )
 
 
-def download_complete_history(cg: BioChatterLight):
+def download_complete_history(bcl: BioChatterLight):
     """
     Button to download the complete message history (i.e., including the
     system prompts) as a JSON file.
 
     Args:
-        cg: current ChatGSE instance
+        bcl: current ChatGSE instance
     """
-    d = cg.complete_history()
+    d = bcl.complete_history()
 
     if d == "{}":
         st.download_button(
@@ -1834,17 +1834,17 @@ def mode_select():
 
 def set_data_mode():
     ss.conversation_mode = "data"
-    ss.cg._ask_for_context("data")
+    ss.bcl._ask_for_context("data")
 
 
 def set_papers_mode():
     ss.conversation_mode = "papers"
-    ss.cg._ask_for_context("papers")
+    ss.bcl._ask_for_context("papers")
 
 
 def set_both_mode():
     ss.conversation_mode = "both"
-    ss.cg._ask_for_context("data and papers")
+    ss.bcl._ask_for_context("data and papers")
 
 
 def waiting_for_rag_agent():
@@ -1861,15 +1861,15 @@ def main():
         ss["primary_model"] = "gpt-3.5-turbo"
 
     # INTERFACE
-    if not ss.get("cg"):
-        ss.cg = BioChatterLight()
-    cg = ss.cg
+    if not ss.get("bcl"):
+        ss.bcl = BioChatterLight()
+    bcl = ss.bcl
 
     # CHANGE MODEL
     if not ss.get("active_model") == ss.primary_model:
-        cg.set_model(ss.primary_model)
+        bcl.set_model(ss.primary_model)
         ss.active_model = ss.primary_model
-        ss.mode = cg._check_for_api_key(write=False, input=ss.input)
+        ss.mode = bcl._check_for_api_key(write=False, input=ss.input)
         # TODO: warn user that we are resetting?
 
     # TOKEN USAGE
@@ -1920,25 +1920,25 @@ def main():
             show_about_section()
 
         if ss.show_setup:
-            cg._display_setup()
+            bcl._display_setup()
 
-        cg._display_history()
+        bcl._display_history()
 
         # CHAT BOT LOGIC
         if ss.input or ss.mode == "waiting_for_rag_agent":
             if ss.mode == "getting_key":
-                ss.mode = cg._get_api_key(ss.input)
+                ss.mode = bcl._get_api_key(ss.input)
                 ss.show_intro = False
                 refresh()
 
             elif ss.mode == "using_community_key":
                 ss.input = ""  # ugly
-                ss.mode = cg._check_for_api_key()
+                ss.mode = bcl._check_for_api_key()
                 ss.show_intro = False
                 refresh()
 
             elif ss.mode == "getting_name":
-                ss.mode = cg._get_user_name()
+                ss.mode = bcl._get_user_name()
                 ss.show_intro = False
 
             elif ss.mode == "getting_context":
@@ -1949,60 +1949,60 @@ def main():
                 # the app before entering the name (such as one of the panels at
                 # the top), it works fine.
 
-                cg._get_context()
+                bcl._get_context()
                 if ss.conversation_mode in ["data", "both"]:
-                    ss.mode = cg._ask_for_data_input()
+                    ss.mode = bcl._ask_for_data_input()
                 else:
                     if ss.get("rag_agent"):
                         if not ss.rag_agent.used:
                             st.write("Please embed at least one document.")
                             ss.mode = "waiting_for_rag_agent"
                         else:
-                            ss.mode = cg._start_chat()
+                            ss.mode = bcl._start_chat()
                     else:
                         st.write("Please embed at least one document.")
                         ss.mode = "waiting_for_rag_agent"
 
             elif ss.mode == "waiting_for_rag_agent":
                 if ss.rag_agent.used:
-                    ss.mode = cg._start_chat()
+                    ss.mode = bcl._start_chat()
 
             elif ss.mode == "getting_data_file_input":
-                ss.mode = cg._get_data_input()
+                ss.mode = bcl._get_data_input()
 
             elif ss.mode == "getting_data_file_description":
-                ss.mode = cg._get_data_file_description()
+                ss.mode = bcl._get_data_file_description()
 
             elif ss.mode == "asking_for_manual_data_input":
-                ss.mode = cg._ask_for_manual_data_input()
+                ss.mode = bcl._ask_for_manual_data_input()
 
             elif ss.mode == "getting_manual_data_input":
-                ss.mode = cg._get_data_input_manual()
+                ss.mode = bcl._get_data_input_manual()
 
             elif ss.mode == "chat":
                 with st.spinner("Thinking ..."):
-                    ss.response, ss.token_usage = cg._get_response()
+                    ss.response, ss.token_usage = bcl._get_response()
 
             # DEMO LOGIC
             elif ss.mode == "demo_key":
                 ss.input = ""  # ugly
-                cg._check_for_api_key()
+                bcl._check_for_api_key()
                 ss.show_intro = False
                 refresh()
 
             elif ss.mode == "demo_start":
-                cg._get_user_name()
+                bcl._get_user_name()
 
             elif ss.mode == "demo_context":
-                cg._get_context()
-                cg._ask_for_data_input()
+                bcl._get_context()
+                bcl._ask_for_data_input()
 
             elif ss.mode == "demo_tool":
                 st.write("(Here, we simulate the upload of a data file.)")
-                cg._get_data_input()
+                bcl._get_data_input()
 
             elif ss.mode == "demo_manual":
-                cg._get_data_input_manual()
+                bcl._get_data_input_manual()
                 st.write(
                     "(The next step will involve sending a basic query to the "
                     "model. This may take a few seconds.)"
@@ -2010,8 +2010,8 @@ def main():
 
             elif ss.mode == "demo_chat":
                 with st.spinner("Thinking ..."):
-                    ss.response, ss.token_usage = cg._get_response()
-                cg._write_and_history(
+                    ss.response, ss.token_usage = bcl._get_response()
+                bcl._write_and_history(
                     "📎 Assistant",
                     "🎉 This concludes the demonstration. You can chat with the "
                     "model now, or start your own inquiry! Please always keep "
@@ -2048,9 +2048,9 @@ def main():
             display_token_usage()
             d1, d2 = st.columns(2)
             with d1:
-                download_chat_history(cg)
+                download_chat_history(bcl)
             with d2:
-                download_complete_history(cg)
+                download_complete_history(bcl)
             model_select()
 
         # CHAT BOX
