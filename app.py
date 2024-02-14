@@ -495,6 +495,13 @@ def model_select():
             st.markdown("Please reload the app to change the model.")
             return
 
+        if ss.user == "community":
+            st.warning(
+                "You are currently using the community key. Please reload the "
+                "app to change the model."
+            )
+            return
+
         # concatenate OPENAI_MODELS and HUGGINGFACE_MODELS
         models = OPENAI_MODELS + HUGGINGFACE_MODELS + XINFERENCE_MODELS
         st.selectbox(
