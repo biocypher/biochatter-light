@@ -640,12 +640,15 @@ def app_info():
         
         BioChatter Light is developed by [Sebastian
         Lobentanzer](https://slobentanzer.github.io); you can find the source
-        code on [GitHub](https://github.com/biocypher/biochatter-light).
+        code on [GitHub](https://github.com/biocypher/biochatter-light). Read a
+        more in-depth discussion of the approach in the
+        [preprint](https://arxiv.org/abs/2305.06488).
 
-        BioChatter Light is a tool to rapidly contextualise common end results of
-        biomedical analyses. It works by setting up a topic-constrained
-        conversation with a pre-trained language model. The main benefits of
-        this approach are:
+        BioChatter Light is a lightweight frontend for the BioChatter library.
+        BioChatter works by setting up a topic-constrained conversation with a
+        pre-trained language model, and includes additional functionalities to
+        include prior knowledge from knowledge graphs or literature databases.
+        The main benefits of this approach are:
 
         - Integration with the low-dimensional outputs of popular bioinformatics
         tools (e.g. gsea, progeny, decoupler)
