@@ -12,12 +12,12 @@ https://github.com/biocypher/biochatter. Check there if you have your own UI
 and are looking for a way to connect it to the world of LLMs! If you are
 looking for a full-featured client-server web application, check out
 https://github.com/biocypher/biochatter-server and
-https://github.com/biocypher/chatgse-next.
+https://github.com/biocypher/biochatter-next.
 
 ## 🤝 Get involved!
 To stay up to date with the project, please star the repository and watch the
 zulip community chat (free to join) at https://biocypher.zulipchat.com.
-Related discussion happens in the `#biochatter and chatgse` stream.
+Related discussion happens in the `#biochatter` stream.
 
 We are very happy about contributions from the community, large and small!
 If you would like to contribute to the platform's development, please refer to
@@ -34,50 +34,50 @@ platform a great open-source tool, you're good. 🙂
 ## 🛠 Prompt engineering discussions
 You can discuss your favourite prompt setups and share the corresponding JSON
 files in the discussion
-[here](https://github.com/biocypher/ChatGSE/discussions/11)! You can go
-[here](https://github.com/biocypher/ChatGSE/discussions/20) to find inspiration
+[here](https://github.com/biocypher/biochatter-light/discussions/11)! You can go
+[here](https://github.com/biocypher/biochatter-light/discussions/20) to find inspiration
 for things the model can do, such as creating formatted markdown output to
 create mindmaps or other visualisations.
 
-## 📑 Retrieval Augmented Generation / In-context learning
+## 📑 Retrieval-Augmented Generation / In-context learning
 
-You can use the Retrieval Augmented Generation (RAG) feature to upload documents
+You can use the Retrieval-Augmented Generation (RAG) feature to upload documents
 and use similarity search to inject context into your prompts. The RAG feature
-is currently only available on local builds of ChatGSE (see below). It requires
+is currently only available on local builds of BioChatter Light (see below). It requires
 a connection to a vector database (currently only [Milvus](https://milvus.io/)
 is supported). We follow [these
 instructions](https://milvus.io/docs/install_standalone-docker.md) to mount a
 Docker instance on your machine (using the standard ports). We provide a Docker
-compose setup to mount the Milvus containers and the ChatGSE container together:
+compose setup to mount the Milvus containers and the BioChatter Light container together:
 
 ```
-git clone https://github.com/biocypher/ChatGSE.git
-cd ChatGSE
+git clone https://github.com/biocypher/biochatter-light.git
+cd biochatter-light
 docker compose up -d
 ```
 
-This command creates three containers for Milvus and one for ChatGSE. After a
-short startup time, you can access the ChatGSE app at http://localhost:8501.
+This command creates three containers for Milvus and one for BioChatter Light. After a
+short startup time, you can access the BioChatter Light app at http://localhost:8501.
 
 ## Local deployment
 
 ### Docker
 
-The simplest way to deply ChatGSE on your machine is using the Docker image we
+The simplest way to deply BioChatter Light on your machine is using the Docker image we
 provide on Docker Hub. You can run it using the following command:
 
 ```
-docker run -p 8501:8501 biocypher/chatgse
+docker run -p 8501:8501 biocypher/biochatter-light
 ```
 
 You can also build the image yourself from this repository (without the
 additional containers for the vector database):
 
 ```
-git clone https://github.com/biocypher/ChatGSE.git
-cd ChatGSE
-docker build -t chatgse .
-docker run -p 8501:8501 chatgse
+git clone https://github.com/biocypher/biochatter-light.git
+cd biochatter-light
+docker build -t biochatter_light .
+docker run -p 8501:8501 biochatter_light
 ```
 
 Note that the community key feature is not available locally, so you need to
@@ -97,7 +97,7 @@ OPENAI_API_KEY=sk-...
 you can run the following command: 
 
 ```
-docker run --env-file local.env -p 8501:8501 chatgse
+docker run --env-file local.env -p 8501:8501 biochatter_light
 ```
 
 ### Poetry
@@ -105,8 +105,8 @@ Local installation can be performed using Poetry (or other package managers
 that can work with a `pyproject.toml` file):
 
 ```
-git clone https://github.com/biocypher/ChatGSE.git
-cd ChatGSE
+git clone https://github.com/biocypher/biochatter-light.git
+cd biochatter-light
 poetry install
 ```
 
@@ -150,7 +150,7 @@ configuration similar to this one to your launch.json:
 
 ```
 
-Note that if you want to use the Retrieval Augmented Generation feature or other
+Note that if you want to use the Retrieval-Augmented Generation feature or other
 connected services, you will still need to start these separately. For the
 vector DB component of the `docker-compose.yml` file, you can do it like so:
 

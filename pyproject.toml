@@ -1,17 +1,17 @@
 [tool.poetry]
-name = "chatgse"
+name = "biochatter-light"
 version = "0.3.2"
-description = "Gene set interpretation assisted by Large Language Models and more"
+description = "A lightweight frontend in pure Python for biochatter"
 authors = ["Sebastian Lobentanzer <sebastian.lobentanzer@gmail.com>"]
 license = "MIT"
 readme = "README.md"
 
 [tool.poetry.dependencies]
 python = ">=3.10,<3.12"
-streamlit = "^1.21.0"
+streamlit = "^1.31.1"
 pandas = "^1.1.5"
 loguru = "^0.7.0"
-biochatter = {version = "^0.3.8", extras = ["podcast", "xinference"]}
+biochatter = {version = "^0.4.7", extras = ["podcast", "xinference"]}
 tabulate = "^0.9.0"
 neo4j-utils = { version = "^0.0.7", optional = true }
 

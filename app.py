@@ -1,5 +1,5 @@
-# ChatGSE app.py: streamlit chat app for contextualisation of biomedical results
-app_name = "chatgse"
+# biochatter-light app.py: streamlit frontend for biochatter
+app_name = "biochatter-light"
 __version__ = "0.3.2"
 
 # BOILERPLATE
@@ -13,7 +13,7 @@ from streamlit.runtime.uploaded_file_manager import (
 import yaml
 
 st.set_page_config(
-    page_title="ChatGSE",
+    page_title="BioChatter Light",
     page_icon="💬",
     layout="wide",
     initial_sidebar_state="expanded",
@@ -28,7 +28,7 @@ def local_css(file_name):
         st.markdown(f"<style>{f.read()}</style>", unsafe_allow_html=True)
 
 
-local_css("style.css")
+# local_css("style.css")
 
 ss = st.session_state
 
@@ -41,8 +41,8 @@ DEV_FUNCTIONALITY = (
 
 OFFLINE_FUNCTIONALITY = (
     "functionality is currently under development and not yet available in the "
-    "online version of ChatGSE. Please check back later or check the [GitHub "
-    "Repository](https://github.com/biocypher/ChatGSE) for running the app "
+    "online version of BioChatter Light. Please check back later or check the [GitHub "
+    "Repository](https://github.com/biocypher/biochatter-light) for running the app "
     "locally."
 )
 
@@ -134,8 +134,8 @@ HOW_MESSAGES = [
 import os
 import datetime
 import pandas as pd
-from chatgse._interface import ChatGSE
-from chatgse._interface import community_possible
+from biochatter_light._interface import BioChatterLight
+from biochatter_light._interface import community_possible
 from biochatter._stats import get_community_usage_cost
 from biochatter.vectorstore import (
     DocumentEmbedder,
@@ -291,7 +291,7 @@ def chat_box():
             "You have selected 'data and papers' as the conversation mode, but "
             "have not yet embedded any documents. Prompt injection will only "
             "be performed if you upload at least one document (in the "
-            "'Retrieval Augmented Generation' tab)."
+            "'Retrieval-Augmented Generation' tab)."
         )
 
 
@@ -407,7 +407,7 @@ def app_header():
     """
     st.markdown(
         f"""
-        # 💬🧬 :red[ChatGSE] `{__version__}`
+        # 💬🧬 :red[BioChatter Light] `{__version__}`
         """
     )
     if ss.get("on_streamlit"):
@@ -561,7 +561,7 @@ def use_community_key():
     Use the community key for the conversation.
     """
     ss.openai_api_key = os.environ["OPENAI_COMMUNITY_KEY"]
-    ss.cg._history_only("📎 Assistant", "Using community key!")
+    ss.bcl._history_only("📎 Assistant", "Using community key!")
     ss.user = "community"
     ss.mode = "using_community_key"
     ss.show_community_select = False
@@ -573,7 +573,7 @@ def demo_mode():
     Enter the demo mode for the conversation.
     """
     ss.openai_api_key = os.environ["OPENAI_COMMUNITY_KEY"]
-    ss.cg._history_only("📎 Assistant", "Using community key!")
+    ss.bcl._history_only("📎 Assistant", "Using community key!")
     ss.user = "community"
     ss.show_community_select = False
     ss.input = "Demo User"
@@ -634,11 +634,11 @@ def app_info():
     st.markdown(
         """
         
-        ChatGSE is developed by [Sebastian
+        BioChatter Light is developed by [Sebastian
         Lobentanzer](https://slobentanzer.github.io); you can find the source
-        code on [GitHub](https://github.com/biocypher/chatgse).
+        code on [GitHub](https://github.com/biocypher/biochatter-light).
 
-        ChatGSE is a tool to rapidly contextualise common end results of
+        BioChatter Light is a tool to rapidly contextualise common end results of
         biomedical analyses. It works by setting up a topic-constrained
         conversation with a pre-trained language model. The main benefits of
         this approach are:
@@ -656,12 +656,12 @@ def app_info():
         OpenAI)
         
         The agents you will be talking to are an `📎 Assistant` (a
-        pre-programmed conversational algorithm), a `💬🧬 ChatGSE` model, which
+        pre-programmed conversational algorithm), a `💬🧬 BioChatter Light` model, which
         is a pre-trained language model with instructions aimed at specifically
         improving the quality of biomedical answers, and a `️️️️️️️️️️️🕵️ Correcting agent`,
         which is a separate pre-trained language model with the task of catching
         and correcting false information conveyed by the primary model. You will
-        only see the `🕵️ Correcting agent` if it detects that the `💬🧬 ChatGSE`
+        only see the `🕵️ Correcting agent` if it detects that the `💬🧬 BioChatter Light`
         model has made a mistake. In general, even though we try our best to
         avoid mistakes using the correcting agent and internal safeguards, the
         general limitations of the used Large Language Model apply: their
@@ -680,21 +680,21 @@ def app_info():
         function as JSON). Additionally, OpenAI provide a `gpt-3.5-turbo-16k`
         model with increased token limit of 16000 per conversation. This model
         is slightly more expensive, but can be useful for longer conversations,
-        particularly when including the Retrieval Augmented Generation / prompt
+        particularly when including the Retrieval-Augmented Generation / prompt
         injection feature.
 
         """
     )
 
 
-def download_chat_history(cg: ChatGSE):
+def download_chat_history(bcl: BioChatterLight):
     """
     Button to download the chat history as a JSON file.
 
     Args:
-        cg: current ChatGSE instance
+        cg: current BioChatter Light instance
     """
-    cg.update_json_history()
+    bcl.update_json_history()
     st.download_button(
         label="Download Chat History",
         data=ss.json_history,
@@ -704,15 +704,15 @@ def download_chat_history(cg: ChatGSE):
     )
 
 
-def download_complete_history(cg: ChatGSE):
+def download_complete_history(bcl: BioChatterLight):
     """
     Button to download the complete message history (i.e., including the
     system prompts) as a JSON file.
 
     Args:
-        cg: current ChatGSE instance
+        cg: current BioChatter Light instance
     """
-    d = cg.complete_history()
+    d = bcl.complete_history()
 
     if d == "{}":
         st.download_button(
@@ -817,15 +817,15 @@ def show_correcting_agent_prompts():
 
 def show_rag_agent_prompts():
     """
-    Prompt engineering panel: Retrieval Augmented Generation.
+    Prompt engineering panel: Retrieval-Augmented Generation.
     """
     st.markdown(
         "`📎 Assistant`: Here you can edit the prompts used to set up the "
-        "Retrieval Augmented Generation task. Text passages from any uploaded "
+        "Retrieval-Augmented Generation task. Text passages from any uploaded "
         "documents will be passed on to the primary model using these prompts. "
         "The placeholder `{statements}` will be replaced by the text passages. "
         "Upload documents and edit vector database settings in the "
-        "`Retrieval Augmented Generation` tab."
+        "`Retrieval-Augmented Generation` tab."
     )
 
     for num, msg in enumerate(ss.prompts["rag_agent_prompts"]):
@@ -973,7 +973,7 @@ def prompt_save_button():
         "Save Full Prompt Set (JSON)",
         data=save_prompt_set(),
         use_container_width=True,
-        file_name=f"ChatGSE_prompt_set-{date}.json",
+        file_name=f"biochatter_light_prompt_set-{date}.json",
     )
 
 
@@ -1061,7 +1061,7 @@ def show_about_section():
         "limited functionality. For more information on our vision of the "
         "platform, please see [our preprint](https://arxiv.org/abs/2305.06488)! "
         "If you'd like to contribute to the project, please find us on "
-        "[GitHub](https://github.com/biocypher/ChatGSE) or "
+        "[GitHub](https://github.com/biocypher/biochatter-light) or "
         "[Zulip](https://biocypher.zulipchat.com). We'd love to hear from you!"
     )
 
@@ -1079,7 +1079,7 @@ def shuffle_messages(l: list, i: int):
 def rag_agent_panel():
     """
 
-    Upload files for Retrieval Augmented Generation, one file at a time. Upon
+    Upload files for Retrieval-Augmented Generation, one file at a time. Upon
     upload, document is split and embedded into a connected vector DB using the
     `vectorstore.py` module of biochatter. The top k results of similarity
     search of the user's query will be injected into the prompt to the primary
@@ -1093,7 +1093,7 @@ def rag_agent_panel():
     if ss.use_rag_agent:
         if not ss.get("rag_agent"):
             if os.getenv("DOCKER_COMPOSE"):
-                # running in same docker compose as chatgse
+                # running in same docker compose as BioChatter Light
                 connection_args = {"host": "milvus-standalone", "port": "19530"}
             else:
                 # running on host machine from the milvus docker compose
@@ -1103,8 +1103,8 @@ def rag_agent_panel():
                 use_prompt=False,
                 online=ss.get("online"),
                 api_key=ss.get("openai_api_key"),
-                embedding_collection_name="chatgse_embeddings",
-                metadata_collection_name="chatgse_metadata",
+                embedding_collection_name="biochatter_light_embeddings",
+                metadata_collection_name="biochatter_light_metadata",
                 connection_args=connection_args,
             )
 
@@ -1128,7 +1128,7 @@ def rag_agent_panel():
                 "This feature is currently not available in online mode, as it "
                 "requires connection to a vector database. Please run the app "
                 "locally to use this feature. See the [README]("
-                "https://github.com/biocypher/ChatGSE#-retrieval-augmented-generation--in-context-learning)"
+                "https://github.com/biocypher/biochatter-light#-retrieval-augmented-generation--in-context-learning)"
                 " for more info."
             )
         st.info(
@@ -1138,7 +1138,7 @@ def rag_agent_panel():
         )
         with st.form("Upload Document", clear_on_submit=True):
             uploaded_file = st.file_uploader(
-                "Upload a document for Retrieval Augmented Generation",
+                "Upload a document for Retrieval-Augmented Generation",
                 type=["txt", "pdf"],
                 label_visibility="collapsed",
                 disabled=disabled,
@@ -1170,7 +1170,7 @@ def rag_agent_panel():
                         "An error occurred while saving the embeddings. Please "
                         "check if Milvus is running. For information on the "
                         "Docker Compose setup, see the [README]("
-                        "https://github.com/biocypher/ChatGSE#-retrieval-augmented-generation--in-context-learning)."
+                        "https://github.com/biocypher/biochatter-light#-retrieval-augmented-generation--in-context-learning)."
                     )
                     st.error(e)
                     return
@@ -1210,7 +1210,7 @@ def rag_agent_panel():
 
         # checkbox for whether to use the rag_agent prompt
         st.checkbox(
-            "Use Retrieval Augmented Generation to inject search results into the prompt",
+            "Use Retrieval-Augmented Generation to inject search results into the prompt",
             value=ss.use_rag_agent,
             on_change=toggle_rag_agent_prompt,
             disabled=ss.online,
@@ -1825,30 +1825,30 @@ def mode_select():
 
     if ss.online:
         st.info(
-            "Retrieval Augmented Generation is currently not available in the "
+            "Retrieval-Augmented Generation is currently not available in the "
             "online version. Please use the Docker Compose setup in our "
-            "[GitHub repository](https://github.com/biocypher/ChatGSE#-retrieval-augmented-generation--in-context-learning) "
-            "to run ChatGSE locally and use this feature."
+            "[GitHub repository](https://github.com/biocypher/biochatter-light#-retrieval-augmented-generation--in-context-learning) "
+            "to run BioChatter Light locally and use this feature."
         )
 
 
 def set_data_mode():
     ss.conversation_mode = "data"
-    ss.cg._ask_for_context("data")
+    ss.bcl._ask_for_context("data")
 
 
 def set_papers_mode():
     ss.conversation_mode = "papers"
-    ss.cg._ask_for_context("papers")
+    ss.bcl._ask_for_context("papers")
 
 
 def set_both_mode():
     ss.conversation_mode = "both"
-    ss.cg._ask_for_context("data and papers")
+    ss.bcl._ask_for_context("data and papers")
 
 
 def waiting_for_rag_agent():
-    st.info("Use the 'Retrieval Augmented Generation' tab to embed documents.")
+    st.info("Use the 'Retrieval-Augmented Generation' tab to embed documents.")
 
 
 def main():
@@ -1862,8 +1862,8 @@ def main():
 
     # INTERFACE
     if not ss.get("cg"):
-        ss.cg = ChatGSE()
-    cg = ss.cg
+        ss.bcl = BioChatterLight()
+    cg = ss.bcl
 
     # CHANGE MODEL
     if not ss.get("active_model") == ss.primary_model:
@@ -1899,7 +1899,7 @@ def main():
         [
             "Chat",
             "Prompt Engineering",
-            "Retrieval Augmented Generation",
+            "Retrieval-Augmented Generation",
             "Correcting Agent",
             "Cell Type Annotation",
             "Experimental Design",
@@ -1911,7 +1911,7 @@ def main():
     with chat_tab:
         # WELCOME MESSAGE AND CHAT HISTORY
         st.markdown(
-            "Welcome to ``ChatGSE``! "
+            "Welcome to ``BioChatter Light``! "
             ":violet[If you are on a small screen, you may need to "
             "shift-scroll to the right to see all tabs. -->]"
         )
@@ -2142,7 +2142,7 @@ def main():
                     "Primary Model",
                     "Correcting Agent",
                     "Tools",
-                    "Retrieval Augmented Generation",
+                    "Retrieval-Augmented Generation",
                 ),
             )
 
@@ -2155,7 +2155,7 @@ def main():
             elif ss.prompts_box == "Tools":
                 show_tool_prompts()
 
-            elif ss.prompts_box == "Retrieval Augmented Generation":
+            elif ss.prompts_box == "Retrieval-Augmented Generation":
                 show_rag_agent_prompts()
 
     with correct_tab:
@@ -2183,7 +2183,7 @@ def main():
             "their training set, and thus excludes very current research "
             "as well as research articles that are not open access. To "
             "fill in the gaps of the model's knowledge, we include a "
-            "Retrieval Augmented Generation approach that stores knowledge from "
+            "Retrieval-Augmented Generation approach that stores knowledge from "
             "user-provided documents in a vector database, which can be "
             "used to supplement the model prompt by retrieving the most "
             "relevant contents of the provided documents. This process "
@@ -2199,7 +2199,7 @@ def main():
         else:
             st.info(
                 "Please enter your OpenAI API key to use the "
-                "Retrieval Augmented Generation functionality."
+                "Retrieval-Augmented Generation functionality."
             )
 
     with genetics_tab:

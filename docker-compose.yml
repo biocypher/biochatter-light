@@ -44,9 +44,9 @@ services:
       - "etcd"
       - "minio"
 
-  chatgse:
+  biochatter_light:
     build: .
-    container_name: chatgse
+    container_name: biochatter_light
     image: python:3.10-slim
     command:
       - /bin/bash
