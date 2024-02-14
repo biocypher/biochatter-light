@@ -39,9 +39,9 @@ files in the discussion
 for things the model can do, such as creating formatted markdown output to
 create mindmaps or other visualisations.
 
-## 📑 Retrieval Augmented Generation / In-context learning
+## 📑 Retrieval-Augmented Generation / In-context learning
 
-You can use the Retrieval Augmented Generation (RAG) feature to upload documents
+You can use the Retrieval-Augmented Generation (RAG) feature to upload documents
 and use similarity search to inject context into your prompts. The RAG feature
 is currently only available on local builds of BioChatter Light (see below). It requires
 a connection to a vector database (currently only [Milvus](https://milvus.io/)
@@ -150,7 +150,7 @@ configuration similar to this one to your launch.json:
 
 ```
 
-Note that if you want to use the Retrieval Augmented Generation feature or other
+Note that if you want to use the Retrieval-Augmented Generation feature or other
 connected services, you will still need to start these separately. For the
 vector DB component of the `docker-compose.yml` file, you can do it like so:
 

@@ -293,7 +293,7 @@ def chat_box():
             "You have selected 'data and papers' as the conversation mode, but "
             "have not yet embedded any documents. Prompt injection will only "
             "be performed if you upload at least one document (in the "
-            "'Retrieval Augmented Generation' tab)."
+            "'Retrieval-Augmented Generation' tab)."
         )
 
 
@@ -682,7 +682,7 @@ def app_info():
         function as JSON). Additionally, OpenAI provide a `gpt-3.5-turbo-16k`
         model with increased token limit of 16000 per conversation. This model
         is slightly more expensive, but can be useful for longer conversations,
-        particularly when including the Retrieval Augmented Generation / prompt
+        particularly when including the Retrieval-Augmented Generation / prompt
         injection feature.
 
         """
@@ -819,15 +819,15 @@ def show_correcting_agent_prompts():
 
 def show_rag_agent_prompts():
     """
-    Prompt engineering panel: Retrieval Augmented Generation.
+    Prompt engineering panel: Retrieval-Augmented Generation.
     """
     st.markdown(
         "`📎 Assistant`: Here you can edit the prompts used to set up the "
-        "Retrieval Augmented Generation task. Text passages from any uploaded "
+        "Retrieval-Augmented Generation task. Text passages from any uploaded "
         "documents will be passed on to the primary model using these prompts. "
         "The placeholder `{statements}` will be replaced by the text passages. "
         "Upload documents and edit vector database settings in the "
-        "`Retrieval Augmented Generation` tab."
+        "`Retrieval-Augmented Generation` tab."
     )
 
     for num, msg in enumerate(ss.prompts["rag_agent_prompts"]):
@@ -1081,7 +1081,7 @@ def shuffle_messages(l: list, i: int):
 def rag_agent_panel():
     """
 
-    Upload files for Retrieval Augmented Generation, one file at a time. Upon
+    Upload files for Retrieval-Augmented Generation, one file at a time. Upon
     upload, document is split and embedded into a connected vector DB using the
     `vectorstore.py` module of biochatter. The top k results of similarity
     search of the user's query will be injected into the prompt to the primary
@@ -1152,7 +1152,7 @@ def rag_agent_panel():
         )
         with st.form("Upload Document", clear_on_submit=True):
             uploaded_file = st.file_uploader(
-                "Upload a document for Retrieval Augmented Generation",
+                "Upload a document for Retrieval-Augmented Generation",
                 type=["txt", "pdf"],
                 label_visibility="collapsed",
                 disabled=disabled,
@@ -1224,7 +1224,7 @@ def rag_agent_panel():
 
         # checkbox for whether to use the rag_agent prompt
         st.checkbox(
-            "Use Retrieval Augmented Generation to inject search results into the prompt",
+            "Use Retrieval-Augmented Generation to inject search results into the prompt",
             value=ss.use_rag_agent,
             on_change=toggle_rag_agent_prompt,
             disabled=ss.online,
@@ -1839,7 +1839,7 @@ def mode_select():
 
     if ss.online:
         st.info(
-            "Retrieval Augmented Generation is currently not available in the "
+            "Retrieval-Augmented Generation is currently not available in the "
             "online version. Please use the Docker Compose setup in our "
             "[GitHub repository](https://github.com/biocypher/biochatter-light#-retrieval-augmented-generation--in-context-learning) "
             "to run BioChatter Light locally and use this feature."
@@ -1862,7 +1862,7 @@ def set_both_mode():
 
 
 def waiting_for_rag_agent():
-    st.info("Use the 'Retrieval Augmented Generation' tab to embed documents.")
+    st.info("Use the 'Retrieval-Augmented Generation' tab to embed documents.")
 
 
 def main():
@@ -1913,7 +1913,7 @@ def main():
         [
             "Chat",
             "Prompt Engineering",
-            "Retrieval Augmented Generation",
+            "Retrieval-Augmented Generation",
             "Correcting Agent",
             "Cell Type Annotation",
             "Experimental Design",
@@ -2152,7 +2152,7 @@ def main():
                     "Primary Model",
                     "Correcting Agent",
                     "Tools",
-                    "Retrieval Augmented Generation",
+                    "Retrieval-Augmented Generation",
                 ),
             )
 
@@ -2165,7 +2165,7 @@ def main():
             elif ss.prompts_box == "Tools":
                 show_tool_prompts()
 
-            elif ss.prompts_box == "Retrieval Augmented Generation":
+            elif ss.prompts_box == "Retrieval-Augmented Generation":
                 show_rag_agent_prompts()
 
     with correct_tab:
@@ -2193,7 +2193,7 @@ def main():
             "their training set, and thus excludes very current research "
             "as well as research articles that are not open access. To "
             "fill in the gaps of the model's knowledge, we include a "
-            "Retrieval Augmented Generation approach that stores knowledge from "
+            "Retrieval-Augmented Generation approach that stores knowledge from "
             "user-provided documents in a vector database, which can be "
             "used to supplement the model prompt by retrieving the most "
             "relevant contents of the provided documents. This process "
@@ -2209,7 +2209,7 @@ def main():
         else:
             st.info(
                 "Please enter your OpenAI API key to use the "
-                "Retrieval Augmented Generation functionality."
+                "Retrieval-Augmented Generation functionality."
             )
 
     with genetics_tab:
