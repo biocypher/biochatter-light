@@ -1,4 +1,4 @@
-# ChatGSE app.py: streamlit chat app for contextualisation of biomedical results
+# BioChatter Light app.py: streamlit chat app for contextualisation of biomedical results
 app_name = "chatgse"
 __version__ = "0.3.2"
 
@@ -13,7 +13,7 @@ from streamlit.runtime.uploaded_file_manager import (
 import yaml
 
 st.set_page_config(
-    page_title="ChatGSE",
+    page_title="BioChatter Light",
     page_icon="💬",
     layout="wide",
     initial_sidebar_state="expanded",
@@ -41,7 +41,7 @@ DEV_FUNCTIONALITY = (
 
 OFFLINE_FUNCTIONALITY = (
     "functionality is currently under development and not yet available in the "
-    "online version of ChatGSE. Please check back later or check the [GitHub "
+    "online version of BioChatter Light. Please check back later or check the [GitHub "
     "Repository](https://github.com/biocypher/ChatGSE) for running the app "
     "locally."
 )
@@ -407,7 +407,7 @@ def app_header():
     """
     st.markdown(
         f"""
-        # 💬🧬 :red[ChatGSE] `{__version__}`
+        # 💬🧬 :red[BioChatter Light] `{__version__}`
         """
     )
     if ss.get("on_streamlit"):
@@ -634,11 +634,11 @@ def app_info():
     st.markdown(
         """
         
-        ChatGSE is developed by [Sebastian
+        BioChatter Light is developed by [Sebastian
         Lobentanzer](https://slobentanzer.github.io); you can find the source
         code on [GitHub](https://github.com/biocypher/chatgse).
 
-        ChatGSE is a tool to rapidly contextualise common end results of
+        BioChatter Light is a tool to rapidly contextualise common end results of
         biomedical analyses. It works by setting up a topic-constrained
         conversation with a pre-trained language model. The main benefits of
         this approach are:
@@ -656,12 +656,12 @@ def app_info():
         OpenAI)
         
         The agents you will be talking to are an `📎 Assistant` (a
-        pre-programmed conversational algorithm), a `💬🧬 ChatGSE` model, which
+        pre-programmed conversational algorithm), a `💬🧬 BioChatter Light` model, which
         is a pre-trained language model with instructions aimed at specifically
         improving the quality of biomedical answers, and a `️️️️️️️️️️️🕵️ Correcting agent`,
         which is a separate pre-trained language model with the task of catching
         and correcting false information conveyed by the primary model. You will
-        only see the `🕵️ Correcting agent` if it detects that the `💬🧬 ChatGSE`
+        only see the `🕵️ Correcting agent` if it detects that the `💬🧬 BioChatter Light`
         model has made a mistake. In general, even though we try our best to
         avoid mistakes using the correcting agent and internal safeguards, the
         general limitations of the used Large Language Model apply: their
