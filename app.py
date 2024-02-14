@@ -1,4 +1,4 @@
-# BioChatter Light app.py: streamlit chat app for contextualisation of biomedical results
+# BioChatter Light: lightweight pure Python frontend for BioChatter
 app_name = "biochatter-light"
 __version__ = "0.3.3"
 
@@ -9,6 +9,7 @@ import streamlit.components.v1 as components
 from streamlit.runtime.uploaded_file_manager import (
     UploadedFile,
     UploadedFileRec,
+    FileURLsProto,
 )
 import yaml
 
@@ -40,10 +41,9 @@ DEV_FUNCTIONALITY = (
 )
 
 OFFLINE_FUNCTIONALITY = (
-    "functionality is currently under development and not yet available in the "
-    "online version of BioChatter Light. Please check back later or check the [GitHub "
-    "Repository](https://github.com/biocypher/biochatter-light) for running the app "
-    "locally."
+    "functionality is not available in the online version of BioChatter Light. "
+    "Please check the [GitHub Repository](https://github.com/biocypher/biochatter-light) "
+    "for instructions on running the app locally."
 )
 
 PRIMARY_MODEL_PROMPTS = [
@@ -610,13 +610,15 @@ def demo_next():
             data = f.read()
 
         uploaded_file = UploadedFileRec(
-            id=1,
+            file_id=1,
             name="progeny.csv",
             type="text/csv",
             data=data,
         )
 
-        ss.demo_tool_data = [UploadedFile(record=uploaded_file)]
+        ss.demo_tool_data = [
+            UploadedFile(record=uploaded_file, file_urls=FileURLsProto())
+        ]
         ss.mode = "demo_tool"
         ss.input = "done"
 
@@ -1059,11 +1061,10 @@ def show_about_section():
             )
 
     st.info(
-        "This app is still in development; you are seeing a preview with "
-        "limited functionality. For more information on our vision of the "
-        "platform, please see [our preprint](https://arxiv.org/abs/2305.06488)! "
+        "This is the lightweight frontend for BioChatter in pure Python. "
+        "For more information on the platform, please see [our preprint](https://arxiv.org/abs/2305.06488)! "
         "If you'd like to contribute to the project, please find us on "
-        "[GitHub](https://github.com/biocypher/biochatter-light) or "
+        "[GitHub](https://github.com/biocypher) or "
         "[Zulip](https://biocypher.zulipchat.com). We'd love to hear from you!"
     )
 
