@@ -83,6 +83,21 @@ docker run -p 8501:8501 biochatter-light
 Note that the community key feature is not available locally, so you need to
 provide your own API key (either in the app or as an environment variable).
 
+#### Local LLMs using Xorbits Inference
+
+Note that connection to locally deployed models via the Xinference API is not
+supported in the Docker image (because the optional "xinference" dependencies of
+BioChatter are not installed due to their large size). If you want to use this
+feature, you can build the image yourself including these dependencies, by
+setting
+
+```
+biochatter = {version = "0.4.7", extras = ["xinference"]}
+```
+
+in the `pyproject.toml` file. You can then build the image as described above,
+or install and run the app locally using Poetry (see below).
+
 #### Provide your API key
 Instead of manually entering the key, you can provide it to the Docker run
 command as an environment variable. You can designate the variable in your
