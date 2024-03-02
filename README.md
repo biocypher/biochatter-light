@@ -1,20 +1,23 @@
 # 💬🧬 BioChatter Light
+
 Gene set interpretation and more, assisted by large language models. Find the
-deployed app at https://chat.biocypher.org. We are currently ***heavily***
-work in progress, but we are commited to open source and very open to comments,
-criticisms, and contributions! Read the [preprint
-here](https://arxiv.org/abs/2305.06488)!
+deployed app at https://light.biochatter.org. This app is a development platform
+and framework demonstration, not a commercial service. We are commited to open
+source and very open to comments, criticisms, and contributions! Read the
+preprint [here](https://arxiv.org/abs/2305.06488)!
 
 This repository contains only the frontend code of our streamlit app. The code
 base used for communication with the LLMs, vector databases, and other
 components of our project is developed at 
-https://github.com/biocypher/biochatter. Check there if you have your own UI
-and are looking for a way to connect it to the world of LLMs! If you are
-looking for a full-featured client-server web application, check out
+https://github.com/biocypher/biochatter. Check there if you have your own UI and
+are looking for a way to connect it to the world of LLMs! If you are looking for
+a full-featured client-server web application, check out [BioChatter
+Next](https://next.biochatter.org), developed at
 https://github.com/biocypher/biochatter-server and
 https://github.com/biocypher/biochatter-next.
 
 ## 🤝 Get involved!
+
 To stay up to date with the project, please star the repository and watch the
 zulip community chat (free to join) at https://biocypher.zulipchat.com.
 Related discussion happens in the `#biochatter` stream.
@@ -32,12 +35,13 @@ platform a great open-source tool, you're good. 🙂
 > This disclaimer was adapted from the [Pooch](https://github.com/fatiando/pooch) project.
 
 ## 🛠 Prompt engineering discussions
+
 You can discuss your favourite prompt setups and share the corresponding JSON
 files in the discussion
 [here](https://github.com/biocypher/biochatter-light/discussions/11)! You can go
-[here](https://github.com/biocypher/biochatter-light/discussions/20) to find inspiration
-for things the model can do, such as creating formatted markdown output to
-create mindmaps or other visualisations.
+[here](https://github.com/biocypher/biochatter-light/discussions/20) to find
+inspiration for things the model can do, such as creating formatted markdown
+output to create mindmaps or other visualisations.
 
 ## 📑 Retrieval-Augmented Generation / In-context learning
 
@@ -99,6 +103,7 @@ in the `pyproject.toml` file. You can then build the image as described above,
 or install and run the app locally using Poetry (see below).
 
 #### Provide your API key
+
 Instead of manually entering the key, you can provide it to the Docker run
 command as an environment variable. You can designate the variable in your
 environment directly (`export OPENAI_API_KEY=sk-...`), or start the container
@@ -116,6 +121,7 @@ docker run --env-file local.env -p 8501:8501 biochatter-light
 ```
 
 ### Poetry
+
 Local installation can be performed using Poetry (or other package managers
 that can work with a `pyproject.toml` file):
 
@@ -124,6 +130,8 @@ git clone https://github.com/biocypher/biochatter-light.git
 cd biochatter-light
 poetry install
 ```
+
+#### Mac OS and Apple Silicon
 
 For Apple Silicon machines, this must be followed by the following commands
 (inside the activated environment using `poetry shell`):
@@ -136,44 +144,3 @@ mamba install grpcio  # alternatively, conda
 This step is necessary due to incompatibilities in the standard ARM grpcio
 package. Currently, only conda-forge provides a compatible version. To avoid
 this issue, you can work in a devcontainer (see above).
-
-### Devcontainer
-To deploy/develop the app locally, we recommend using VS Code with the included
-devcontainer setup. This requires Docker and the [Remote
-Containers](https://marketplace.visualstudio.com/items?itemName=ms-vscode-remote.remote-containers)
-extension. After cloning the repository, open the folder in VS Code and click
-the `Reopen in Container` button that appears in the bottom right corner (or
-use the command palette to find the command). This will build a Docker image
-of the app and open it in VS Code. You can then run the app by adding a
-configuration similar to this one to your launch.json:
-
-```
-
-{
-    "name": "Streamlit",
-    "type": "python",
-    "request": "launch",
-    "program": "/usr/local/bin/streamlit",
-    "console": "integratedTerminal",
-    "justMyCode": true,
-    "cwd": "${workspaceFolder}",
-    "args": [
-        "run",
-        "app.py"
-    ]
-}
-
-```
-
-Note that if you want to use the Retrieval-Augmented Generation feature or other
-connected services, you will still need to start these separately. For the
-vector DB component of the `docker-compose.yml` file, you can do it like so:
-
-```
-docker compose up -d standalone
-```
-
-Once the other docker containers are running, they should be discoverable from
-within the devcontainer. If you add your own containers, make sure that they
-use the same network as your devcontainer (e.g. `milvus`).
-
