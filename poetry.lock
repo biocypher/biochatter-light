@@ -187,13 +187,13 @@ tests-no-zope = ["attrs[tests-mypy]", "cloudpickle", "hypothesis", "pympler", "p
 
 [[package]]
 name = "biochatter"
-version = "0.4.8"
+version = "0.4.9"
 description = "Backend library for conversational AI in biomedicine"
 optional = false
 python-versions = ">=3.10,<3.12"
 files = [
-    {file = "biochatter-0.4.8-py3-none-any.whl", hash = "sha256:9c07c1952edc40191ce95044068a78272162c839ca10bc0e24c07cb5a82e26b5"},
-    {file = "biochatter-0.4.8.tar.gz", hash = "sha256:e59298b3217ef5450f1287113276143ae9520a51fc8c21528c23ae784f84ebe9"},
+    {file = "biochatter-0.4.9-py3-none-any.whl", hash = "sha256:f4809bacaa38af0a1cffa431ee09b4bcc8e973be2de81116db3b5ba34a517f06"},
+    {file = "biochatter-0.4.9.tar.gz", hash = "sha256:9170757ddad3187990c193971513274ea6ffca073d095b1ef9b541444bd29d9f"},
 ]
 
 [package.dependencies]
@@ -3680,4 +3680,4 @@ neo4j = ["neo4j-utils"]
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.10,<3.12"
-content-hash = "9a561bfa41657a70417449119a29f7b0191b3593a58d93b99af69f94195e33fe"
+content-hash = "50b1bbedb4115a897de6bcbcc946b1cfaae3628008bbb3598920a1c2e5247fdc"
