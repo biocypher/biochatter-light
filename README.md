@@ -1,10 +1,10 @@
 # 💬🧬 BioChatter Light
 
-Gene set interpretation and more, assisted by large language models. Find the
-deployed app at https://light.biochatter.org. This app is a development platform
-and framework demonstration, not a commercial service. We are commited to open
-source and very open to comments, criticisms, and contributions! Read the
-preprint [here](https://arxiv.org/abs/2305.06488)!
+This app demonstrates workflows in biomedical research and application, assisted
+by large language models. Find the deployed app at https://light.biochatter.org.
+This app is a development platform and framework demonstration, not a commercial
+service. We are commited to open source and very open to comments, criticisms,
+and contributions! Read the preprint [here](https://arxiv.org/abs/2305.06488)!
 
 This repository contains only the frontend code of our streamlit app. The code
 base used for communication with the LLMs, vector databases, and other
