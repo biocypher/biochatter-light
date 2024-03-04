@@ -2128,7 +2128,7 @@ def main():
             "statistical aspects of experimental design."
         )
         st.markdown(
-            f"`📎 Assistant`: Experimental design functionality {OFFLINE_FUNCTIONALITY}"
+            f"`📎 Assistant`: Experimental design {OFFLINE_FUNCTIONALITY}"
         )
 
     with prompts_tab:
@@ -2192,7 +2192,7 @@ def main():
         )
         if ss.get("online"):
             st.markdown(
-                f"`📎 Assistant`: Correction agent functionality {OFFLINE_FUNCTIONALITY}"
+                f"`📎 Assistant`: Correction agent {OFFLINE_FUNCTIONALITY}"
             )
         else:
             correcting_agent_panel()
@@ -2226,7 +2226,7 @@ def main():
     with genetics_tab:
         if ss.get("online"):
             st.markdown(
-                f"`📎 Assistant`: Genetics annotation functionality {OFFLINE_FUNCTIONALITY}"
+                f"`📎 Assistant`: Genetics annotation {OFFLINE_FUNCTIONALITY}"
             )
         else:
             genetics_panel()
@@ -2234,7 +2234,7 @@ def main():
     with kg_tab:
         if ss.get("online"):
             st.markdown(
-                f"`📎 Assistant`: Knowledge graph functionality {OFFLINE_FUNCTIONALITY}"
+                f"`📎 Assistant`: Knowledge graph {OFFLINE_FUNCTIONALITY}"
             )
         else:
             kg_panel()
