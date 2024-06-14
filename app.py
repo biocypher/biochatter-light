@@ -156,14 +156,14 @@ import neo4j_utils as nu
 # CONFIGURATION
 
 TABS_TO_SHOW = {
-    "Chat": os.getenv("CHAT_TAB", True),
-    "Prompt Engineering": os.getenv("PROMPT_ENGINEERING_TAB", True),
-    "Retrieval-Augmented Generation": os.getenv("RAG_TAB", True),
-    "Correcting Agent": os.getenv("CORRECTING_AGENT_TAB", True),
-    "Cell Type Annotation": os.getenv("CELL_TYPE_ANNOTATION_TAB", False),
-    "Experimental Design": os.getenv("EXPERIMENTAL_DESIGN_TAB", False),
-    "Genetics Annotation": os.getenv("GENETICS_ANNOTATION_TAB", False),
-    "Knowledge Graph": os.getenv("KNOWLEDGE_GRAPH_TAB", False),
+    "Chat": os.getenv("CHAT_TAB", "true") == "true",
+    "Prompt Engineering": os.getenv("PROMPT_ENGINEERING_TAB", "true") == "true",
+    "Retrieval-Augmented Generation": os.getenv("RAG_TAB", "true") == "true",
+    "Correcting Agent": os.getenv("CORRECTING_AGENT_TAB", "true") == "true",
+    "Cell Type Annotation": os.getenv("CELL_TYPE_ANNOTATION_TAB", "false") == "true",
+    "Experimental Design": os.getenv("EXPERIMENTAL_DESIGN_TAB", "false") == "true",
+    "Genetics Annotation": os.getenv("GENETICS_ANNOTATION_TAB", "false") == "true",
+    "Knowledge Graph": os.getenv("KNOWLEDGE_GRAPH_TAB", "false") == "true",
 }
 
 
@@ -1118,7 +1118,7 @@ def rag_agent_panel():
     """
 
     if ss.use_rag_agent:
-        if os.getenv("DOCKER_COMPOSE"):
+        if os.getenv("DOCKER_COMPOSE", "false") == "true":
             # running in same docker compose as biochatter-light
             connection_args = {"host": "milvus-standalone", "port": "19530"}
         else:
@@ -1617,9 +1617,13 @@ def kg_panel():
 
     with connection:
         ip, port = st.columns(2)
+        if os.getenv("DOCKER_COMPOSE", "false") == "true":
+            host = "deploy"
+        else:
+            host = "localhost"
         with ip:
             st.text_input(
-                "Database IP address:", value="localhost", key="db_ip"
+                "Database IP address:", value=host, key="db_ip"
             )
         with port:
             st.text_input("Database port:", value="7687", key="db_port")
@@ -1671,7 +1675,8 @@ def kg_panel():
             )
         else:
             st.error(
-                "Please upload a schema configuration or info file to continue."
+                "Please upload a schema configuration or info file to continue "
+                "or provide a graph with a schema info node."
             )
 
     if success and ss.get("schema_dict"):
