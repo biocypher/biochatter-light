@@ -16,6 +16,33 @@ Next](https://next.biochatter.org), developed at
 https://github.com/biocypher/biochatter-server and
 https://github.com/biocypher/biochatter-next.
 
+## 🚀 Quick start
+
+If you want to build your own version of the app, you can modify all components
+of the workflow by cloning this repository and running the app locally. You can
+also deploy the app on your own server or cloud service. The app is built using
+[Streamlit](https://streamlit.io/), a Python library for creating web
+applications from Python scripts.
+
+### Tab selection
+
+You can use environment variables to select the tabs to display; these can also
+be defined in the `docker-compose.yml` file. The following environment variables
+are available:
+
+- `CHAT_TAB`: Show the chat tab.
+- `PROMPT_ENGINEERING_TAB`: Show the prompt engineering tab.
+- `RAG_TAB`: Show the retrieval-augmented generation tab.
+- `KNOWLEDGE_GRAPH_TAB`: Show the knowledge graph tab.
+- `CORRECTING_AGENT_TAB`: Show the correcting agent tab.
+- `CELL_TYPE_ANNOTATION_TAB`: Show the cell type annotation tab.
+- `EXPERIMENTAL_DESIGN_TAB`: Show the experimental design tab.
+- `GENETICS_ANNOTATION_TAB`: Show the genetics annotation tab.
+
+Simply set these to `true` to show the corresponding tab. We also have the
+`DOCKER_COMPOSE` environment variable, which we use to signal to the app that it
+is running inside a Docker container; you won't need to set this manually.
+
 ## 🤝 Get involved!
 
 To stay up to date with the project, please star the repository and watch the

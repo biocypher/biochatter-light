@@ -153,6 +153,20 @@ from langchain.embeddings import OpenAIEmbeddings
 import neo4j_utils as nu
 
 
+# CONFIGURATION
+
+TABS_TO_SHOW = {
+    "Chat": os.getenv("CHAT_TAB", True),
+    "Prompt Engineering": os.getenv("PROMPT_ENGINEERING_TAB", True),
+    "Retrieval-Augmented Generation": os.getenv("RAG_TAB", True),
+    "Correcting Agent": os.getenv("CORRECTING_AGENT_TAB", True),
+    "Cell Type Annotation": os.getenv("CELL_TYPE_ANNOTATION_TAB", False),
+    "Experimental Design": os.getenv("EXPERIMENTAL_DESIGN_TAB", False),
+    "Genetics Annotation": os.getenv("GENETICS_ANNOTATION_TAB", False),
+    "Knowledge Graph": os.getenv("KNOWLEDGE_GRAPH_TAB", False),
+}
+
+
 # HANDLERS
 def update_api_keys():
     """
@@ -1911,333 +1925,323 @@ def main():
             ss.conversation.set_rag_agent(ss.rag_agent)
 
     # TABS
-    (
-        chat_tab,
-        prompts_tab,
-        rag_agent_tab,
-        correct_tab,
-        annot_tab,
-        exp_design_tab,
-        genetics_tab,
-        kg_tab,
-    ) = st.tabs(
-        [
-            "Chat",
-            "Prompt Engineering",
-            "Retrieval-Augmented Generation",
-            "Correcting Agent",
-            "Cell Type Annotation",
-            "Experimental Design",
-            "Genetics Annotation",
-            "Knowledge Graph",
-        ]
-    )
+    tabs_to_show = [tab for tab, show in TABS_TO_SHOW.items() if show]
+    tabs = st.tabs(tabs_to_show)
+    tab_dict = dict(zip(tabs_to_show, tabs))
 
-    with chat_tab:
-        # WELCOME MESSAGE AND CHAT HISTORY
-        st.markdown(
-            "Welcome to ``BioChatter Light``! "
-            ":violet[If you are on a small screen, you may need to "
-            "shift-scroll to the right to see all tabs. -->]"
-        )
+    if "Chat" in tabs_to_show:
+        with tab_dict["Chat"]:
+            # WELCOME MESSAGE AND CHAT HISTORY
+            st.markdown(
+                "Welcome to ``BioChatter Light``! "
+                ":violet[If you are on a small screen, you may need to "
+                "shift-scroll to the right to see all tabs. -->]"
+            )
 
-        if ss.show_intro:
-            show_about_section()
+            if ss.show_intro:
+                show_about_section()
 
-        if ss.show_setup:
-            bcl._display_setup()
+            if ss.show_setup:
+                bcl._display_setup()
 
-        bcl._display_history()
+            bcl._display_history()
 
-        # CHAT BOT LOGIC
-        if ss.input or ss.mode == "waiting_for_rag_agent":
-            if ss.mode == "getting_key":
-                ss.mode = bcl._get_api_key(ss.input)
-                ss.show_intro = False
-                refresh()
+            # CHAT BOT LOGIC
+            if ss.input or ss.mode == "waiting_for_rag_agent":
+                if ss.mode == "getting_key":
+                    ss.mode = bcl._get_api_key(ss.input)
+                    ss.show_intro = False
+                    refresh()
 
-            elif ss.mode == "using_community_key":
-                ss.input = ""  # ugly
-                ss.mode = bcl._check_for_api_key()
-                ss.show_intro = False
-                refresh()
+                elif ss.mode == "using_community_key":
+                    ss.input = ""  # ugly
+                    ss.mode = bcl._check_for_api_key()
+                    ss.show_intro = False
+                    refresh()
 
-            elif ss.mode == "getting_name":
-                ss.mode = bcl._get_user_name()
-                ss.show_intro = False
+                elif ss.mode == "getting_name":
+                    ss.mode = bcl._get_user_name()
+                    ss.show_intro = False
 
-            elif ss.mode == "getting_context":
-                # TODO: Sometimes the app goes from mode select straight into
-                # context, and then obviously the conversation mode is not set
-                # yet. It only happens if this is the first break point. If
-                # something is debugged before, or if something is pressed in
-                # the app before entering the name (such as one of the panels at
-                # the top), it works fine.
+                elif ss.mode == "getting_context":
+                    # TODO: Sometimes the app goes from mode select straight into
+                    # context, and then obviously the conversation mode is not set
+                    # yet. It only happens if this is the first break point. If
+                    # something is debugged before, or if something is pressed in
+                    # the app before entering the name (such as one of the panels at
+                    # the top), it works fine.
 
-                bcl._get_context()
-                if ss.conversation_mode in ["data", "both"]:
-                    ss.mode = bcl._ask_for_data_input()
-                else:
-                    if not ss.get("embedder_used"):
-                        st.write("Please embed at least one document.")
-                        ss.mode = "waiting_for_rag_agent"
+                    bcl._get_context()
+                    if ss.conversation_mode in ["data", "both"]:
+                        ss.mode = bcl._ask_for_data_input()
                     else:
+                        if not ss.get("embedder_used"):
+                            st.write("Please embed at least one document.")
+                            ss.mode = "waiting_for_rag_agent"
+                        else:
+                            ss.mode = bcl._start_chat()
+
+                elif ss.mode == "waiting_for_rag_agent":
+                    if ss.get("embedder_used"):
                         ss.mode = bcl._start_chat()
 
-            elif ss.mode == "waiting_for_rag_agent":
-                if ss.get("embedder_used"):
-                    ss.mode = bcl._start_chat()
+                elif ss.mode == "getting_data_file_input":
+                    ss.mode = bcl._get_data_input()
 
+                elif ss.mode == "getting_data_file_description":
+                    ss.mode = bcl._get_data_file_description()
+
+                elif ss.mode == "asking_for_manual_data_input":
+                    ss.mode = bcl._ask_for_manual_data_input()
+
+                elif ss.mode == "getting_manual_data_input":
+                    ss.mode = bcl._get_data_input_manual()
+
+                elif ss.mode == "chat":
+                    with st.spinner("Thinking ..."):
+                        ss.response, ss.token_usage = bcl._get_response()
+
+                # DEMO LOGIC
+                elif ss.mode == "demo_key":
+                    ss.input = ""  # ugly
+                    bcl._check_for_api_key()
+                    ss.show_intro = False
+                    refresh()
+
+                elif ss.mode == "demo_start":
+                    bcl._get_user_name()
+
+                elif ss.mode == "demo_context":
+                    bcl._get_context()
+                    bcl._ask_for_data_input()
+
+                elif ss.mode == "demo_tool":
+                    st.write("(Here, we simulate the upload of a data file.)")
+                    bcl._get_data_input()
+
+                elif ss.mode == "demo_manual":
+                    bcl._get_data_input_manual()
+                    st.write(
+                        "(The next step will involve sending a basic query to the "
+                        "model. This may take a few seconds.)"
+                    )
+
+                elif ss.mode == "demo_chat":
+                    with st.spinner("Thinking ..."):
+                        ss.response, ss.token_usage = bcl._get_response()
+                    bcl._write_and_history(
+                        "📎 Assistant",
+                        "🎉 This concludes the demonstration. You can chat with the "
+                        "model now, or start your own inquiry! Please always keep "
+                        "in mind that Large Language Models can sometimes be "
+                        "incorrect or misleading, and depending on the complexity "
+                        "of the task may not yield the desired results. They are "
+                        "however very good at synthesising information from their "
+                        "training set, and thus can be useful to explain the "
+                        "biological context of a particular gene set or cell "
+                        "type. For instance, you could ask what a particular "
+                        "pathway does in a particular cell type, or which drugs "
+                        "could be used to target it.",
+                    )
+                    ss.mode = "chat"
+
+            # RESET INPUT
+            ss.input = ""
+
+            # SIDEBAR
+            with st.sidebar:
+                app_header()
+                reset_button()
+                if ss.mode == "getting_data_file_input":
+                    file_uploader()
+                with st.expander("About"):
+                    app_info()
+                if (
+                    ss.get("show_community_select", False)
+                    and ss.get("primary_model") in OPENAI_MODELS
+                    and community_possible()
+                ):
+                    remaining_tokens()
+                    community_select()
+                display_token_usage()
+                d1, d2 = st.columns(2)
+                with d1:
+                    download_chat_history(bcl)
+                with d2:
+                    download_complete_history(bcl)
+                model_select()
+
+            # CHAT BOX
+
+            if ss.mode == "getting_key":
+                if ss.primary_model in OPENAI_MODELS:
+                    openai_key_chat_box()
+                elif ss.primary_model in HUGGINGFACE_MODELS:
+                    huggingface_key_chat_box()
+            elif ss.mode == "getting_mode":
+                mode_select()
             elif ss.mode == "getting_data_file_input":
-                ss.mode = bcl._get_data_input()
+                data_input_buttons()
+            elif ss.mode in ["getting_name", "getting_context"]:
+                chat_line()
+                autofocus_line()
+            elif ss.mode == "waiting_for_rag_agent":
+                waiting_for_rag_agent()
+            elif "demo" in ss.mode:
+                demo_next_button()
+            else:
+                if not ss.get("error"):
+                    chat_box()
+                    autofocus_area()
 
-            elif ss.mode == "getting_data_file_description":
-                ss.mode = bcl._get_data_file_description()
-
-            elif ss.mode == "asking_for_manual_data_input":
-                ss.mode = bcl._ask_for_manual_data_input()
-
-            elif ss.mode == "getting_manual_data_input":
-                ss.mode = bcl._get_data_input_manual()
-
-            elif ss.mode == "chat":
-                with st.spinner("Thinking ..."):
-                    ss.response, ss.token_usage = bcl._get_response()
-
-            # DEMO LOGIC
-            elif ss.mode == "demo_key":
-                ss.input = ""  # ugly
-                bcl._check_for_api_key()
-                ss.show_intro = False
-                refresh()
-
-            elif ss.mode == "demo_start":
-                bcl._get_user_name()
-
-            elif ss.mode == "demo_context":
-                bcl._get_context()
-                bcl._ask_for_data_input()
-
-            elif ss.mode == "demo_tool":
-                st.write("(Here, we simulate the upload of a data file.)")
-                bcl._get_data_input()
-
-            elif ss.mode == "demo_manual":
-                bcl._get_data_input_manual()
-                st.write(
-                    "(The next step will involve sending a basic query to the "
-                    "model. This may take a few seconds.)"
+    if "Retrieval-Augmented Generation" in tabs_to_show:
+        with tab_dict["Retrieval-Augmented Generation"]:
+            st.markdown(
+                "While Large Language Models have access to vast amounts of "
+                "knowledge, this knowledge only includes what was present in "
+                "their training set, and thus excludes very current research "
+                "as well as research articles that are not open access. To "
+                "fill in the gaps of the model's knowledge, we include a "
+                "Retrieval-Augmented Generation approach that stores knowledge from "
+                "user-provided documents in a vector database, which can be "
+                "used to supplement the model prompt by retrieving the most "
+                "relevant contents of the provided documents. This process "
+                "builds on the unique functionality of vector databases to "
+                "perform similarity search on the embeddings of the documents' "
+                "contents."
+            )
+            if ss.get("openai_api_key"):
+                rag_agent_panel()
+                if ss.get("first_document_uploaded"):
+                    ss.first_document_uploaded = False
+                    refresh()
+            else:
+                st.info(
+                    "Please enter your OpenAI API key to use the "
+                    "Retrieval-Augmented Generation functionality."
                 )
 
-            elif ss.mode == "demo_chat":
-                with st.spinner("Thinking ..."):
-                    ss.response, ss.token_usage = bcl._get_response()
-                bcl._write_and_history(
-                    "📎 Assistant",
-                    "🎉 This concludes the demonstration. You can chat with the "
-                    "model now, or start your own inquiry! Please always keep "
-                    "in mind that Large Language Models can sometimes be "
-                    "incorrect or misleading, and depending on the complexity "
-                    "of the task may not yield the desired results. They are "
-                    "however very good at synthesising information from their "
-                    "training set, and thus can be useful to explain the "
-                    "biological context of a particular gene set or cell "
-                    "type. For instance, you could ask what a particular "
-                    "pathway does in a particular cell type, or which drugs "
-                    "could be used to target it.",
+    if "Cell Type Annotation" in tabs_to_show:
+        with tab_dict["Cell Type Annotation"]:
+            if ss.user == "community":
+                st.markdown(f"{DEV_FUNCTIONALITY}")
+            else:
+                st.markdown(
+                    "A common repetitive task in bioinformatics is to annotate "
+                    "single-cell datasets with cell type labels. This task is usually "
+                    "performed by a human expert, who will look at the expression of "
+                    "marker genes and assign a cell type label based on their "
+                    "knowledge of the cell types present in the tissue of interest. "
+                    "Large Language Models have been shown to be able to perform this "
+                    "task with high accuracy, and can be used to automate cell type "
+                    "annotation with minimal human input (see e.g. [this arXiv "
+                    "preprint](https://www.biorxiv.org/content/10.1101/2023.04.16.537094v1))."
                 )
-                ss.mode = "chat"
+                st.markdown(
+                    "`📎 Assistant`: Cell type annotation "
+                    f"{OFFLINE_FUNCTIONALITY}"
+                )
 
-        # RESET INPUT
-        ss.input = ""
-
-        # SIDEBAR
-        with st.sidebar:
-            app_header()
-            reset_button()
-            if ss.mode == "getting_data_file_input":
-                file_uploader()
-            with st.expander("About"):
-                app_info()
-            if (
-                ss.get("show_community_select", False)
-                and ss.get("primary_model") in OPENAI_MODELS
-                and community_possible()
-            ):
-                remaining_tokens()
-                community_select()
-            display_token_usage()
-            d1, d2 = st.columns(2)
-            with d1:
-                download_chat_history(bcl)
-            with d2:
-                download_complete_history(bcl)
-            model_select()
-
-        # CHAT BOX
-
-        if ss.mode == "getting_key":
-            if ss.primary_model in OPENAI_MODELS:
-                openai_key_chat_box()
-            elif ss.primary_model in HUGGINGFACE_MODELS:
-                huggingface_key_chat_box()
-        elif ss.mode == "getting_mode":
-            mode_select()
-        elif ss.mode == "getting_data_file_input":
-            data_input_buttons()
-        elif ss.mode in ["getting_name", "getting_context"]:
-            chat_line()
-            autofocus_line()
-        elif ss.mode == "waiting_for_rag_agent":
-            waiting_for_rag_agent()
-        elif "demo" in ss.mode:
-            demo_next_button()
-        else:
-            if not ss.get("error"):
-                chat_box()
-                autofocus_area()
-
-    with annot_tab:
-        if ss.user == "community":
-            st.markdown(f"{DEV_FUNCTIONALITY}")
-        else:
+    if "Experimental Design" in tabs_to_show:
+        with tab_dict["Experimental Design"]:
             st.markdown(
-                "A common repetitive task in bioinformatics is to annotate "
-                "single-cell datasets with cell type labels. This task is usually "
-                "performed by a human expert, who will look at the expression of "
-                "marker genes and assign a cell type label based on their "
-                "knowledge of the cell types present in the tissue of interest. "
-                "Large Language Models have been shown to be able to perform this "
-                "task with high accuracy, and can be used to automate cell type "
-                "annotation with minimal human input (see e.g. [this arXiv "
-                "preprint](https://www.biorxiv.org/content/10.1101/2023.04.16.537094v1))."
+                "Experimental design is a crucial step in any biological experiment. "
+                "However, it can be a subtle and complex task, requiring a deep "
+                "understanding of the biological system under study as well as "
+                "statistical and computational expertise. Large Language Models "
+                "can potentially fill the gaps that exist in most research groups, "
+                "which traditionally focus on either the biological or the "
+                "statistical aspects of experimental design."
             )
             st.markdown(
-                "`📎 Assistant`: Cell type annotation "
-                f"{OFFLINE_FUNCTIONALITY}"
+                f"`📎 Assistant`: Experimental design {OFFLINE_FUNCTIONALITY}"
             )
 
-    with exp_design_tab:
-        st.markdown(
-            "Experimental design is a crucial step in any biological experiment. "
-            "However, it can be a subtle and complex task, requiring a deep "
-            "understanding of the biological system under study as well as "
-            "statistical and computational expertise. Large Language Models "
-            "can potentially fill the gaps that exist in most research groups, "
-            "which traditionally focus on either the biological or the "
-            "statistical aspects of experimental design."
-        )
-        st.markdown(
-            f"`📎 Assistant`: Experimental design {OFFLINE_FUNCTIONALITY}"
-        )
-
-    with prompts_tab:
-        st.markdown(
-            "The construction of prompts is a crucial step in the use of "
-            "Large Language Models. However, it can be a subtle and complex "
-            "task, often requiring empirical testing on prompt composition "
-            "due to the black-box nature of the models. We provide composable "
-            "prompts and prompt templates (which can include variables), as "
-            "well as save and load functionality for full prompt sets to "
-            "facilitate testing, reproducibility, and sharing."
-        )
-
-        if not ss.mode in [
-            "getting_key",
-            "using_community_key",
-            "getting_name",
-            "getting_context",
-        ]:
+    if "Prompt Engineering" in tabs_to_show:
+        with tab_dict["Prompt Engineering"]:
             st.markdown(
-                "`📎 Assistant`: Prompt tuning is only available before "
-                "initialising the conversation, that is, before giving a "
-                "context. Please reset the app to tune the prompt set."
-            )
-            prompt_save_button()
-
-        else:
-            prompt_save_load_reset()
-            ss.prompts_box = st.selectbox(
-                "Select a prompt set",
-                (
-                    "Primary Model",
-                    "Correcting Agent",
-                    "Tools",
-                    "Retrieval-Augmented Generation",
-                ),
+                "The construction of prompts is a crucial step in the use of "
+                "Large Language Models. However, it can be a subtle and complex "
+                "task, often requiring empirical testing on prompt composition "
+                "due to the black-box nature of the models. We provide composable "
+                "prompts and prompt templates (which can include variables), as "
+                "well as save and load functionality for full prompt sets to "
+                "facilitate testing, reproducibility, and sharing."
             )
 
-            if ss.prompts_box == "Primary Model":
-                show_primary_model_prompts()
+            if not ss.mode in [
+                "getting_key",
+                "using_community_key",
+                "getting_name",
+                "getting_context",
+            ]:
+                st.markdown(
+                    "`📎 Assistant`: Prompt tuning is only available before "
+                    "initialising the conversation, that is, before giving a "
+                    "context. Please reset the app to tune the prompt set."
+                )
+                prompt_save_button()
 
-            elif ss.prompts_box == "Correcting Agent":
-                show_correcting_agent_prompts()
+            else:
+                prompt_save_load_reset()
+                ss.prompts_box = st.selectbox(
+                    "Select a prompt set",
+                    (
+                        "Primary Model",
+                        "Correcting Agent",
+                        "Tools",
+                        "Retrieval-Augmented Generation",
+                    ),
+                )
 
-            elif ss.prompts_box == "Tools":
-                show_tool_prompts()
+                if ss.prompts_box == "Primary Model":
+                    show_primary_model_prompts()
 
-            elif ss.prompts_box == "Retrieval-Augmented Generation":
-                show_rag_agent_prompts()
+                elif ss.prompts_box == "Correcting Agent":
+                    show_correcting_agent_prompts()
 
-    with correct_tab:
-        st.markdown(
-            "Large Language Models are very good at synthesising information "
-            "from their training set, and thus can be useful to explain the "
-            "biological context of a particular gene set or cell type. "
-            "However, they can sometimes be incorrect or misleading, and "
-            "have been known to occasionally hallucinate while being very "
-            "convinced of their answer. To ameliorate this issue, we include "
-            "a correcting agent that automatically checks the validity of the "
-            "primary model's statements, and corrects them if necessary."
-        )
-        if ss.get("online"):
+                elif ss.prompts_box == "Tools":
+                    show_tool_prompts()
+
+                elif ss.prompts_box == "Retrieval-Augmented Generation":
+                    show_rag_agent_prompts()
+
+    if "Correcting Agent" in tabs_to_show:
+        with tab_dict["Correcting Agent"]:
             st.markdown(
-                f"`📎 Assistant`: Correction agent {OFFLINE_FUNCTIONALITY}"
+                "Large Language Models are very good at synthesising information "
+                "from their training set, and thus can be useful to explain the "
+                "biological context of a particular gene set or cell type. "
+                "However, they can sometimes be incorrect or misleading, and "
+                "have been known to occasionally hallucinate while being very "
+                "convinced of their answer. To ameliorate this issue, we include "
+                "a correcting agent that automatically checks the validity of the "
+                "primary model's statements, and corrects them if necessary."
             )
-        else:
-            correcting_agent_panel()
+            if ss.get("online"):
+                st.markdown(
+                    f"`📎 Assistant`: Correction agent {OFFLINE_FUNCTIONALITY}"
+                )
+            else:
+                correcting_agent_panel()
 
-    with rag_agent_tab:
-        st.markdown(
-            "While Large Language Models have access to vast amounts of "
-            "knowledge, this knowledge only includes what was present in "
-            "their training set, and thus excludes very current research "
-            "as well as research articles that are not open access. To "
-            "fill in the gaps of the model's knowledge, we include a "
-            "Retrieval-Augmented Generation approach that stores knowledge from "
-            "user-provided documents in a vector database, which can be "
-            "used to supplement the model prompt by retrieving the most "
-            "relevant contents of the provided documents. This process "
-            "builds on the unique functionality of vector databases to "
-            "perform similarity search on the embeddings of the documents' "
-            "contents."
-        )
-        if ss.get("openai_api_key"):
-            rag_agent_panel()
-            if ss.get("first_document_uploaded"):
-                ss.first_document_uploaded = False
-                refresh()
-        else:
-            st.info(
-                "Please enter your OpenAI API key to use the "
-                "Retrieval-Augmented Generation functionality."
-            )
+    if "Genetics Annotation" in tabs_to_show:
+        with tab_dict["Genetics Annotation"]:
+            if ss.get("online"):
+                st.markdown(
+                    f"`📎 Assistant`: Genetics annotation {OFFLINE_FUNCTIONALITY}"
+                )
+            else:
+                genetics_panel()
 
-    with genetics_tab:
-        if ss.get("online"):
-            st.markdown(
-                f"`📎 Assistant`: Genetics annotation {OFFLINE_FUNCTIONALITY}"
-            )
-        else:
-            genetics_panel()
-
-    with kg_tab:
-        if ss.get("online"):
-            st.markdown(
-                f"`📎 Assistant`: Knowledge graph {OFFLINE_FUNCTIONALITY}"
-            )
-        else:
-            kg_panel()
+    if "Knowledge Graph" in tabs_to_show:
+        with tab_dict["Knowledge Graph"]:
+            if ss.get("online"):
+                st.markdown(
+                    f"`📎 Assistant`: Knowledge graph {OFFLINE_FUNCTIONALITY}"
+                )
+            else:
+                kg_panel()
 
 
 if __name__ == "__main__":

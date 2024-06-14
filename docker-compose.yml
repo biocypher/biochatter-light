@@ -62,6 +62,10 @@ services:
         poetry run streamlit run app.py --server.port=8501
     environment:
       - DOCKER_COMPOSE=true
+      - CHAT_TAB=true
+      - PROMPT_ENGINEERING_TAB=true
+      - RAG_TAB=true
+      - KNOWLEDGE_GRAPH_TAB=true
     volumes:
       - .:/app
     ports:
