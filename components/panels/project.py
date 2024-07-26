@@ -77,7 +77,7 @@ def summary_panel():
 
     with individual:
         summarise = st.button(
-            f"Summarise for {ss.get('individual')}",
+            "Summarise for individual (choose in Settings)",
             on_click=_summarise_individual(ss.get("individual")),
             use_container_width=True,
         )
@@ -103,6 +103,7 @@ def summary_panel():
 def tasks_panel():
     st.markdown(
         """
+        ### This Week's Tasks
         
         In this panel, we give a demonstration of the task management system to
         plan tasks for the next project iteration. The tasks are taken from the
@@ -143,7 +144,7 @@ def tasks_panel():
             st.markdown("## Group tasks\n\n" f'{ss.get("tasks")}')
     with individual:
         tasks = st.button(
-            f"Plan Tasks for {ss.get('individual')}",
+            "Plan Tasks for individual (choose in Settings)",
             on_click=_plan_tasks_individual(ss.get("individual")),
             use_container_width=True,
         )
