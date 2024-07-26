@@ -2,7 +2,7 @@ import streamlit as st
 
 ss = st.session_state
 
-__version__ = "0.5.1"
+__version__ = "0.6.0"
 
 
 def app_header():
