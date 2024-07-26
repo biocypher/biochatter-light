@@ -5,12 +5,15 @@ import streamlit as st
 ss = st.session_state
 import json
 
+import os
+
 
 def _connect_to_neo4j():
     """
     Connect to the Neo4j database.
     """
-    db_uri = "bolt://" + ss.get("db_ip") + ":" + ss.get("db_port")
+    _determine_neo4j_connection()
+    db_uri = "bolt://" + ss.get("db_ip", "localhost") + ":" + ss.get("db_port")
     ss.neodriver = nu.Driver(
         db_name=ss.get("db_name") or "neo4j",
         db_uri=db_uri,
@@ -22,6 +25,21 @@ def _connect_to_neo4j():
     else:
         _find_schema_info_node()
         return True
+
+
+def _determine_neo4j_connection():
+    """
+    Determine the connection details for the Neo4j database.
+    """
+    if ss.get("db_ip") is None:
+        if os.getenv("DOCKER_COMPOSE", "false") == "true":
+            ss["db_ip"] = "deploy"
+        else:
+            ss["db_ip"] = "localhost"
+    if ss.get("db_port") is None:
+        ss["db_port"] = "7687"
+    if ss.get("db_name") is None:
+        ss["db_name"] = "neo4j"
 
 
 def _find_schema_info_node():
