@@ -69,6 +69,7 @@ from .panels import (
     kg_panel,
     summary_panel,
     tasks_panel,
+    task_settings_panel,
 )
 
 from .prompts import (
@@ -441,6 +442,10 @@ def main_logic():
     if "This Week's Tasks" in tabs_to_show:
         with tab_dict["This Week's Tasks"]:
             tasks_panel()
+
+    if "Task Settings" in tabs_to_show:
+        with tab_dict["Task Settings"]:
+            task_settings_panel()
 
 
 def _startup():

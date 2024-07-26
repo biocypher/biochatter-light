@@ -7,6 +7,18 @@ import json
 
 import os
 
+from components.constants import (
+    SUMMARY_QUERY,
+    SUMMARY_QUERY_INDIVIDUAL,
+    TASKS_QUERY,
+    TASKS_QUERY_INDIVIDUAL,
+)
+
+ss["summary_query"] = SUMMARY_QUERY
+ss["summary_query_individual"] = SUMMARY_QUERY_INDIVIDUAL
+ss["tasks_query"] = TASKS_QUERY
+ss["tasks_query_individual"] = TASKS_QUERY_INDIVIDUAL
+
 
 def _connect_to_neo4j():
     """
@@ -57,54 +69,34 @@ def _find_schema_info_node():
 
 def _summarise():
     _connect_to_neo4j()
-    result = ss.neodriver.query(
-        """
-        MATCH (person:Person)-[:Leads]->(project:Project)-[:PartOf]->(iteration:Iteration)
-        WHERE project.status = 'Done' OR project.status = 'In Progress'
-        RETURN person.name, project.status, project.size, project.title, project.description, iteration.title
-        """
-    )
+    result = ss.neodriver.query(ss.get("summary_query"))
 
-    ss["summary_query"] = result
+    ss["summary_query_result"] = result
 
 
 def _summarise_individual(person):
     _connect_to_neo4j()
     result = ss.neodriver.query(
-        f"""
-        MATCH (person:Person {{name: '{person}'}})-[:Leads]->(project:Project)-[:PartOf]->(iteration:Iteration)
-        WHERE project.status = 'Done' OR project.status = 'In Progress'
-        RETURN person.name, project.status, project.size, project.title, project.description, iteration.title
-        """
+        ss.get("summary_query_individual").format(person=person)
     )
 
-    ss["summary_query_individual"] = result
+    ss["summary_query_result_individual"] = result
 
 
 def _plan_tasks():
     _connect_to_neo4j()
-    result = ss.neodriver.query(
-        """
-        MATCH (person:Person)-[:Leads]->(project:Project)-[:PartOf]->(iteration:Iteration)
-        WHERE project.status = 'Todo' OR project.status = 'In Progress'                                  
-        RETURN person.name, project.status, project.size, project.title, project.description, iteration.title
-        """
-    )
+    result = ss.neodriver.query(ss.get("tasks_query"))
 
-    ss["tasks_query"] = result
+    ss["tasks_query_result"] = result
 
 
 def _plan_tasks_individual(person):
     _connect_to_neo4j()
     result = ss.neodriver.query(
-        f"""
-        MATCH (person:Person {{name: '{person}'}})-[:Leads]->(project:Project)-[:PartOf]->(iteration:Iteration)
-        WHERE project.status = 'Todo' OR project.status = 'In Progress'                                  
-        RETURN person.name, project.status, project.size, project.title, project.description, iteration.title
-        """
+        ss.get("tasks_query_individual").format(person=person)
     )
 
-    ss["tasks_query_individual"] = result
+    ss["tasks_query_result_individual"] = result
 
 
 def _run_neo4j_query(query):

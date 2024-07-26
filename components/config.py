@@ -18,4 +18,5 @@ TABS_TO_SHOW = {
     "Last Week's Summary": os.getenv("LAST_WEEKS_SUMMARY_TAB", "false")
     == "true",
     "This Week's Tasks": os.getenv("THIS_WEEKS_TASKS_TAB", "false") == "true",
+    "Task Settings": os.getenv("TASK_SETTINGS_PANEL_TAB", "false") == "true",
 }

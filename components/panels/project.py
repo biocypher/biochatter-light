@@ -10,6 +10,19 @@ from components.kg import (
     _plan_tasks_individual,
 )
 
+from components.constants import (
+    SUMMARY_INSTRUCTION,
+    SUMMARY_INSTRUCTION_INDIVIDUAL,
+    TASKS_INSTRUCTION,
+    TASKS_INSTRUCTION_INDIVIDUAL,
+)
+
+ss["summary_instruction"] = SUMMARY_INSTRUCTION
+ss["summary_instruction_individual"] = SUMMARY_INSTRUCTION_INDIVIDUAL
+ss["tasks_instruction"] = TASKS_INSTRUCTION
+ss["tasks_instruction_individual"] = TASKS_INSTRUCTION_INDIVIDUAL
+ss["individual"] = "slobentanzer"
+
 
 def summary_panel():
     st.markdown(
@@ -53,14 +66,8 @@ def summary_panel():
                 conv = ss.get("conversation")
                 conv.reset()
                 conv.correct = False
-                conv.append_system_message(
-                    "You will receive a collection of projects, and your task is to "
-                    "summarise them for the group. Explain what was done in the last "
-                    "project iteration at a high level, including the size of the "
-                    "task (XS to XL) and the participating team members. Distinguish "
-                    "between completed and ongoing tasks."
-                )
-                query_return = ss.get("summary_query", "")
+                conv.append_system_message(ss.get("summary_instruction"))
+                query_return = ss.get("summary_query_result", "")
                 if query_return:
                     msg, _, _ = conv.query(json.dumps(query_return[0]))
                     ss["summary"] = msg
@@ -71,7 +78,7 @@ def summary_panel():
     with individual:
         summarise = st.button(
             "Summarise for *slobentanzer*",
-            on_click=_summarise_individual("slobentanzer"),
+            on_click=_summarise_individual(ss.get("individual")),
             use_container_width=True,
         )
         if summarise:
@@ -80,13 +87,9 @@ def summary_panel():
                 conv.reset()
                 conv.correct = False
                 conv.append_system_message(
-                    "You will receive a collection of projects led by one team "
-                    "member, and your task is to summarise them for the group. "
-                    "Explain what was done in the last project iteration at a high "
-                    "level, including the size of the task (XS to XL). Distinguish "
-                    "between completed and ongoing tasks."
+                    ss.get("summary_instruction_individual")
                 )
-                query_return = ss.get("summary_query_individual", "")
+                query_return = ss.get("summary_query_result_individual", "")
                 if query_return:
                     msg, _, _ = conv.query(json.dumps(query_return[0]))
                     ss["summary_individual"] = msg
@@ -130,14 +133,8 @@ def tasks_panel():
         if tasks:
             with st.spinner("Planning ..."):
                 conv = ss.get("conversation")
-                conv.append_system_message(
-                    "You will receive a collection of tasks, and your task is "
-                    "to plan them for the group. Prioritise the tasks "
-                    "according to their size, priority, and assigned members, "
-                    "and suggest potentially useful collaborations. Dedicate a "
-                    "section in the beginning to who should talk to whom."
-                )
-                query_return = ss.get("tasks_query", "")
+                conv.append_system_message(ss.get("tasks_instruction"))
+                query_return = ss.get("tasks_query_result", "")
                 if query_return:
                     msg, _, _ = conv.query(json.dumps(query_return[0]))
                     ss["tasks"] = msg
@@ -147,19 +144,16 @@ def tasks_panel():
     with individual:
         tasks = st.button(
             "Plan Tasks for *slobentanzer*",
-            on_click=_plan_tasks_individual("slobentanzer"),
+            on_click=_plan_tasks_individual(ss.get("individual")),
             use_container_width=True,
         )
         if tasks:
             with st.spinner("Planning ..."):
                 conv = ss.get("conversation")
                 conv.append_system_message(
-                    "You will receive a collection of tasks of an individual "
-                    "member of a group, and your task is to plan the next project "
-                    "phase. Prioritise the tasks according to their size / "
-                    "priority, and suggest potentially useful collaborations."
+                    ss.get("tasks_instruction_individual")
                 )
-                query_return = ss.get("tasks_query_individual", "")
+                query_return = ss.get("tasks_query_result_individual", "")
                 if query_return:
                     msg, _, _ = conv.query(json.dumps(query_return[0]))
                     ss["tasks_individual"] = msg
@@ -168,3 +162,100 @@ def tasks_panel():
             st.markdown(
                 "## Individual tasks\n\n" f'{ss.get("tasks_individual")}'
             )
+
+
+def task_settings_panel():
+    """
+    Allow the user to modify the Cypher queries and the LLM instructions used
+    fror the summary and tasks panels.
+    """
+    st.markdown(
+        """
+        ## Settings
+
+        Here, you can modify the Cypher queries and the LLM instructions used
+        for the summary and tasks panels.
+        """
+    )
+
+    llm, neo4j, who = st.tabs(
+        ["LLM Instructions", "Neo4j Queries", "Individual"]
+    )
+
+    with llm:
+        st.markdown(
+            """
+            Here you can modify the instructions given to the LLM assistant for
+            the summary and tasks panels. The instructions are used to guide the
+            LLM in generating the summaries and task plans. You can use the text
+            fields below to modify the instructions and see the changes in the
+            summary and tasks panels.
+            """
+        )
+
+        with st.expander("Summary Instructions"):
+            ss["summary_instruction"] = st.text_area(
+                "Group Instruction", ss.get("summary_instruction", "")
+            )
+            ss["summary_instruction_individual"] = st.text_area(
+                "Individual Instruction",
+                ss.get("summary_instruction_individual", ""),
+            )
+
+        with st.expander("Tasks Instructions"):
+            ss["tasks_instruction"] = st.text_area(
+                "Tasks Instruction", ss.get("tasks_instruction", "")
+            )
+            ss["tasks_instruction_individual"] = st.text_area(
+                "Tasks Instruction for Individual",
+                ss.get("tasks_instruction_individual", ""),
+            )
+
+    with neo4j:
+        st.markdown(
+            """
+
+            Here you can modify the Cypher queries used to extract the necessary
+            data from the project database. The queries are used to fetch the
+            data of the project components (from the [GitHub
+            Project](https://github.com/orgs/biocypher/projects/6/views/1)). By
+            making them more specific or detailed, you can influence the
+            summaries and task plans generated by the LLM assistant. Please be
+            aware that modifying these queries requires knowledge of the project
+            database schema and the data stored in it; incorrect queries may
+            lead to null results.
+
+            """
+        )
+
+        with st.expander("Summary Queries"):
+            ss["summary_query"] = st.text_area(
+                "Group Query", ss.get("summary_query", "")
+            )
+            ss["summary_query_individual"] = st.text_area(
+                "Individual Query",
+                ss.get("summary_query_individual", ""),
+            )
+
+        with st.expander("Tasks Queries"):
+            ss["tasks_query"] = st.text_area(
+                "Group Query", ss.get("tasks_query", "")
+            )
+            ss["tasks_query_individual"] = st.text_area(
+                "Individual Query",
+                ss.get("tasks_query_individual", ""),
+            )
+
+    with who:
+        st.markdown(
+            """
+            Here you can modify the individual for whom the summary and tasks
+            are generated. By default, the individual is set to *slobentanzer*.
+            In our demo project, we also have *nilskre* and *fengsh27* as team
+            members.
+            """
+        )
+
+        ss["individual"] = st.text_input(
+            "Individual", ss.get("individual", "slobentanzer")
+        )
