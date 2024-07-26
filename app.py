@@ -1824,11 +1824,15 @@ def summary_panel():
         if summarise:
             with st.spinner("Summarising ..."):
                 conv = ss.get("conversation")
+                conv.reset()
+                conv.correct = False
                 conv.append_system_message(
                     "You will receive a collection of projects, and your task is to "
                     "summarise them for the group. Explain what was done in the last "
                     "project iteration at a high level, including the size of the "
-                    "task (XS to XL) and the participating team members.")
+                    "task (XS to XL) and the participating team members. Distinguish "
+                    "between completed and ongoing tasks."
+                )
                 query_return = ss.get("summary_query", "")
                 if query_return:
                     msg, _, _ = conv.query(json.dumps(query_return[0]))
@@ -1836,10 +1840,8 @@ def summary_panel():
 
         if ss.get("summary"):
             st.markdown(
-                f"""
-                ## Group summary
-                {ss.get("summary")}
-                """
+                "## Group summary\n\n"
+                f'{ss.get("summary")}'
             )
 
     with individual:
@@ -1851,11 +1853,14 @@ def summary_panel():
         if summarise:
             with st.spinner("Summarising ..."):
                 conv = ss.get("conversation")
+                conv.reset()
+                conv.correct = False
                 conv.append_system_message(
                     "You will receive a collection of projects led by one team "
                     "member, and your task is to summarise them for the group. "
                     "Explain what was done in the last project iteration at a high "
-                    "level, including the size of the task (XS to XL)."
+                    "level, including the size of the task (XS to XL). Distinguish "
+                    "between completed and ongoing tasks."
                 )
                 query_return = ss.get("summary_query_individual", "")
                 if query_return:
@@ -1864,10 +1869,8 @@ def summary_panel():
 
         if ss.get("summary_individual"):
             st.markdown(
-                f"""
-                ## Individual summary
-                {ss.get("summary_individual")}
-                """
+                "## Individual summary\n\n"
+                f'{ss.get("summary_individual")}'
             )
 
 
@@ -1876,8 +1879,8 @@ def _summarise():
     result = ss.neodriver.query(
         """
         MATCH (person:Person)-[:Leads]->(project:Project)-[:PartOf]->(iteration:Iteration)
-        WHERE project.status = 'Done' AND iteration.title = 'Iteration'
-        RETURN person.name, project.size, project.title, project.description
+        WHERE project.status = 'Done' OR project.status = 'In Progress'
+        RETURN person.name, project.status, project.size, project.title, project.description, iteration.title
         """
     )
 
@@ -1888,8 +1891,8 @@ def _summarise_individual(person):
     result = ss.neodriver.query(
         f"""
         MATCH (person:Person {{name: '{person}'}})-[:Leads]->(project:Project)-[:PartOf]->(iteration:Iteration)
-        WHERE project.status = 'Done' AND iteration.title = 'Iteration'
-        RETURN person.name, project.size, project.title, project.description
+        WHERE project.status = 'Done' OR project.status = 'In Progress'
+        RETURN person.name, project.status, project.size, project.title, project.description, iteration.title
         """
     )
 
@@ -1897,8 +1900,104 @@ def _summarise_individual(person):
     
 
 def tasks_panel():
-    pass
+    st.markdown(
+        """
+        
+        In this panel, we give a demonstration of the task management system to
+        plan tasks for the next project iteration. The tasks are taken from the
+        project database, which is built from the [GitHub
+        Project](https://github.com/orgs/biocypher/projects/6/views/1), as
+        described in the summary panel. The open tasks are summarised and
+        interpreted by the LLM assistant, providing a prioritisation and
+        recommendation for the next steps, including collaborations that should
+        be considered in the coming iteration.
 
+        As with the summary panel, this system would ideally be integrated into
+        a messaging platform such as Zulip or Slack via a web hook / bot; and
+        the bot would ideally have write access to the GitHub Project to modify
+        the individual tasks based on priorities and feedback from the team
+        members.
+
+        """
+    )
+
+    # create two buttons spanning the entire screen
+    group, individual = st.columns(2)
+    with group:
+        tasks = st.button(
+            "Plan Tasks for the Group", 
+            on_click=_plan_tasks, 
+            use_container_width=True
+        )
+        if tasks:
+            with st.spinner("Planning ..."):
+                conv = ss.get("conversation")
+                conv.append_system_message(
+                    "You will receive a collection of tasks, and your task is "
+                    "to plan them for the group. Prioritise the tasks "
+                    "according to their size, priority, and assigned members, "
+                    "and suggest potentially useful collaborations. Dedicate a "
+                    "section in the beginning to who should talk to whom."
+                )
+                query_return = ss.get("tasks_query", "")
+                if query_return:
+                    msg, _, _ = conv.query(json.dumps(query_return[0]))
+                    ss["tasks"] = msg
+
+        if ss.get("tasks"):
+            st.markdown(
+                "## Group tasks\n\n"
+                f'{ss.get("tasks")}'
+            )
+    with individual:
+        tasks = st.button(
+            "Plan Tasks for *slobentanzer*", 
+            on_click=_plan_tasks_individual("slobentanzer"), 
+            use_container_width=True
+        )
+        if tasks:
+            with st.spinner("Planning ..."):
+                conv = ss.get("conversation")
+                conv.append_system_message(
+                    "You will receive a collection of tasks of an individual "
+                    "member of a group, and your task is to plan the next project "
+                    "phase. Prioritise the tasks according to their size / "
+                    "priority, and suggest potentially useful collaborations."
+                )
+                query_return = ss.get("tasks_query_individual", "")
+                if query_return:
+                    msg, _, _ = conv.query(json.dumps(query_return[0]))
+                    ss["tasks_individual"] = msg
+
+        if ss.get("tasks_individual"):
+            st.markdown(
+                "## Individual tasks\n\n"
+                f'{ss.get("tasks_individual")}'
+            )
+
+def _plan_tasks():
+    _connect_to_neo4j()
+    result = ss.neodriver.query(
+        """
+        MATCH (person:Person)-[:Leads]->(project:Project)-[:PartOf]->(iteration:Iteration)
+        WHERE project.status = 'Todo' OR project.status = 'In Progress'                                  
+        RETURN person.name, project.status, project.size, project.title, project.description, iteration.title
+        """
+    )
+
+    ss["tasks_query"] = result
+
+def _plan_tasks_individual(person):
+    _connect_to_neo4j()
+    result = ss.neodriver.query(
+        f"""
+        MATCH (person:Person {{name: '{person}'}})-[:Leads]->(project:Project)-[:PartOf]->(iteration:Iteration)
+        WHERE project.status = 'Todo' OR project.status = 'In Progress'                                  
+        RETURN person.name, project.status, project.size, project.title, project.description, iteration.title
+        """
+    )
+
+    ss["tasks_query_individual"] = result
 
 def _run_neo4j_query(query):
     """
