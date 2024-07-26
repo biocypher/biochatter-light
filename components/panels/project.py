@@ -226,20 +226,26 @@ def task_settings_panel():
 
         with st.expander("Summary Instructions"):
             ss["summary_instruction"] = st.text_area(
-                "Group Instruction", ss.get("summary_instruction", "")
+                "Group Instruction",
+                ss.get("summary_instruction", ""),
+                key="summary_instruction_group",
             )
             ss["summary_instruction_individual"] = st.text_area(
                 "Individual Instruction",
                 ss.get("summary_instruction_individual", ""),
+                key="summary_instruction_individual",
             )
 
         with st.expander("Tasks Instructions"):
             ss["tasks_instruction"] = st.text_area(
-                "Tasks Instruction", ss.get("tasks_instruction", "")
+                "Grroup Instruction",
+                ss.get("tasks_instruction", ""),
+                key="task_instruction_group",
             )
             ss["tasks_instruction_individual"] = st.text_area(
-                "Tasks Instruction for Individual",
+                "Individual Instruction",
                 ss.get("tasks_instruction_individual", ""),
+                key="task_instruction_individual",
             )
 
     with neo4j:
@@ -261,20 +267,26 @@ def task_settings_panel():
 
         with st.expander("Summary Queries"):
             ss["summary_query"] = st.text_area(
-                "Group Query", ss.get("summary_query", "")
+                "Group Query",
+                ss.get("summary_query", ""),
+                key="summary_query_group",
             )
             ss["summary_query_individual"] = st.text_area(
                 "Individual Query",
                 ss.get("summary_query_individual", ""),
+                key="summary_query_individual",
             )
 
         with st.expander("Tasks Queries"):
             ss["tasks_query"] = st.text_area(
-                "Group Query", ss.get("tasks_query", "")
+                "Group Query",
+                ss.get("tasks_query", ""),
+                key="tasks_query_group",
             )
             ss["tasks_query_individual"] = st.text_area(
                 "Individual Query",
                 ss.get("tasks_query_individual", ""),
+                key="tasks_query_individual",
             )
 
     with who:
@@ -288,5 +300,5 @@ def task_settings_panel():
         )
 
         ss["individual"] = st.text_input(
-            "Individual", ss.get("individual", "slobentanzer")
+            "Individual", ss.get("individual", "slobentanzer"), key="individual"
         )
