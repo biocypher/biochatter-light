@@ -119,31 +119,10 @@ TASKS_QUERY_INDIVIDUAL = """
         RETURN person.name, project.status, project.size, project.title, project.description, iteration.title
         """
 
-SUMMARY_INSTRUCTION = """
-        You will receive a collection of projects, and your task is to summarise
-        them for the group. Explain what was done in the last project iteration
-        at a high level, including the size of the task (XS to XL) and the
-        participating team members. Distinguish between completed and ongoing
-        tasks.
-        """
+SUMMARY_INSTRUCTION = "You will receive a collection of projects, and your task is to summarise them for the group. Explain what was done in the last project iteration at a high level, including the size of the task (XS to XL) and the participating team members. Distinguish between completed and ongoing tasks."
 
-SUMMARY_INSTRUCTION_INDIVIDUAL = """
-        You will receive a collection of projects led by one team member, and
-        your task is to summarise them for the group. Explain what was done in
-        the last project iteration at a high level, including the size of the
-        task (XS to XL). Distinguish between completed and ongoing tasks.
-        """
+SUMMARY_INSTRUCTION_INDIVIDUAL = "You will receive a collection of projects led by one team member, and your task is to summarise them for the group. Explain what was done in the last project iteration at a high level, including the size of the task (XS to XL). Distinguish between completed and ongoing tasks. "
 
-TASKS_INSTRUCTION = """
-        You will receive a collection of tasks, and your task is to plan them
-        for the group. Prioritise the tasks according to their size, priority,
-        and assigned members, and suggest potentially useful collaborations.
-        Dedicate a section in the beginning to who should talk to whom.
-        """
+TASKS_INSTRUCTION = "You will receive a collection of tasks, and your task is to plan them for the group. Prioritise the tasks according to their size, priority, and assigned members, and suggest potentially useful collaborations. Dedicate a section in the beginning to who should talk to whom. "
 
-TASKS_INSTRUCTION_INDIVIDUAL = """
-        You will receive a collection of tasks of an individual member of a
-        group, and your task is to plan the next project phase. Prioritise the
-        tasks according to their size / priority, and suggest potentially useful
-        collaborations.
-        """
+TASKS_INSTRUCTION_INDIVIDUAL = "You will receive a collection of tasks of an individual member of a group, and your task is to plan the next project phase. Prioritise the tasks according to their size / priority, and suggest potentially useful collaborations. "
