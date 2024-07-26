@@ -95,29 +95,21 @@ HOW_MESSAGES = [
     "Injecting prior knowledge into LLM queries.",
 ]
 
-SUMMARY_QUERY = """
-        MATCH (person:Person)-[:Leads]->(project:Project)-[:PartOf]->(iteration:Iteration)
-        WHERE project.status = 'Done' OR project.status = 'In Progress'
-        RETURN person.name, project.status, project.size, project.title, project.description, iteration.title
-        """
+SUMMARY_QUERY = """MATCH (person:Person)-[:Leads]->(project:Project)-[:PartOf]->(iteration:Iteration)
+WHERE project.status = 'Done' OR project.status = 'In Progress'
+RETURN person.name, project.status, project.size, project.title, project.description, iteration.title"""
 
-SUMMARY_QUERY_INDIVIDUAL = """
-        MATCH (person:Person {{name: '{person}'}})-[:Leads]->(project:Project)-[:PartOf]->(iteration:Iteration)
-        WHERE project.status = 'Done' OR project.status = 'In Progress'
-        RETURN person.name, project.status, project.size, project.title, project.description, iteration.title
-        """
+SUMMARY_QUERY_INDIVIDUAL = """MATCH (person:Person {{name: '{person}'}})-[:Leads]->(project:Project)-[:PartOf]->(iteration:Iteration)
+WHERE project.status = 'Done' OR project.status = 'In Progress'
+RETURN person.name, project.status, project.size, project.title, project.description, iteration.title"""
 
-TASKS_QUERY = """
-        MATCH (person:Person)-[:Leads]->(project:Project)-[:PartOf]->(iteration:Iteration)
-        WHERE project.status = 'Todo' OR project.status = 'In Progress'                                  
-        RETURN person.name, project.status, project.size, project.title, project.description, iteration.title
-        """
+TASKS_QUERY = """MATCH (person:Person)-[:Leads]->(project:Project)-[:PartOf]->(iteration:Iteration)
+WHERE project.status = 'Todo' OR project.status = 'In Progress'                                  
+RETURN person.name, project.status, project.size, project.title, project.description, iteration.title"""
 
-TASKS_QUERY_INDIVIDUAL = """
-        MATCH (person:Person {{name: '{person}'}})-[:Leads]->(project:Project)-[:PartOf]->(iteration:Iteration)
-        WHERE project.status = 'Todo' OR project.status = 'In Progress'                                  
-        RETURN person.name, project.status, project.size, project.title, project.description, iteration.title
-        """
+TASKS_QUERY_INDIVIDUAL = """MATCH (person:Person {{name: '{person}'}})-[:Leads]->(project:Project)-[:PartOf]->(iteration:Iteration)
+WHERE project.status = 'Todo' OR project.status = 'In Progress'                                  
+RETURN person.name, project.status, project.size, project.title, project.description, iteration.title"""
 
 SUMMARY_INSTRUCTION = "You will receive a collection of projects, and your task is to summarise them for the group. Explain what was done in the last project iteration at a high level, including the size of the task (XS to XL) and the participating team members. Distinguish between completed and ongoing tasks."
 
