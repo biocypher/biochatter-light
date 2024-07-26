@@ -77,7 +77,7 @@ def summary_panel():
 
     with individual:
         summarise = st.button(
-            "Summarise for *slobentanzer*",
+            f"Summarise for {ss.get('individual')}",
             on_click=_summarise_individual(ss.get("individual")),
             use_container_width=True,
         )
@@ -143,7 +143,7 @@ def tasks_panel():
             st.markdown("## Group tasks\n\n" f'{ss.get("tasks")}')
     with individual:
         tasks = st.button(
-            "Plan Tasks for *slobentanzer*",
+            f"Plan Tasks for {ss.get('individual')}",
             on_click=_plan_tasks_individual(ss.get("individual")),
             use_container_width=True,
         )
