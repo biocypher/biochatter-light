@@ -1813,18 +1813,62 @@ def summary_panel():
         
         """
     )
-    summarise = st.button("Summarise", on_click=_summarise)
-    if summarise:
-        conv = ss.get("conversation")
-        conv.append_system_message(
-            "You will receive a collection of projects, and your task is to "
-            "summarise them for the group. Explain what was done in the last "
-            "project iteration at a high level, including the size of the "
-            "task (XS to XL) and the participating team members.")
-        query_return = ss.get("summary", "")
-        if query_return:
-            msg, _, _ = conv.query(json.dumps(query_return[0]))
-        st.write(msg)
+    # create two buttons spanning the entire screen
+    group, individual = st.columns(2)
+    with group:
+        summarise = st.button(
+            "Summarise for the Group", 
+            on_click=_summarise, 
+            use_container_width=True
+        )
+        if summarise:
+            with st.spinner("Summarising ..."):
+                conv = ss.get("conversation")
+                conv.append_system_message(
+                    "You will receive a collection of projects, and your task is to "
+                    "summarise them for the group. Explain what was done in the last "
+                    "project iteration at a high level, including the size of the "
+                    "task (XS to XL) and the participating team members.")
+                query_return = ss.get("summary_query", "")
+                if query_return:
+                    msg, _, _ = conv.query(json.dumps(query_return[0]))
+                    ss["summary"] = msg
+
+        if ss.get("summary"):
+            st.markdown(
+                f"""
+                ## Group summary
+                {ss.get("summary")}
+                """
+            )
+
+    with individual:
+        summarise = st.button(
+            "Summarise for *slobentanzer*", 
+            on_click=_summarise_individual("slobentanzer"), 
+            use_container_width=True
+        )
+        if summarise:
+            with st.spinner("Summarising ..."):
+                conv = ss.get("conversation")
+                conv.append_system_message(
+                    "You will receive a collection of projects led by one team "
+                    "member, and your task is to summarise them for the group. "
+                    "Explain what was done in the last project iteration at a high "
+                    "level, including the size of the task (XS to XL)."
+                )
+                query_return = ss.get("summary_query_individual", "")
+                if query_return:
+                    msg, _, _ = conv.query(json.dumps(query_return[0]))
+                    ss["summary_individual"] = msg
+
+        if ss.get("summary_individual"):
+            st.markdown(
+                f"""
+                ## Individual summary
+                {ss.get("summary_individual")}
+                """
+            )
 
 
 def _summarise():
@@ -1837,7 +1881,19 @@ def _summarise():
         """
     )
 
-    ss["summary"] = result
+    ss["summary_query"] = result
+
+def _summarise_individual(person):
+    _connect_to_neo4j()
+    result = ss.neodriver.query(
+        f"""
+        MATCH (person:Person {{name: '{person}'}})-[:Leads]->(project:Project)-[:PartOf]->(iteration:Iteration)
+        WHERE project.status = 'Done' AND iteration.title = 'Iteration'
+        RETURN person.name, project.size, project.title, project.description
+        """
+    )
+
+    ss["summary_query_individual"] = result
     
 
 def tasks_panel():
