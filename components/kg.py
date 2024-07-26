@@ -69,7 +69,7 @@ def _find_schema_info_node():
 
 def _summarise():
     _connect_to_neo4j()
-    result = ss.neodriver.query(ss.get("summary_query"))
+    result = ss.neodriver.query(ss.get("summary_query", SUMMARY_QUERY))
 
     ss["summary_query_result"] = result
 
@@ -77,7 +77,9 @@ def _summarise():
 def _summarise_individual(person):
     _connect_to_neo4j()
     result = ss.neodriver.query(
-        ss.get("summary_query_individual").format(person=person)
+        ss.get("summary_query_individual", SUMMARY_QUERY_INDIVIDUAL).format(
+            person=person
+        )
     )
 
     ss["summary_query_result_individual"] = result
@@ -85,7 +87,7 @@ def _summarise_individual(person):
 
 def _plan_tasks():
     _connect_to_neo4j()
-    result = ss.neodriver.query(ss.get("tasks_query"))
+    result = ss.neodriver.query(ss.get("tasks_query", TASKS_QUERY))
 
     ss["tasks_query_result"] = result
 
@@ -93,7 +95,9 @@ def _plan_tasks():
 def _plan_tasks_individual(person):
     _connect_to_neo4j()
     result = ss.neodriver.query(
-        ss.get("tasks_query_individual").format(person=person)
+        ss.get("tasks_query_individual", TASKS_QUERY_INDIVIDUAL).format(
+            person=person
+        )
     )
 
     ss["tasks_query_result_individual"] = result

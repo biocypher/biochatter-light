@@ -66,11 +66,17 @@ def summary_panel():
                 conv = ss.get("conversation")
                 conv.reset()
                 conv.correct = False
-                conv.append_system_message(ss.get("summary_instruction"))
+                conv.append_system_message(
+                    ss.get("summary_instruction", SUMMARY_INSTRUCTION)
+                )
                 query_return = ss.get("summary_query_result", "")
                 if query_return:
                     msg, _, _ = conv.query(json.dumps(query_return[0]))
                     ss["summary"] = msg
+                else:
+                    st.error(
+                        "No results from query. Please check the database or query for errors."
+                    )
 
         if ss.get("summary"):
             st.markdown("## Group summary\n\n" f'{ss.get("summary")}')
@@ -78,7 +84,9 @@ def summary_panel():
     with individual:
         summarise = st.button(
             "Summarise for individual (choose in Settings)",
-            on_click=_summarise_individual(ss.get("individual")),
+            on_click=_summarise_individual(
+                ss.get("individual", "slobentanzer")
+            ),
             use_container_width=True,
         )
         if summarise:
@@ -87,12 +95,19 @@ def summary_panel():
                 conv.reset()
                 conv.correct = False
                 conv.append_system_message(
-                    ss.get("summary_instruction_individual")
+                    ss.get(
+                        "summary_instruction_individual",
+                        SUMMARY_INSTRUCTION_INDIVIDUAL,
+                    )
                 )
                 query_return = ss.get("summary_query_result_individual", "")
                 if query_return:
                     msg, _, _ = conv.query(json.dumps(query_return[0]))
                     ss["summary_individual"] = msg
+                else:
+                    st.error(
+                        "No results from query. Please check the database or query for errors."
+                    )
 
         if ss.get("summary_individual"):
             st.markdown(
@@ -134,30 +149,45 @@ def tasks_panel():
         if tasks:
             with st.spinner("Planning ..."):
                 conv = ss.get("conversation")
-                conv.append_system_message(ss.get("tasks_instruction"))
+                conv.append_system_message(
+                    ss.get("tasks_instruction", TASKS_INSTRUCTION)
+                )
                 query_return = ss.get("tasks_query_result", "")
                 if query_return:
                     msg, _, _ = conv.query(json.dumps(query_return[0]))
                     ss["tasks"] = msg
+                else:
+                    st.error(
+                        "No results from query. Please check the database or query for errors."
+                    )
 
         if ss.get("tasks"):
             st.markdown("## Group tasks\n\n" f'{ss.get("tasks")}')
     with individual:
         tasks = st.button(
             "Plan Tasks for individual (choose in Settings)",
-            on_click=_plan_tasks_individual(ss.get("individual")),
+            on_click=_plan_tasks_individual(
+                ss.get("individual", "slobentanzer")
+            ),
             use_container_width=True,
         )
         if tasks:
             with st.spinner("Planning ..."):
                 conv = ss.get("conversation")
                 conv.append_system_message(
-                    ss.get("tasks_instruction_individual")
+                    ss.get(
+                        "tasks_instruction_individual",
+                        TASKS_INSTRUCTION_INDIVIDUAL,
+                    )
                 )
                 query_return = ss.get("tasks_query_result_individual", "")
                 if query_return:
                     msg, _, _ = conv.query(json.dumps(query_return[0]))
                     ss["tasks_individual"] = msg
+                else:
+                    st.error(
+                        "No results from query. Please check the database or query for errors."
+                    )
 
         if ss.get("tasks_individual"):
             st.markdown(
