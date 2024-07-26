@@ -1,6 +1,6 @@
 # BioChatter Light: lightweight pure Python frontend for BioChatter
 app_name = "biochatter-light"
-__version__ = "0.5.0"
+__version__ = "0.5.1"
 
 # BOILERPLATE
 import json
