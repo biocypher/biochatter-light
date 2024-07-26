@@ -164,6 +164,8 @@ TABS_TO_SHOW = {
     "Experimental Design": os.getenv("EXPERIMENTAL_DESIGN_TAB", "false") == "true",
     "Genetics Annotation": os.getenv("GENETICS_ANNOTATION_TAB", "false") == "true",
     "Knowledge Graph": os.getenv("KNOWLEDGE_GRAPH_TAB", "false") == "true",
+    "Last Week's Summary": os.getenv("LAST_WEEKS_SUMMARY_TAB", "false") == "true",
+    "This Week's Tasks": os.getenv("THIS_WEEKS_TASKS_TAB", "false") == "true",
 }
 
 
@@ -1782,6 +1784,65 @@ def _find_schema_info_node():
         ss.schema_dict = json.loads(schema_info_node["schema_info"])
         ss.schema_from = "graph"
 
+def summary_panel():
+    st.markdown(
+        """
+        ### Last Week's Summary
+
+        Here, we provide a summary of last week's activities from the project
+        database. The database is built from the [GitHub
+        Project](https://github.com/orgs/biocypher/projects/6/views/1) as a
+        BioCypher knowledge graph and serves as a demonstration of the flexible
+        BioChatter workflow. This BioChatter Light application is a stand-in for
+        demonstration purposes, since the workflow presented here would ideally
+        be integrated into a messaging platform such as Zulip or Slack via a web
+        hook / bot. For instance, this summary would be generated for the entire
+        group, but also for each individual project group and member, and sent
+        to the appropriate channels automatically.
+
+        Together with the recommendations generated for the next week (see
+        second tab), this provides a demonstration of a project management
+        system that has fair and sustainable data collection via a BioCypher
+        KG built from a GitHub project, and a conversational AI that can
+        summarise and recommend actions based on the live data.
+
+        Further, the system can be used to modify the project via the respective
+        API calls, e.g., to add tasks, or move tasks between status columns. For
+        the demonstration purposes of this use case, this functionality is not
+        implemented.
+        
+        """
+    )
+    summarise = st.button("Summarise", on_click=_summarise)
+    if summarise:
+        conv = ss.get("conversation")
+        conv.append_system_message(
+            "You will receive a collection of projects, and your task is to "
+            "summarise them for the group. Explain what was done in the last "
+            "project iteration at a high level, including the size of the "
+            "task (XS to XL) and the participating team members.")
+        query_return = ss.get("summary", "")
+        if query_return:
+            msg, _, _ = conv.query(json.dumps(query_return[0]))
+        st.write(msg)
+
+
+def _summarise():
+    _connect_to_neo4j()
+    result = ss.neodriver.query(
+        """
+        MATCH (person:Person)-[:Leads]->(project:Project)-[:PartOf]->(iteration:Iteration)
+        WHERE project.status = 'Done' AND iteration.title = 'Iteration'
+        RETURN person.name, project.size, project.title, project.description
+        """
+    )
+
+    ss["summary"] = result
+    
+
+def tasks_panel():
+    pass
+
 
 def _run_neo4j_query(query):
     """
@@ -2247,6 +2308,14 @@ def main():
                 )
             else:
                 kg_panel()
+
+    if "Last Week's Summary" in tabs_to_show:
+        with tab_dict["Last Week's Summary"]:
+            summary_panel()
+
+    if "This Week's Tasks" in tabs_to_show:
+        with tab_dict["This Week's Tasks"]:
+            tasks_panel()
 
 
 if __name__ == "__main__":
