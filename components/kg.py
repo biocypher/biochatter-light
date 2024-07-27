@@ -29,6 +29,8 @@ def _connect_to_neo4j():
     ss.neodriver = nu.Driver(
         db_name=ss.get("db_name") or "neo4j",
         db_uri=db_uri,
+        db_user=ss.get("db_user", "neo4j"),
+        db_passwd=ss.get("db_password", "neo4j"),
     )
 
     # return True if connected, False if no DB found
@@ -50,8 +52,19 @@ def _determine_neo4j_connection():
             ss["db_ip"] = "localhost"
     if ss.get("db_port") is None:
         ss["db_port"] = "7687"
+    # If the URI is set, use it to connect to the database
+    # extract between bolt:// and :
+    if os.getenv("NEO4J_URI"):
+        uri = os.getenv("NEO4J_URI")
+        ss["db_ip"] = uri.split("//")[1].split(":")[0]
+        ss["db_port"] = uri.split(":")[2]
     if ss.get("db_name") is None:
         ss["db_name"] = "neo4j"
+
+    # If the user has provided a username and password, use them
+    if os.getenv("NEO4J_USER") and os.getenv("NEO4J_PASSWORD"):
+        ss["db_user"] = os.getenv("NEO4J_USER")
+        ss["db_password"] = os.getenv("NEO4J_PASSWORD")
 
 
 def _find_schema_info_node():

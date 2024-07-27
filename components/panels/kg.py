@@ -13,6 +13,7 @@ from components.handlers import (
 from components.kg import (
     _run_neo4j_query,
     _connect_to_neo4j,
+    _determine_neo4j_connection,
 )
 
 
@@ -49,14 +50,11 @@ def kg_panel():
 
     with connection:
         ip, port = st.columns(2)
-        if os.getenv("DOCKER_COMPOSE", "false") == "true":
-            host = "deploy"
-        else:
-            host = "localhost"
+        _determine_neo4j_connection()
         with ip:
-            st.text_input("Database IP address:", value=host, key="db_ip")
+            st.text_input("Database IP address:", value=ss.get("db_ip"))
         with port:
-            st.text_input("Database port:", value="7687", key="db_port")
+            st.text_input("Database port:", value=ss.get("db_port"))
 
         # try connecting (only neo4j for now)
         if dbms_type == "Neo4j":
