@@ -238,7 +238,7 @@ def task_settings_panel():
 
         with st.expander("Tasks Instructions"):
             ss["tasks_instruction"] = st.text_area(
-                "Grroup Instruction",
+                "Group Instruction",
                 ss.get("tasks_instruction", ""),
                 key="task_instruction_group1",
             )
