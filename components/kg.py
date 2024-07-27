@@ -45,26 +45,28 @@ def _determine_neo4j_connection():
     """
     Determine the connection details for the Neo4j database.
     """
+    if os.getenv("NEO4J_URI"):
+        uri = os.getenv("NEO4J_URI")
     if ss.get("db_ip") is None:
-        if os.getenv("DOCKER_COMPOSE", "false") == "true":
+        if uri:
+            ss["db_ip"] = uri.split("//")[1].split(":")[0]
+        elif os.getenv("DOCKER_COMPOSE", "false") == "true":
             ss["db_ip"] = "deploy"
         else:
             ss["db_ip"] = "localhost"
     if ss.get("db_port") is None:
-        ss["db_port"] = "7687"
-    # If the URI is set, use it to connect to the database
-    # extract between bolt:// and :
-    if os.getenv("NEO4J_URI"):
-        uri = os.getenv("NEO4J_URI")
-        ss["db_ip"] = uri.split("//")[1].split(":")[0]
-        ss["db_port"] = uri.split(":")[2]
+        if uri:
+            ss["db_port"] = uri.split(":")[2]
+        else:
+            ss["db_port"] = "7687"
     if ss.get("db_name") is None:
         ss["db_name"] = "neo4j"
 
     # If the user has provided a username and password, use them
-    if os.getenv("NEO4J_USER") and os.getenv("NEO4J_PASSWORD"):
-        ss["db_user"] = os.getenv("NEO4J_USER")
-        ss["db_password"] = os.getenv("NEO4J_PASSWORD")
+    if not ss.get("db_user") or not ss.get("db_password"):
+        if os.getenv("NEO4J_USER") and os.getenv("NEO4J_PASSWORD"):
+            ss["db_user"] = os.getenv("NEO4J_USER")
+            ss["db_password"] = os.getenv("NEO4J_PASSWORD")
 
 
 def _find_schema_info_node():

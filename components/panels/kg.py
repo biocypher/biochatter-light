@@ -52,9 +52,14 @@ def kg_panel():
         ip, port = st.columns(2)
         _determine_neo4j_connection()
         with ip:
-            st.text_input("Database IP address:", value=ss.get("db_ip"))
+            st.text_input("Database IP address:", key="db_ip")
         with port:
-            st.text_input("Database port:", value=ss.get("db_port"))
+            st.text_input("Database port:", key="db_port")
+        user, password = st.columns(2)
+        with user:
+            st.text_input("Username:", key="db_user")
+        with password:
+            st.text_input("Password:", key="db_password")
 
         # try connecting (only neo4j for now)
         if dbms_type == "Neo4j":
