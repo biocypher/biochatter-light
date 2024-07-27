@@ -4,8 +4,8 @@ import json
 ss = st.session_state
 
 from components.kg import (
-    _summarise_individual,
     _summarise,
+    _summarise_individual,
     _plan_tasks,
     _plan_tasks_individual,
 )
@@ -15,16 +15,25 @@ from components.constants import (
     SUMMARY_INSTRUCTION_INDIVIDUAL,
     TASKS_INSTRUCTION,
     TASKS_INSTRUCTION_INDIVIDUAL,
+    SUMMARY_QUERY,
+    SUMMARY_QUERY_INDIVIDUAL,
+    TASKS_QUERY,
+    TASKS_QUERY_INDIVIDUAL,
 )
-
-ss["summary_instruction"] = SUMMARY_INSTRUCTION
-ss["summary_instruction_individual"] = SUMMARY_INSTRUCTION_INDIVIDUAL
-ss["tasks_instruction"] = TASKS_INSTRUCTION
-ss["tasks_instruction_individual"] = TASKS_INSTRUCTION_INDIVIDUAL
-ss["individual"] = "slobentanzer"
 
 
 def summary_panel():
+    if not ss.get("summary_query"):
+        ss["summary_query"] = SUMMARY_QUERY
+    if not ss.get("summary_query_individual"):
+        ss["summary_query_individual"] = SUMMARY_QUERY_INDIVIDUAL
+    if not ss.get("summary_instruction"):
+        ss["summary_instruction"] = SUMMARY_INSTRUCTION
+    if not ss.get("summary_instruction_individual"):
+        ss["summary_instruction_individual"] = SUMMARY_INSTRUCTION_INDIVIDUAL
+    if not ss.get("individual"):
+        ss["individual"] = "slobentanzer"
+
     st.markdown(
         """
         ### Last Week's Summary
@@ -116,6 +125,17 @@ def summary_panel():
 
 
 def tasks_panel():
+    if not ss.get("tasks_query"):
+        ss["tasks_query"] = TASKS_QUERY
+    if not ss.get("tasks_query_individual"):
+        ss["tasks_query_individual"] = TASKS_QUERY_INDIVIDUAL
+    if not ss.get("tasks_instruction"):
+        ss["tasks_instruction"] = TASKS_INSTRUCTION
+    if not ss.get("tasks_instruction_individual"):
+        ss["tasks_instruction_individual"] = TASKS_INSTRUCTION_INDIVIDUAL
+    if not ss.get("individual"):
+        ss["individual"] = "slobentanzer"
+
     st.markdown(
         """
         ### This Week's Tasks
