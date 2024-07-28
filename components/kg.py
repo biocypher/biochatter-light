@@ -33,6 +33,7 @@ def _determine_neo4j_connection():
     """
     Determine the connection details for the Neo4j database.
     """
+    uri = None
     if os.getenv("NEO4J_URI"):
         uri = os.getenv("NEO4J_URI")
     if ss.get("db_ip") is None:
