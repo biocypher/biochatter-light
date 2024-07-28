@@ -61,13 +61,16 @@ services:
         poetry install
         poetry run streamlit run app.py --server.port=8501
     environment:
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
       - DOCKER_COMPOSE=true
-      - CHAT_TAB=false
-      - PROMPT_ENGINEERING_TAB=false
-      - RAG_TAB=false
-      - CORRECTING_AGENT_TAB=false
-      - KNOWLEDGE_GRAPH_TAB=true
-      - LAST_WEEKS_SUMMARY_TAB=true
+      - CHAT_TAB=true
+      - PROMPT_ENGINEERING_TAB=true
+      - RAG_TAB=true
+      - CORRECTING_AGENT_TAB=true
+      - KNOWLEDGE_GRAPH_TAB=false
+      - LAST_WEEKS_SUMMARY_TAB=false
+      - THIS_WEEKS_TASKS_TAB=false
+      - TASK_SETTINGS_PANEL_TAB=false
     volumes:
       - .:/app
     ports:
