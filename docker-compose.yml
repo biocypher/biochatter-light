@@ -68,6 +68,9 @@ services:
       - RAG_TAB=true
       - CORRECTING_AGENT_TAB=true
       - KNOWLEDGE_GRAPH_TAB=false
+      - CELL_TYPE_ANNOTATION_TAB=false
+      - EXPERIMENTAL_DESIGN_TAB=false
+      - GENETICS_ANNOTATION_TAB=false
       - LAST_WEEKS_SUMMARY_TAB=false
       - THIS_WEEKS_TASKS_TAB=false
       - TASK_SETTINGS_PANEL_TAB=false
