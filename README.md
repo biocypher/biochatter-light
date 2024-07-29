@@ -30,14 +30,20 @@ You can use environment variables to select the tabs to display; these can also
 be defined in the `docker-compose.yml` file. The following environment variables
 are available:
 
-- `CHAT_TAB`: Show the chat tab.
-- `PROMPT_ENGINEERING_TAB`: Show the prompt engineering tab.
-- `RAG_TAB`: Show the retrieval-augmented generation tab.
-- `KNOWLEDGE_GRAPH_TAB`: Show the knowledge graph tab.
-- `CORRECTING_AGENT_TAB`: Show the correcting agent tab.
-- `CELL_TYPE_ANNOTATION_TAB`: Show the cell type annotation tab.
-- `EXPERIMENTAL_DESIGN_TAB`: Show the experimental design tab.
-- `GENETICS_ANNOTATION_TAB`: Show the genetics annotation tab.
+- Basic tabs
+    - `CHAT_TAB`: Show the chat tab.
+    - `PROMPT_ENGINEERING_TAB`: Show the prompt engineering tab.
+    - `CORRECTING_AGENT_TAB`: Show the correcting agent tab.
+- Retrieval-augmented generation
+    - `RAG_TAB`: Show the retrieval-augmented generation tab.
+    - `KNOWLEDGE_GRAPH_TAB`: Show the knowledge graph tab.
+- Special use cases
+    - `CELL_TYPE_ANNOTATION_TAB`: Show the cell type annotation tab.
+    - `EXPERIMENTAL_DESIGN_TAB`: Show the experimental design tab.
+    - `GENETICS_ANNOTATION_TAB`: Show the genetics annotation tab.
+    - `LAST_WEEKS_SUMMARY_TAB`: Show the last week's summary tab (project management).
+    - `THIS_WEEKS_TASKS_TAB`: Show this week's tasks tab (project management).
+    - `TASK_SETTINGS_PANEL_TAB`: Show the task settings panel tab (project management).  
 
 Simply set these to `true` to show the corresponding tab. We also have the
 `DOCKER_COMPOSE` environment variable, which we use to signal to the app that it
