@@ -36,31 +36,37 @@ def summary_panel():
 
     st.markdown(
         """
-        ### Last Week's Summary
+Welcome to the BioChatter project management demo, where we showcase a workflow
+for summarising a project team's activities and making plans for the next
+project iteration. We build a knowledge graph from a GitHub project (see
+[here](https://github.com/orgs/biocypher/projects/6/views/1)) and integrate it
+using an LLM agent via BioChatter. You can find a more detailed description in
+our [vignette](https://biochatter.org/vignette-custom-bclight-advanced/).
 
-        Here, we provide a summary of last week's activities from the project
-        database. The database is built from the [GitHub
-        Project](https://github.com/orgs/biocypher/projects/6/views/1) as a
-        BioCypher knowledge graph and serves as a demonstration of the flexible
-        BioChatter workflow. This BioChatter Light application is a stand-in for
-        demonstration purposes, since the workflow presented here would ideally
-        be integrated into a messaging platform such as Zulip or Slack via a web
-        hook / bot. For instance, this summary would be generated for the entire
-        group, but also for each individual project group and member, and sent
-        to the appropriate channels automatically.
+### Last Week's Summary
 
-        Together with the recommendations generated for the next week (see
-        second tab), this provides a demonstration of a project management
-        system that has fair and sustainable data collection via a BioCypher
-        KG built from a GitHub project, and a conversational AI that can
-        summarise and recommend actions based on the live data.
+In this tab, we provide a summary of last week's activities from the project
+database. The database is built from the [GitHub
+Project](https://github.com/orgs/biocypher/projects/6/views/1) as a BioCypher
+knowledge graph and serves as a demonstration of the flexible BioChatter
+workflow. This BioChatter Light application is a stand-in for demonstration
+purposes, since the workflow presented here would ideally be integrated into a
+messaging platform such as Zulip or Slack via a web hook / bot. For instance,
+this summary would be generated for the entire group, but also for each
+individual project group and member, and sent to the appropriate channels
+automatically.
 
-        Further, the system can be used to modify the project via the respective
-        API calls, e.g., to add tasks, or move tasks between status columns. For
-        the demonstration purposes of this use case, this functionality is not
-        implemented.
-        
-        """
+Together with the recommendations generated for the next week (see second tab),
+this provides a demonstration of a project management system that has fair and
+sustainable data collection via a BioCypher KG built from a GitHub project, and
+a conversational AI that can summarise and recommend actions based on the live
+data.
+
+Further, the system can be used to modify the project via the respective API
+calls, e.g., to add tasks, or move tasks between status columns. For the
+demonstration purposes of this use case, this functionality is not implemented.
+
+"""
     )
     # create two buttons spanning the entire screen
     group, individual = st.columns(2)
