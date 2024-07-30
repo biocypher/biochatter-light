@@ -49,6 +49,21 @@ Simply set these to `true` to show the corresponding tab. We also have the
 `DOCKER_COMPOSE` environment variable, which we use to signal to the app that it
 is running inside a Docker container; you won't need to set this manually.
 
+## Neo4j connectivity and authentication
+
+If you want to connect a Neo4j knowledge graph to the BioChatter app, you can
+set some environment variables to configure the connection. The following
+variables are available:
+
+- `NEO4J_URI`: The URI of the Neo4j database, e.g., `bolt://localhost:7687`.
+- `NEO4J_USER`: The username for the Neo4j database, e.g., `neo4j`.
+- `NEO4J_PASSWORD`: The password for the Neo4j database, e.g., `password`.
+- `NEO4J_DBNAME`: The name of the Neo4j database to connect to, e.g., `neo4j`.
+
+The knowledge graph tab allows the specification of URI (hostname and port), the
+username and password in the UI. The database name is set to `neo4j` by default,
+if you have a different one, please set the environment variable.
+
 ## 🤝 Get involved!
 
 To stay up to date with the project, please star the repository and watch the
