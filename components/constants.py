@@ -97,19 +97,63 @@ HOW_MESSAGES = [
 
 SUMMARY_QUERY = """MATCH (person:Person)-[:Leads]->(project:Project)-[:PartOf]->(iteration:Iteration)
 WHERE project.status = 'Done' OR project.status = 'In Progress'
-RETURN person.name, project.status, project.size, project.title, project.description, iteration.title"""
+WITH person, project, iteration
+OPTIONAL MATCH (project)-[hc:HasComment]->(comment:Comment)
+WITH person, project, iteration, comment.text AS commentText, hc.recency AS recency
+ORDER BY recency ASC
+WITH person, project, iteration, COLLECT(commentText)[..5] AS comments
+RETURN person.name, 
+       project.status, 
+       project.size, 
+       project.title, 
+       project.description, 
+       iteration.title, 
+       REDUCE(output = '', comment in comments | output + '; ' + comment) AS concatenated_comments"""
 
 SUMMARY_QUERY_INDIVIDUAL = """MATCH (person:Person {{name: '{person}'}})-[:Leads]->(project:Project)-[:PartOf]->(iteration:Iteration)
 WHERE project.status = 'Done' OR project.status = 'In Progress'
-RETURN person.name, project.status, project.size, project.title, project.description, iteration.title"""
+WITH person, project, iteration
+OPTIONAL MATCH (project)-[hc:HasComment]->(comment:Comment)
+WITH person, project, iteration, comment.text AS commentText, hc.recency AS recency
+ORDER BY recency ASC
+WITH person, project, iteration, COLLECT(commentText)[..5] AS comments
+RETURN person.name, 
+       project.status, 
+       project.size, 
+       project.title, 
+       project.description, 
+       iteration.title, 
+       REDUCE(output = '', comment in comments | output + '; ' + comment) AS concatenated_comments"""
 
 TASKS_QUERY = """MATCH (person:Person)-[:Leads]->(project:Project)-[:PartOf]->(iteration:Iteration)
 WHERE project.status = 'Todo' OR project.status = 'In Progress'                                  
-RETURN person.name, project.status, project.size, project.title, project.description, iteration.title"""
+WITH person, project, iteration
+OPTIONAL MATCH (project)-[hc:HasComment]->(comment:Comment)
+WITH person, project, iteration, comment.text AS commentText, hc.recency AS recency
+ORDER BY recency ASC
+WITH person, project, iteration, COLLECT(commentText)[..5] AS comments
+RETURN person.name, 
+       project.status, 
+       project.size, 
+       project.title, 
+       project.description, 
+       iteration.title, 
+       REDUCE(output = '', comment in comments | output + '; ' + comment) AS concatenated_comments"""
 
 TASKS_QUERY_INDIVIDUAL = """MATCH (person:Person {{name: '{person}'}})-[:Leads]->(project:Project)-[:PartOf]->(iteration:Iteration)
 WHERE project.status = 'Todo' OR project.status = 'In Progress'                                  
-RETURN person.name, project.status, project.size, project.title, project.description, iteration.title"""
+WITH person, project, iteration
+OPTIONAL MATCH (project)-[hc:HasComment]->(comment:Comment)
+WITH person, project, iteration, comment.text AS commentText, hc.recency AS recency
+ORDER BY recency ASC
+WITH person, project, iteration, COLLECT(commentText)[..5] AS comments
+RETURN person.name, 
+       project.status, 
+       project.size, 
+       project.title, 
+       project.description, 
+       iteration.title, 
+       REDUCE(output = '', comment in comments | output + '; ' + comment) AS concatenated_comments"""
 
 SUMMARY_INSTRUCTION = "You will receive a collection of projects, and your task is to summarise them for the group. Explain what was done in the last project iteration at a high level, including the size of the task (XS to XL) and the participating team members. Distinguish between completed and ongoing tasks."
 
