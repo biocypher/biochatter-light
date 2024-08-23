@@ -410,12 +410,7 @@ def main_logic():
                 "a correcting agent that automatically checks the validity of the "
                 "primary model's statements, and corrects them if necessary."
             )
-            if ss.get("online"):
-                st.markdown(
-                    f"`📎 Assistant`: Correction agent {OFFLINE_FUNCTIONALITY}"
-                )
-            else:
-                correcting_agent_panel()
+            correcting_agent_panel()
 
     if "Genetics Annotation" in tabs_to_show:
         with tab_dict["Genetics Annotation"]:
