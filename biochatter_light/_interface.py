@@ -179,6 +179,10 @@ class BioChatterLight:
             )
             return
         elif use_xinference():
+            st.error(
+                "Xinference not implemented yet. Please use Ollama for now."
+            )
+            return
             ss.conversation = XinferenceConversation(
                 base_url=ss.get("base_url"),
                 model_name=ss.get("primary_model"),
@@ -214,14 +218,18 @@ class BioChatterLight:
                 split_correction=ss.split_correction,
             )
         elif model_name in XINFERENCE_MODELS:
+            # not used in env definition case
             ss.conversation = XinferenceConversation(
                 base_url=ss.get("xinference_base_url"),
+                model_name=model_name,
                 prompts=ss.prompts,
                 correct=ss.correct,
                 split_correction=ss.split_correction,
             )
         elif model_name in OLLAMA_MODELS:
+            # not used in env definition case
             ss.conversation = OllamaConversation(
+                base_url=ss.get("ollama_base_url"),
                 model_name=model_name,
                 prompts=ss.prompts,
                 correct=ss.correct,
