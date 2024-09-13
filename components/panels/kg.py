@@ -119,13 +119,18 @@ def kg_panel():
             # value="How many people named Donald are in the database?",
         )
 
-        # TODO get schema from graph (when connecting) or upload
-        # TODO ask about the schema more generally, without generating a query?
-
         if question:
-            # manual schema info file
+
+            def conversation_factory():
+                """
+                Factory function for creating a conversation with the LLM.
+                """
+                if ss.get("conversation"):
+                    return ss.conversation
+
             prompt_engine = BioCypherPromptEngine(
                 schema_config_or_info_dict=ss.schema_dict,
+                conversation_factory=conversation_factory,
             )
 
             # generate query if not modified

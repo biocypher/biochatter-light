@@ -261,7 +261,10 @@ def main_logic():
                     download_chat_history(bcl)
                 with d2:
                     download_complete_history(bcl)
-                model_select()
+                if not os.getenv("OLLAMA_MODEL") and not os.getenv(
+                    "XINFERENCE_MODEL"
+                ):
+                    model_select()
 
             # CHAT BOX
 
@@ -270,6 +273,10 @@ def main_logic():
                     openai_key_chat_box()
                 elif ss.primary_model in HUGGINGFACE_MODELS:
                     huggingface_key_chat_box()
+                elif os.getenv("OLLAMA_MODEL") or os.getenv("XINFERENCE_MODEL"):
+                    bcl._ask_for_user_name()
+                    ss.mode = "getting_name"
+                    refresh()
             elif ss.mode == "getting_mode":
                 mode_select()
             elif ss.mode == "getting_data_file_input":
@@ -461,7 +468,10 @@ def _startup():
         "rag_agent_prompts": RAG_PROMPTS,
         "schema_prompts": SCHEMA_PROMPTS,
     }
-    ss.correct = True
+    if not os.getenv("XINFERENCE_MODEL") and not os.getenv("OLLAMA_MODEL"):
+        ss.correct = True
+    else:
+        ss.correct = False
     ss.split_correction = False
     ss.generate_query = True
 

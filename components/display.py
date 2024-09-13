@@ -28,6 +28,19 @@ def display_token_usage():
     with st.expander("Token usage", expanded=True):
         maximum = ss.get("token_limit", 0)
 
+        if not ss.get("token_usage"):
+            ss.token_usage = {
+                "prompt_tokens": 0,
+                "completion_tokens": 0,
+                "total_tokens": 0,
+            }
+        elif isinstance(ss.token_usage, int):
+            ss.token_usage = {
+                "prompt_tokens": 0,
+                "completion_tokens": 0,
+                "total_tokens": ss.token_usage,
+            }
+
         st.markdown(
             f"""
             Last query: {ss.token_usage["prompt_tokens"]}
