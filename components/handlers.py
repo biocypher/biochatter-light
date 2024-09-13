@@ -10,8 +10,8 @@ from biochatter._stats import get_community_usage_cost
 from streamlit.runtime.uploaded_file_manager import (
     UploadedFile,
     UploadedFileRec,
-    FileURLsProto,
 )
+from streamlit.proto.Common_pb2 import FileURLs
 import pandas as pd
 from .kg import _connect_to_neo4j
 
@@ -197,7 +197,7 @@ def demo_next():
         )
 
         ss.demo_tool_data = [
-            UploadedFile(record=uploaded_file, file_urls=FileURLsProto())
+            UploadedFile(record=uploaded_file, file_urls=FileURLs())
         ]
         ss.mode = "demo_tool"
         ss.input = "done"
@@ -276,7 +276,7 @@ def set_both_mode():
 
 def refresh():
     ss.input = ""
-    st.experimental_rerun()
+    st.rerun()
 
 
 def _rerun_query():
