@@ -274,6 +274,7 @@ def main_logic():
                 elif ss.primary_model in HUGGINGFACE_MODELS:
                     huggingface_key_chat_box()
                 elif os.getenv("OLLAMA_MODEL") or os.getenv("XINFERENCE_MODEL"):
+                    bcl._ask_for_user_name()
                     ss.mode = "getting_name"
                     refresh()
             elif ss.mode == "getting_mode":
