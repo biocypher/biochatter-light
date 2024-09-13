@@ -14,9 +14,16 @@ from biochatter.llm_connect import (
     OllamaConversation,
     OPENAI_MODELS,
     HUGGINGFACE_MODELS,
-    XINFERENCE_MODELS,
     TOKEN_LIMITS,
 )
+
+XINFERENCE_MODELS = [
+    "llama-3.1-instruct",
+]
+
+OLLAMA_MODELS = [
+    "llama3.1",
+]
 
 ss = st.session_state
 
@@ -28,6 +35,34 @@ def community_possible():
         and "REDIS_PW" in os.environ
         and ss.primary_model == "gpt-3.5-turbo"
     )
+
+
+def use_ollama():
+    if "OLLAMA_MODEL" in os.environ:
+        if "XINFERENCE_MODEL" in os.environ:
+            raise ValueError(
+                "Both Ollama and Xinference models are set in the environment. "
+                "Please only set one."
+            )
+
+        ss.primary_model = os.getenv("OLLAMA_MODEL")
+        OLLAMA_MODELS.append(os.getenv("OLLAMA_MODEL"))
+        ss.base_url = os.getenv("OLLAMA_URL") or "http://localhost:11434"
+        return True
+
+
+def use_xinference():
+    if "XINFERENCE_MODEL" in os.environ:
+        if "OLLAMA_MODEL" in os.environ:
+            raise ValueError(
+                "Both Ollama and Xinference models are set in the environment. "
+                "Please only set one."
+            )
+
+        ss.primary_model = os.getenv("XINFERENCE_MODEL")
+        XINFERENCE_MODELS.append(os.getenv("XINFERENCE_MODEL"))
+        ss.base_url = os.getenv("XINFERENCE_URL") or "http://localhost:9997"
+        return True
 
 
 API_KEY_REQUIRED = "The currently selected model requires an API key."
@@ -134,6 +169,25 @@ class BioChatterLight:
         if ss.get("conversation"):
             logger.warning("Conversation already exists, overwriting.")
 
+        if use_ollama():
+            ss.conversation = OllamaConversation(
+                base_url=ss.get("base_url"),
+                model_name=ss.get("primary_model"),
+                prompts=ss.prompts,
+                correct=ss.correct,
+                split_correction=ss.split_correction,
+            )
+            return
+        elif use_xinference():
+            ss.conversation = XinferenceConversation(
+                base_url=ss.get("base_url"),
+                model_name=ss.get("primary_model"),
+                prompts=ss.prompts,
+                correct=ss.correct,
+                split_correction=ss.split_correction,
+            )
+            return
+
         if ss.get("openai_api_type") == "azure":
             ss.conversation = AzureGptConversation(
                 deployment_name=ss.get("openai_deployment_name"),
@@ -166,6 +220,13 @@ class BioChatterLight:
                 correct=ss.correct,
                 split_correction=ss.split_correction,
             )
+        elif model_name in OLLAMA_MODELS:
+            ss.conversation = OllamaConversation(
+                model_name=model_name,
+                prompts=ss.prompts,
+                correct=ss.correct,
+                split_correction=ss.split_correction,
+            )
 
     def _check_for_api_key(self, write: bool = True, input: str = None):
         """
@@ -181,12 +242,10 @@ class BioChatterLight:
         """
         if ss.primary_model in OPENAI_MODELS:
             key = ss.get("openai_api_key")
-        elif ss.primary_model in HUGGINGFACE_MODELS:
-            key = ss.get("huggingfacehub_api_key")
-        elif ss.primary_model in XINFERENCE_MODELS:
-            key = ss.get("xinference_api_key")
-
-        ss.token_limit = TOKEN_LIMITS[ss.primary_model]
+            ss.token_limit = TOKEN_LIMITS[ss.primary_model]
+        else:
+            key = None
+            ss.token_limit = 2000
 
         if not key and input:
             key = input
