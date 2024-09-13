@@ -11,6 +11,7 @@ from biochatter.llm_connect import (
     AzureGptConversation,
     BloomConversation,
     XinferenceConversation,
+    OllamaConversation,
     OPENAI_MODELS,
     HUGGINGFACE_MODELS,
     XINFERENCE_MODELS,
