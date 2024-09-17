@@ -49,6 +49,35 @@ Simply set these to `true` to show the corresponding tab. We also have the
 `DOCKER_COMPOSE` environment variable, which we use to signal to the app that it
 is running inside a Docker container; you won't need to set this manually.
 
+## LLM connectivity and selection
+
+The default use case, demonstrated in `docker-compose.yml`, is to connect to the
+OpenAI API, which allows quick development and testing without the need for
+deploying and managing your own models. In addition, these models currently
+give best overall performance. To use this feature, you have to provide your own
+API key in the `OPENAI_API_KEY` environment variable, as well have a valid and
+billable account with OpenAI.
+
+### Open-source model deployment
+
+We allow deployment and connection to locally hosted models via the Ollama
+software and Python API. Instead of providing an OpenAI API key, you can connect
+to the locally or remotely hosted Ollama command line interface using the
+`OLLAMA_MODEL` environment variable to select one of the available models from
+the [Ollama library](https://ollama.com/library). For instance,
+`OLLAMA_MODEL=llama3.1` will launch and connect to the 8B default variant of
+Llama-3.1 instruct.
+
+By default, we connect to port 11434 on localhost, which is the initial setting
+for Ollama. You can change the URL, including pointing to a remote server, by
+setting the `OLLAMA_URL` environment variable. For instance, if you want to
+connect to a locally running Ollama instance from within a Docker container, you
+can set `OLLAMA_URL=http://host.docker.internal:11434`. This is demonstrated in
+the [pole](https://github.com/biocypher/pole) example repository, in line 60 of
+the
+[docker-compose-ollama.yml](https://github.com/biocypher/pole/blob/main/docker-compose-ollama.yml#L60)
+file.
+
 ## Neo4j connectivity and authentication
 
 If you want to connect a Neo4j knowledge graph to the BioChatter app, you can
