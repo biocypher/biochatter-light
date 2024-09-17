@@ -51,12 +51,12 @@ is running inside a Docker container; you won't need to set this manually.
 
 ## LLM connectivity and selection
 
-The default use case, demonstrated in `docker-compose.yml`, is to connect to the
-OpenAI API, which allows quick development and testing without the need for
-deploying and managing your own models. In addition, these models currently
-give best overall performance. To use this feature, you have to provide your own
-API key in the `OPENAI_API_KEY` environment variable, as well have a valid and
-billable account with OpenAI.
+The default use case, demonstrated in [docker-compose.yml](docker-compose.yml),
+is to connect to the OpenAI API, which allows quick development and testing
+without the need for deploying and managing your own models. In addition, these
+models currently give best overall performance. To use this feature, you have to
+provide your own API key in the `OPENAI_API_KEY` environment variable, as well
+have a valid and billable account with OpenAI.
 
 ### Open-source model deployment
 
