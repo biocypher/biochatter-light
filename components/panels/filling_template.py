@@ -5,10 +5,18 @@ ss = st.session_state
 import requests
 import pandas as pd
 from io import StringIO
+import os
 
 
 def fetch_csv_files():
-    repo_url = "https://api.github.com/repos/marvinm2/pole/contents/data"
+    # Check if the environment variable is set
+    repo_url = os.getenv("CSV_REPO_URL_FOR_FILLING_TEMPLATE")
+    st.write(repo_url)
+    if not repo_url:
+        st.error(
+            "Environment variable 'CSV_REPO_URL_FOR_FILLING_TEMPLATE' is not set. Please set it to continue."
+        )
+        return []
 
     if not ss.get("template_directory"):
         response = requests.get(repo_url)
@@ -29,11 +37,17 @@ def fetch_csv_files():
 
 
 def read_csv_from_github(file_name):
-    file_url = (
-        f"https://raw.githubusercontent.com/marvinm2/pole/main/data/{file_name}"
-    )
-    response = requests.get(file_url)
+    # Check if the environment variable is set
+    base_url = os.getenv("CSV_REPO_URL_FOR_FILLING_TEMPLATE")
+    if not base_url:
+        st.error(
+            "Environment variable 'CSV_REPO_URL_FOR_FILLING_TEMPLATE' is not set. Please set it to continue."
+        )
+        return None
 
+    file_url = f"{base_url}/{file_name}"
+    response = requests.get(file_url)
+    st.write(file_url)
     if response.status_code == 200:
         csv_data = StringIO(response.text)
         df = pd.read_csv(csv_data)
@@ -51,6 +65,7 @@ def filling_template_panel():
     """
     st.markdown("### 📄 Select CSV File from GitHub Repository")
 
+    # Fetch the CSV files only if the environment variable is set
     csv_files = fetch_csv_files()
 
     if csv_files:
