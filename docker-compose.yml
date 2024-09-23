@@ -67,6 +67,7 @@ services:
       - PROMPT_ENGINEERING_TAB=true
       - RAG_TAB=true
       - CORRECTING_AGENT_TAB=true
+      - FILLING_TEMPLATE_TAB=true
       - KNOWLEDGE_GRAPH_TAB=false
       - CELL_TYPE_ANNOTATION_TAB=false
       - EXPERIMENTAL_DESIGN_TAB=false
