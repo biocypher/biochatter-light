@@ -89,6 +89,3 @@ def filling_template_panel():
 
     else:
         st.warning("No CSV files available.")
-
-
-filling_template_panel()
