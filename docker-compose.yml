@@ -62,11 +62,13 @@ services:
         poetry run streamlit run app.py --server.port=8501
     environment:
       - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - FILLING_TEMPLATE_API_URL=${FILLING_TEMPLATE_API_URL}
       - DOCKER_COMPOSE=true
       - CHAT_TAB=true
       - PROMPT_ENGINEERING_TAB=true
       - RAG_TAB=true
       - CORRECTING_AGENT_TAB=true
+      - FILLING_TEMPLATE_TAB=true
       - KNOWLEDGE_GRAPH_TAB=false
       - CELL_TYPE_ANNOTATION_TAB=false
       - EXPERIMENTAL_DESIGN_TAB=false

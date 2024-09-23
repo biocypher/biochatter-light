@@ -15,6 +15,8 @@ TABS_TO_SHOW = {
     # Specific purpose tabs
     "Cell Type Annotation": os.getenv("CELL_TYPE_ANNOTATION_TAB", "false")
     == "true",
+    "Filling Template": os.getenv("FILLING_TEMPLATE_TAB", "false") 
+    == "true",
     "Experimental Design": os.getenv("EXPERIMENTAL_DESIGN_TAB", "false")
     == "true",
     "Genetics Annotation": os.getenv("GENETICS_ANNOTATION_TAB", "false")

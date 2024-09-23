@@ -70,6 +70,7 @@ from .panels import (
     summary_panel,
     tasks_panel,
     task_settings_panel,
+    filling_template_panel,
 )
 
 from .prompts import (
@@ -319,6 +320,19 @@ def main_logic():
                     "Please enter your OpenAI API key to use the "
                     "Retrieval-Augmented Generation functionality."
                 )
+
+    if "Filling Template" in tabs_to_show:
+        with tab_dict["Filling Template"]:
+            st.markdown(
+                "This tab is used to provide an interface for entering data in "
+                "the format specified by one or multiple templates. These "
+                "templates are loaded from a directory on GitHub that contains "
+                "CSV files with defined columns. The user can select a "
+                "template from the available CSV files and add data, which can "
+                "be downloaded after creation. To add rows, use the button "
+                "below."
+            )
+            filling_template_panel()
 
     if "Cell Type Annotation" in tabs_to_show:
         with tab_dict["Cell Type Annotation"]:

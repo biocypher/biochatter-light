@@ -43,7 +43,9 @@ are available:
     - `GENETICS_ANNOTATION_TAB`: Show the genetics annotation tab.
     - `LAST_WEEKS_SUMMARY_TAB`: Show the last week's summary tab (project management).
     - `THIS_WEEKS_TASKS_TAB`: Show this week's tasks tab (project management).
-    - `TASK_SETTINGS_PANEL_TAB`: Show the task settings panel tab (project management).  
+    - `TASK_SETTINGS_PANEL_TAB`: Show the task settings panel tab (project management). 
+    - `TEMPLATE_FILLING_TAB`: Show the template filling tab.
+    - `TEMPLATE_FILLING_URL`: The URL with the CSV templates for the above tab. 
 
 Simply set these to `true` to show the corresponding tab. We also have the
 `DOCKER_COMPOSE` environment variable, which we use to signal to the app that it
