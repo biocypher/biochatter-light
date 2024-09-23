@@ -1,7 +1,6 @@
 import streamlit as st
 
 ss = st.session_state
-
 import requests
 import pandas as pd
 from io import StringIO
@@ -9,9 +8,9 @@ import os
 
 
 def fetch_csv_files():
-    # Check if the environment variable is set
     repo_url = os.getenv("FILLING_TEMPLATE_API_URL")
     st.write(repo_url)
+
     if not repo_url:
         st.error(
             "Environment variable 'FILLING_TEMPLATE_API_URL' is not set. Please set it to continue."
@@ -23,8 +22,11 @@ def fetch_csv_files():
 
         if response.status_code == 200:
             files = response.json()
+            # Fetch the file names and download URLs from the response
             csv_files = [
-                file["name"] for file in files if file["name"].endswith(".csv")
+                {"name": file["name"], "download_url": file["download_url"]}
+                for file in files
+                if file["name"].endswith(".csv")
             ]
             ss.template_directory = csv_files
             return csv_files
@@ -36,24 +38,17 @@ def fetch_csv_files():
         return ss.template_directory
 
 
-def read_csv_from_github(file_name):
-    # Check if the environment variable is set
-    base_url = os.getenv("FILLING_TEMPLATE_API_URL")
-    if not base_url:
-        st.error(
-            "Environment variable 'FILLING_TEMPLATE_API_URL' is not set. Please set it to continue."
-        )
-        return None
+def read_csv_from_github(file_info):
+    file_url = file_info["download_url"]
 
-    file_url = f"{base_url}/{file_name}"
     response = requests.get(file_url)
-    st.write(file_url)
+    st.write(f"Fetching file from {file_url}")
     if response.status_code == 200:
         csv_data = StringIO(response.text)
         df = pd.read_csv(csv_data)
         return df
     else:
-        st.error(f"Error fetching CSV file: {file_name}")
+        st.error(f"Error fetching CSV file: {file_info['name']}")
         return None
 
 
@@ -65,29 +60,24 @@ def filling_template_panel():
     """
     st.markdown("### 📄 Select CSV File from GitHub Repository")
 
-    # Fetch the CSV files only if the environment variable is set
     csv_files = fetch_csv_files()
 
     if csv_files:
-        selected_file = st.selectbox("Choose a CSV file:", csv_files)
+        # Track the selected file in session state
+        selected_file = st.selectbox("Choose a CSV file:", csv_files, format_func=lambda x: x["name"])
 
-        # Read the selected CSV file into a DataFrame
-        df = read_csv_from_github(selected_file)
+        # Check if a new file is selected, reset the DataFrame if necessary
+        if "selected_file" not in ss or ss.selected_file != selected_file:
+            ss.selected_file = selected_file  # Update selected file
+            ss.df = read_csv_from_github(selected_file)  # Load new CSV into DataFrame
 
-        if df is not None:
-            if "df" not in st.session_state:
-                st.session_state.df = df
-
+        if ss.df is not None:
             if st.button("Add Empty Row"):
-                empty_row = pd.DataFrame(
-                    [[None] * len(df.columns)], columns=df.columns
-                )
-                st.session_state.df = pd.concat(
-                    [st.session_state.df, empty_row], ignore_index=True
-                )
+                empty_row = pd.DataFrame([[None] * len(ss.df.columns)], columns=ss.df.columns)
+                ss.df = pd.concat([ss.df, empty_row], ignore_index=True)
 
             st.markdown("### Editable DataFrame")
-            edited_df = st.data_editor(st.session_state.df)
+            edited_df = st.data_editor(ss.df)
 
             st.session_state.df = edited_df
 
