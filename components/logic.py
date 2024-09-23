@@ -319,7 +319,18 @@ def main_logic():
                     "Please enter your OpenAI API key to use the "
                     "Retrieval-Augmented Generation functionality."
                 )
-
+                
+    if "Filling Template" in tabs_to_show:
+        with tab_dict["Filling Template"]:
+            st.markdown(
+                "Filling templates is a common task in bioinformatics, "
+                "where a user provides a template with variables that need "
+                "to be filled in with specific information."
+            )
+            st.markdown(
+                "`📎 Assistant`: Filling template {OFFLINE_FUNCTIONALITY}"
+            )
+            
     if "Cell Type Annotation" in tabs_to_show:
         with tab_dict["Cell Type Annotation"]:
             if ss.user == "community":
