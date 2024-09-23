@@ -13,7 +13,9 @@ def fetch_csv_files():
 
     if not repo_url:
         st.error(
-            "Environment variable 'FILLING_TEMPLATE_API_URL' is not set. Please set it to continue."
+            "Environment variable 'FILLING_TEMPLATE_API_URL' is not set. "
+            "Please set it to a valid GitHub API address of a folder "
+            "containing your CSV templates to continue."
         )
         return []
 
