@@ -10,11 +10,11 @@ import os
 
 def fetch_csv_files():
     # Check if the environment variable is set
-    repo_url = os.getenv("CSV_REPO_URL_FOR_FILLING_TEMPLATE")
+    repo_url = os.getenv("FILLING_TEMPLATE_API_URL")
     st.write(repo_url)
     if not repo_url:
         st.error(
-            "Environment variable 'CSV_REPO_URL_FOR_FILLING_TEMPLATE' is not set. Please set it to continue."
+            "Environment variable 'FILLING_TEMPLATE_API_URL' is not set. Please set it to continue."
         )
         return []
 
@@ -38,10 +38,10 @@ def fetch_csv_files():
 
 def read_csv_from_github(file_name):
     # Check if the environment variable is set
-    base_url = os.getenv("CSV_REPO_URL_FOR_FILLING_TEMPLATE")
+    base_url = os.getenv("FILLING_TEMPLATE_API_URL")
     if not base_url:
         st.error(
-            "Environment variable 'CSV_REPO_URL_FOR_FILLING_TEMPLATE' is not set. Please set it to continue."
+            "Environment variable 'FILLING_TEMPLATE_API_URL' is not set. Please set it to continue."
         )
         return None
 
