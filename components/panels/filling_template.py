@@ -64,22 +64,28 @@ def filling_template_panel():
 
     if csv_files:
         # Track the selected file in session state
-        selected_file = st.selectbox("Choose a CSV file:", csv_files, format_func=lambda x: x["name"])
+        selected_file = st.selectbox(
+            "Choose a CSV file:", csv_files, format_func=lambda x: x["name"]
+        )
 
         # Check if a new file is selected, reset the DataFrame if necessary
         if "selected_file" not in ss or ss.selected_file != selected_file:
             ss.selected_file = selected_file  # Update selected file
-            ss.df = read_csv_from_github(selected_file)  # Load new CSV into DataFrame
+            ss.df = read_csv_from_github(
+                selected_file
+            )  # Load new CSV into DataFrame
 
         if ss.df is not None:
             if st.button("Add Empty Row"):
-                empty_row = pd.DataFrame([[None] * len(ss.df.columns)], columns=ss.df.columns)
+                empty_row = pd.DataFrame(
+                    [[None] * len(ss.df.columns)], columns=ss.df.columns
+                )
                 ss.df = pd.concat([ss.df, empty_row], ignore_index=True)
 
             st.markdown("### Editable DataFrame")
             edited_df = st.data_editor(ss.df)
 
-            st.session_state.df = edited_df
+            ss.df = edited_df
 
     else:
         st.warning("No CSV files available.")
