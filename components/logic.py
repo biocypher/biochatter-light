@@ -70,6 +70,7 @@ from .panels import (
     summary_panel,
     tasks_panel,
     task_settings_panel,
+    filling_template_panel,
 )
 
 from .prompts import (
@@ -327,9 +328,7 @@ def main_logic():
                 "where a user provides a template with variables that need "
                 "to be filled in with specific information."
             )
-            st.markdown(
-                "`📎 Assistant`: Filling template {OFFLINE_FUNCTIONALITY}"
-            )
+            filling_template_panel()
             
     if "Cell Type Annotation" in tabs_to_show:
         with tab_dict["Cell Type Annotation"]:
