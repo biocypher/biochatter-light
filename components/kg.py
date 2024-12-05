@@ -73,7 +73,6 @@ def _find_schema_info_node():
     if result[0]:
         schema_info_node = result[0][0]["n"]
         ss.schema_dict = json.loads(schema_info_node["schema_info"])
-        ss.schema_from = "graph"
 
 
 def _summarise():
