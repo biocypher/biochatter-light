@@ -1,11 +1,10 @@
-import neo4j_utils as nu
+import json
+import os
 
+import neo4j_utils as nu
 import streamlit as st
 
 ss = st.session_state
-import json
-
-import os
 
 
 def _connect_to_neo4j():
