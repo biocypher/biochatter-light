@@ -124,9 +124,15 @@ def generate_and_execute_query(prompt_engine, dbms_type, question):
     if ss.get("generate_query"):
         with st.spinner("Generating query ..."):
             if dbms_type == "Neo4j":
-                ss.current_query = prompt_engine.generate_query(
-                    question, dbms_type
-                )
+                try:
+                    ss.current_query = prompt_engine.generate_query(
+                        question, dbms_type
+                    )
+                except AttributeError as e:
+                    if "object has no attribute 'chat'" in str(e):
+                        st.error("Your API key may not be configured correctly. Please check your API key settings.")
+                        return None
+                    raise e
 
     if dbms_type == "Neo4j":
         return _run_neo4j_query(ss.current_query)
@@ -145,8 +151,11 @@ def display_query_results(result):
     )
 
     st.markdown("### Results")
-    if result[0]:
-        st.write(result[0])
+    try:
+        if result[0]:
+            st.write(result[0])
+    except TypeError:
+        st.error("No results to display.")
 
     if ss.get("schema_dict"):
         st.markdown("### Schema Info")
