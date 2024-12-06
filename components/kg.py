@@ -1,11 +1,10 @@
-import neo4j_utils as nu
+import json
+import os
 
+import neo4j_utils as nu
 import streamlit as st
 
 ss = st.session_state
-import json
-
-import os
 
 
 def _connect_to_neo4j():
@@ -73,7 +72,6 @@ def _find_schema_info_node():
     if result[0]:
         schema_info_node = result[0][0]["n"]
         ss.schema_dict = json.loads(schema_info_node["schema_info"])
-        ss.schema_from = "graph"
 
 
 def _summarise():
