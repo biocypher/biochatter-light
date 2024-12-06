@@ -130,9 +130,32 @@ def generate_and_execute_query(prompt_engine, dbms_type, question):
                     )
                 except AttributeError as e:
                     if "object has no attribute 'chat'" in str(e):
-                        st.error("Your API key may not be configured correctly. Please check your API key settings.")
+                        st.error(
+                            "Your API key may not be configured correctly. Please check your API key settings."
+                        )
                         return None
                     raise e
+                except ValueError as e:
+                    error_msg = str(e)
+                    if "Entity selection failed" in error_msg:
+                        st.error(
+                            "Failed to identify relevant entities in your question. Please try to rephrase your "
+                            "question to be more specific about which entities you're interested in."
+                        )
+                    elif "Relationship selection failed" in error_msg:
+                        st.error(
+                            "Failed to identify relationships between entities in your question. Please try to "
+                            "rephrase your question to be more specific about how entities are connected."
+                        )
+                    elif "Property selection failed" in error_msg:
+                        st.error(
+                            "Failed to identify which properties you're interested in. Please try to rephrase your "
+                            "question to be more specific about what information you want to know about the entities "
+                            "or relationships."
+                        )
+                    else:
+                        st.error(f"An unexpected error occurred: {error_msg}")
+                    return None
 
     if dbms_type == "Neo4j":
         return _run_neo4j_query(ss.current_query)
