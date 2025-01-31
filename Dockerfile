@@ -2,7 +2,7 @@ FROM python:3.10-slim
 
 RUN apt-get update --fix-missing && \
     apt-get install -y curl gcc python3-dev && \
-    curl -sSL https://install.python-poetry.org | python3 - && \
+    curl -sSL https://install.python-poetry.org | POETRY_VERSION=1.7.1 python3 - && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
 
