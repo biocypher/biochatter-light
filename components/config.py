@@ -12,6 +12,8 @@ TABS_TO_SHOW = {
     "Retrieval-Augmented Generation": os.getenv("RAG_TAB", "true") == "true",
     # Knowledge graph tab
     "Knowledge Graph": os.getenv("KNOWLEDGE_GRAPH_TAB", "false") == "true",
+    # Schema configuration tab
+    "Schema Configuration": os.getenv("SCHEMA_CONFIG_TAB", "false") == "true",
     # Specific purpose tabs
     "Cell Type Annotation": os.getenv("CELL_TYPE_ANNOTATION_TAB", "false")
     == "true",

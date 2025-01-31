@@ -71,6 +71,7 @@ from .panels import (
     tasks_panel,
     task_settings_panel,
     filling_template_panel,
+    schema_config_panel,
 )
 
 from .prompts import (
@@ -450,6 +451,10 @@ def main_logic():
                 )
             else:
                 kg_panel()
+
+    if "Schema Configuration" in tabs_to_show:
+        with tab_dict["Schema Configuration"]:
+            schema_config_panel()
 
     if "Last Week's Summary" in tabs_to_show:
         with tab_dict["Last Week's Summary"]:

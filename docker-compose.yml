@@ -76,6 +76,7 @@ services:
       - LAST_WEEKS_SUMMARY_TAB=false
       - THIS_WEEKS_TASKS_TAB=false
       - TASK_SETTINGS_PANEL_TAB=false
+      - SCHEMA_CONFIG_TAB=false
     volumes:
       - .:/app
     ports:
