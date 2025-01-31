@@ -1,5 +1,7 @@
 import streamlit as st
 from loguru import logger
+import numpy as np
+from pathlib import Path
 
 ss = st.session_state
 
@@ -23,6 +25,78 @@ def check_dependencies():
     
     return missing_deps
 
+def create_toy_schema() -> dict:
+    """Create a toy schema demonstrating all BioCypher schema features."""
+    return {
+        "Person": {
+            "represented_as": "node",
+            "properties": {
+                "name": {"type": "string"},
+                "age": {"type": "integer"},
+                "email": {"type": "string"}
+            },
+            "input_label": "Person",
+            "is_a": "Agent"
+        },
+        "Organization": {
+            "represented_as": "node",
+            "properties": {
+                "name": {"type": "string"},
+                "founded_year": {"type": "integer"},
+                "location": {"type": "string"}
+            },
+            "input_label": "Organization",
+            "is_a": "Institution"
+        },
+        "WORKS_FOR": {
+            "represented_as": "edge",
+            "source": "Person",
+            "target": "Organization",
+            "properties": {
+                "start_date": {"type": "string"},
+                "role": {"type": "string"}
+            },
+            "is_a": "Employment"
+        },
+        "KNOWS": {
+            "represented_as": "edge",
+            "source": "Person",
+            "target": "Person",
+            "properties": {
+                "since": {"type": "string"},
+                "relationship_type": {"type": "string"}
+            },
+            "is_a": "SocialRelation"
+        },
+        "Project": {
+            "represented_as": "node",
+            "properties": {
+                "name": {"type": "string"},
+                "budget": {"type": "float"},
+                "status": {"type": "string"}
+            }
+        },
+        "Collaboration": {
+            "represented_as": "node",
+            "source": ["Person", "Organization"],
+            "target": "Project",
+            "properties": {
+                "role": {"type": "string"},
+                "contribution": {"type": "string"}
+            },
+            "is_a": "Partnership"
+        },
+        "MANAGES": {
+            "represented_as": "edge",
+            "source": "Person",
+            "target": ["Project", "Organization"],
+            "properties": {
+                "level": {"type": "string"},
+                "department": {"type": "string"}
+            }
+        }
+    }
+
 def schema_config_panel():
     """Main function for the Schema Configuration panel."""
     try:
@@ -40,9 +114,7 @@ def schema_config_panel():
         import networkx as nx
         import yaml
         import json
-        from pathlib import Path
         import plotly.graph_objects as go
-        from typing import Dict, List, Optional
         
         logger.info("Starting schema configuration panel")
         display_info()
@@ -51,8 +123,8 @@ def schema_config_panel():
         uploaded_file = st.file_uploader("Upload BioCypher schema configuration (YAML)", type=['yaml', 'yml'])
         
         if 'schema_config' not in ss:
-            logger.info("Initializing empty schema config")
-            ss.schema_config = {}
+            logger.info("Initializing with toy schema")
+            ss.schema_config = create_toy_schema()
         
         if uploaded_file is not None:
             logger.info(f"Loading schema config from uploaded file: {uploaded_file.name}")
@@ -117,9 +189,7 @@ try:
     import networkx as nx
     import yaml
     import json
-    from pathlib import Path
     import plotly.graph_objects as go
-    from typing import Dict, List, Optional
 
     def display_info():
         """Display introductory information about the Schema Configuration panel."""
@@ -135,7 +205,7 @@ try:
             logger.error(f"Error displaying info: {str(e)}")
             st.error("Error displaying panel information")
 
-    def load_schema_config(config_file: Optional[Path] = None) -> Dict:
+    def load_schema_config(config_file: Path | None = None) -> dict:
         """Load schema configuration from a YAML file or use existing."""
         try:
             if config_file and config_file.exists():
@@ -147,7 +217,7 @@ try:
             st.error(f"Error loading schema configuration: {str(e)}")
             return {}
 
-    def save_schema_config(config: Dict, config_file: Path):
+    def save_schema_config(config: dict, config_file: Path):
         """Save schema configuration to a YAML file."""
         try:
             with open(config_file, 'w') as f:
@@ -156,26 +226,79 @@ try:
             logger.error(f"Error saving schema config: {str(e)}")
             st.error(f"Error saving schema configuration: {str(e)}")
 
-    def create_schema_graph(config: Dict) -> nx.DiGraph:
+    def create_schema_graph(config: dict) -> nx.DiGraph:
         """Create a NetworkX graph from schema configuration."""
         try:
             G = nx.DiGraph()
             
-            # Add nodes
-            for node_type, node_info in config.items():
-                if isinstance(node_info, dict):
-                    properties = node_info.get('properties', {})
-                    G.add_node(node_type, **{'type': 'node', 'properties': properties})
+            # First pass: Add all explicit nodes
+            for entity_type, entity_info in config.items():
+                if isinstance(entity_info, dict):
+                    representation = entity_info.get('represented_as', 'node')
+                    if representation == 'node':
+                        properties = entity_info.get('properties', {})
+                        input_label = entity_info.get('input_label', '')
+                        is_a = entity_info.get('is_a', '')
+                        G.add_node(entity_type, **{
+                            'type': 'node',
+                            'properties': properties,
+                            'input_label': input_label,
+                            'is_a': is_a
+                        })
             
-            # Add edges
-            for node_type, node_info in config.items():
-                if isinstance(node_info, dict) and 'relationships' in node_info:
-                    for rel in node_info['relationships']:
-                        source = node_type
-                        target = rel.get('target')
-                        rel_type = rel.get('type')
-                        if target and rel_type:
-                            G.add_edge(source, target, type=rel_type)
+            # Second pass: Process edges and relationship nodes
+            for entity_type, entity_info in config.items():
+                if isinstance(entity_info, dict):
+                    # Get source and target information if present
+                    sources = entity_info.get('source', [])
+                    targets = entity_info.get('target', [])
+                    
+                    # Skip if no source/target information
+                    if not sources and not targets:
+                        continue
+                        
+                    # Convert to lists if single values
+                    if isinstance(sources, str):
+                        sources = [sources]
+                    if isinstance(targets, str):
+                        targets = [targets]
+                    
+                    representation = entity_info.get('represented_as', 'edge')
+                    input_label = entity_info.get('input_label', '')
+                    is_a = entity_info.get('is_a', '')
+                    
+                    if representation == 'node':
+                        # This is a relationship node - add node and connecting edges
+                        G.add_node(entity_type, **{
+                            'type': 'relationship_node',
+                            'properties': entity_info.get('properties', {}),
+                            'input_label': input_label,
+                            'is_a': is_a
+                        })
+                        
+                        # Add edges from sources and to targets with meaningful names
+                        for source in sources:
+                            G.add_edge(source, entity_type, 
+                                     type='edge',
+                                     label=f'PARTICIPATES_IN_{entity_type}',
+                                     name=f'PARTICIPATES_IN_{entity_type}',
+                                     is_a=is_a)
+                        for target in targets:
+                            G.add_edge(entity_type, target, 
+                                     type='edge',
+                                     label=f'INVOLVES_{target}',
+                                     name=f'INVOLVES_{target}',
+                                     is_a=is_a)
+                    else:
+                        # This is a pure edge - create direct connections
+                        edge_label = entity_info.get('label_as_edge', entity_type)
+                        for source in sources:
+                            for target in targets:
+                                G.add_edge(source, target, 
+                                         type='edge',
+                                         label=edge_label,
+                                         name=entity_type,
+                                         is_a=is_a)
             
             return G
         except Exception as e:
@@ -192,67 +315,190 @@ try:
 
             pos = nx.spring_layout(G)
             
-            # Create edge traces
+            # Create traces for nodes and edges
+            node_trace = {
+                'x': [], 'y': [], 
+                'text': [],  # Node labels (simple names)
+                'hovertext': [],  # Detailed hover information
+                'mode': 'markers+text',
+                'textposition': 'top center',
+                'marker': {'size': 20, 'color': '#1f77b4', 'line_width': 2},
+                'name': 'Nodes'
+            }
+            
+            edge_trace = {
+                'x': [], 'y': [], 
+                'text': [],  # Edge labels
+                'hovertext': [],  # Detailed hover information
+                'mode': 'lines+text',
+                'textposition': 'middle center',
+                'line': {'width': 1, 'color': '#888'},
+                'name': 'Edges'
+            }
+            
+            # Collect node information
+            for node, data in G.nodes(data=True):
+                x, y = pos[node]
+                node_trace['x'].append(x)
+                node_trace['y'].append(y)
+                
+                # Simple label is just the node name
+                node_trace['text'].append(node)
+                
+                # Create detailed hover text
+                props = data.get('properties', {})
+                input_label = data.get('input_label', '')
+                is_a = data.get('is_a', '')
+                hover_text = [
+                    f"Name: {node}",
+                    f"Label: {input_label}",
+                ]
+                if is_a:
+                    if isinstance(is_a, list):
+                        hover_text.append(f"Is a: {', '.join(is_a)}")
+                    else:
+                        hover_text.append(f"Is a: {is_a}")
+                if props:
+                    hover_text.append(f"Properties: {list(props.keys())}")
+                
+                node_trace['hovertext'].append("<br>".join(hover_text))
+            
+            # Collect edge information
+            edge_labels = {}  # Store edge labels for positioning
             edge_x = []
             edge_y = []
             edge_text = []
+            edge_text_pos = []
+            edge_hovertext = []
             
-            for edge in G.edges(data=True):
-                x0, y0 = pos[edge[0]]
-                x1, y1 = pos[edge[1]]
-                edge_x.extend([x0, x1, None])
-                edge_y.extend([y0, y1, None])
-                edge_text.append(edge[2].get('type', ''))
-            
-            edge_trace = go.Scatter(
-                x=edge_x, y=edge_y,
-                line=dict(width=1, color='#888'),
-                hoverinfo='text',
-                text=edge_text,
-                mode='lines'
-            )
-            
-            # Create node traces
-            node_x = []
-            node_y = []
-            node_text = []
-            
-            for node in G.nodes(data=True):
-                x, y = pos[node[0]]
-                node_x.append(x)
-                node_y.append(y)
-                props = node[1].get('properties', {})
-                node_text.append(f"{node[0]}<br>Properties: {list(props.keys())}")
-            
-            node_trace = go.Scatter(
-                x=node_x, y=node_y,
-                mode='markers+text',
-                hoverinfo='text',
-                text=[node for node in G.nodes()],
-                textposition="top center",
-                marker=dict(
-                    size=20,
-                    color='#1f77b4',
-                    line_width=2
-                )
-            )
+            for source, target, data in G.edges(data=True):
+                # Get positions
+                x0, y0 = pos[source]
+                x1, y1 = pos[target]
+                
+                if source == target:
+                    # Self-relationship: create a circular arc
+                    radius = 0.15  # Size of the arc
+                    center_x = x0
+                    center_y = y0 + radius
+                    
+                    # Create points for a smooth arc
+                    t = np.linspace(0, 2*np.pi, 50)
+                    arc_x = center_x + radius * np.cos(t)
+                    arc_y = center_y + radius * np.sin(t)
+                    
+                    edge_x.extend(list(arc_x) + [None])
+                    edge_y.extend(list(arc_y) + [None])
+                    
+                    # Position label above the arc
+                    label_x = center_x
+                    label_y = center_y + radius
+                else:
+                    # Regular edge
+                    edge_x.extend([x0, x1, None])
+                    edge_y.extend([y0, y1, None])
+                    
+                    # Position label at midpoint
+                    label_x = (x0 + x1) / 2
+                    label_y = (y0 + y1) / 2 + 0.05  # Slight offset above the line
+                
+                # Create edge label and hover text
+                label = data.get('label', '')
+                name = data.get('name', '')
+                is_a = data.get('is_a', '')
+                
+                # Add label position
+                edge_text.append(name)
+                edge_text_pos.append([label_x, label_y])
+                
+                # Detailed hover text
+                hover_text = [f"Name: {name}"]
+                if label:
+                    hover_text.append(f"Label: {label}")
+                if is_a:
+                    if isinstance(is_a, list):
+                        hover_text.append(f"Is a: {', '.join(is_a)}")
+                    else:
+                        hover_text.append(f"Is a: {is_a}")
+                edge_hovertext.append("<br>".join(hover_text))
             
             # Create figure
-            fig = go.Figure(data=[edge_trace, node_trace],
-                           layout=go.Layout(
-                               showlegend=False,
-                               hovermode='closest',
-                               margin=dict(b=0, l=0, r=0, t=0),
-                               xaxis=dict(showgrid=False, zeroline=False, showticklabels=False),
-                               yaxis=dict(showgrid=False, zeroline=False, showticklabels=False)
-                           ))
+            traces = []
+            
+            # Add edge lines
+            traces.append(go.Scatter(
+                x=edge_x,
+                y=edge_y,
+                mode='lines',
+                line={'width': 1, 'color': '#888'},
+                hoverinfo='none',
+                name='Edges',  # Add name for legend
+                showlegend=True  # Show in legend
+            ))
+            
+            # Add edge labels separately
+            for i in range(len(edge_text)):
+                if edge_text[i]:  # Only add if there's a label
+                    traces.append(go.Scatter(
+                        x=[edge_text_pos[i][0]],
+                        y=[edge_text_pos[i][1]],
+                        mode='text',
+                        text=[edge_text[i]],
+                        textposition='middle center',
+                        hovertext=[edge_hovertext[i]],
+                        hoverinfo='text',
+                        showlegend=False,
+                        name=f'Edge Label {i+1}'  # Name for potential future use
+                    ))
+            
+            # Add node trace
+            traces.append(go.Scatter(
+                x=node_trace['x'],
+                y=node_trace['y'],
+                mode=node_trace['mode'],
+                marker=node_trace['marker'],
+                text=node_trace['text'],
+                hovertext=node_trace['hovertext'],
+                hoverinfo='text',
+                textposition=node_trace['textposition'],
+                name='Nodes',
+                showlegend=True  # Explicitly show in legend
+            ))
+            
+            # Create figure with improved legend
+            fig = go.Figure(
+                data=traces,
+                layout=go.Layout(
+                    showlegend=True,
+                    hovermode='closest',
+                    margin=dict(b=20, l=5, r=5, t=40),
+                    xaxis=dict(showgrid=False, zeroline=False, showticklabels=False),
+                    yaxis=dict(showgrid=False, zeroline=False, showticklabels=False),
+                    legend=dict(
+                        yanchor="top",
+                        y=0.99,
+                        xanchor="right",
+                        x=0.99,
+                        bgcolor='rgba(50, 50, 50, 0.9)',
+                        bordercolor='rgba(200, 200, 200, 0.5)',
+                        borderwidth=2,
+                        itemsizing='constant',
+                        font=dict(
+                            size=12,
+                            color='white'
+                        )
+                    ),
+                    plot_bgcolor='rgba(0, 0, 0, 0)',  # Transparent background
+                    paper_bgcolor='rgba(0, 0, 0, 0)'  # Transparent background
+                )
+            )
             
             st.plotly_chart(fig, use_container_width=True)
         except Exception as e:
             logger.error(f"Error visualizing schema: {str(e)}")
             st.error(f"Error visualizing schema: {str(e)}")
 
-    def edit_node_properties(config: Dict, node_type: str):
+    def edit_node_properties(config: dict, node_type: str):
         """Edit properties of a selected node type."""
         try:
             if node_type not in config:
@@ -291,7 +537,7 @@ try:
             logger.error(f"Error editing node properties: {str(e)}")
             st.error(f"Error editing node properties: {str(e)}")
 
-    def edit_relationships(config: Dict, source_type: str):
+    def edit_relationships(config: dict, source_type: str):
         """Edit relationships for a selected node type."""
         try:
             if source_type not in config:
