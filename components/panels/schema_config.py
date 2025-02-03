@@ -172,14 +172,8 @@ def schema_config_panel():
         # Initialize or load configuration
         config = ss.schema_config
         
-        # Add new node type
-        new_node_type = st.text_input("Add new node type:")
-        if new_node_type and new_node_type not in config:
-            logger.info(f"Adding new node type: {new_node_type}")
-            config[new_node_type] = {'properties': {}, 'relationships': []}
-        
         # Tabs for different views
-        tab1, tab2, tab3, tab4 = st.tabs(["Graph View", "Node Configuration", "Ontology Mapping", "YAML Preview"])
+        tab1, tab2, tab3, tab4 = st.tabs(["Graph View", "Schema Editor", "Ontology Mapping", "YAML Preview"])
         
         with tab1:
             st.subheader("Schema Graph Visualization")
@@ -192,16 +186,76 @@ def schema_config_panel():
         
         with tab2:
             if config:
-                selected_node = st.selectbox("Select node type to edit:", options=list(config.keys()))
-                if selected_node:
-                    logger.info(f"Editing node: {selected_node}")
+                # Schema manipulation section
+                st.subheader("Schema Editor")
+                
+                # Entity type management
+                col1, col2 = st.columns([3, 1])
+                with col1:
+                    new_entity = st.text_input("Add new entity type:")
+                with col2:
+                    entity_type = st.selectbox(
+                        "Represented as",
+                        options=['node', 'edge'],
+                        key='new_entity_type'
+                    )
+                
+                if new_entity and st.button("Add Entity"):
+                    if new_entity not in config:
+                        logger.info(f"Adding new entity: {new_entity}")
+                        config[new_entity] = {
+                            'represented_as': entity_type,
+                            'properties': {}
+                        }
+                        st.success(f"Added {entity_type}: {new_entity}")
+                
+                # Entity editing section
+                st.divider()
+                
+                selected_entity = st.selectbox(
+                    "Select entity to edit:",
+                    options=list(config.keys()),
+                    key='entity_selector'
+                )
+                
+                if selected_entity:
                     col1, col2 = st.columns(2)
+                    
                     with col1:
-                        edit_node_properties(config, selected_node)
+                        st.subheader(f"Properties: {selected_entity}")
+                        edit_node_properties(config, selected_entity)
+                        
+                        # Delete entity button
+                        if st.button("Delete Entity", type="secondary"):
+                            if st.checkbox(f"Confirm deletion of {selected_entity}"):
+                                del config[selected_entity]
+                                st.success(f"Deleted {selected_entity}")
+                                st.rerun()
+                    
                     with col2:
-                        edit_relationships(config, selected_node)
+                        if config[selected_entity].get('represented_as') == 'edge':
+                            st.subheader("Edge Configuration")
+                            
+                            # Source configuration
+                            source = st.selectbox(
+                                "Source entity",
+                                options=list(config.keys()),
+                                key=f"{selected_entity}_source"
+                            )
+                            config[selected_entity]['source'] = source
+                            
+                            # Target configuration
+                            target = st.selectbox(
+                                "Target entity",
+                                options=list(config.keys()),
+                                key=f"{selected_entity}_target"
+                            )
+                            config[selected_entity]['target'] = target
+                        else:
+                            st.subheader("Relationships")
+                            edit_relationships(config, selected_entity)
             else:
-                st.info("Upload or create a schema configuration to edit nodes.")
+                st.info("Upload or create a schema configuration to edit it.")
         
         with tab3:
             st.subheader("Ontology Mapping")
