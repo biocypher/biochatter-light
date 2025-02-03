@@ -285,22 +285,38 @@ def schema_config_panel():
                     if selected_edge:
                         st.subheader("Edge Configuration")
                         col1, col2 = st.columns(2)
+                        
+                        # Get current source and target
+                        current_source = config[selected_edge].get('source', '')
+                        current_target = config[selected_edge].get('target', '')
+                        
+                        # Convert to list if not already
+                        if isinstance(current_source, str):
+                            current_source = [current_source]
+                        if isinstance(current_target, str):
+                            current_target = [current_target]
+                        
                         with col1:
-                            source = st.selectbox(
-                                "Source entity",
+                            # Multi-select for sources
+                            source = st.multiselect(
+                                "Source entities",
                                 options=list(config.keys()),
-                                key=f"{selected_edge}_source",
-                                index=list(config.keys()).index(config[selected_edge].get('source', list(config.keys())[0]))
+                                default=current_source,
+                                key=f"{selected_edge}_source"
                             )
-                            config[selected_edge]['source'] = source
+                            # Store as string if single value, list if multiple
+                            config[selected_edge]['source'] = source[0] if len(source) == 1 else source
+                            
                         with col2:
-                            target = st.selectbox(
-                                "Target entity",
+                            # Multi-select for targets
+                            target = st.multiselect(
+                                "Target entities",
                                 options=list(config.keys()),
-                                key=f"{selected_edge}_target",
-                                index=list(config.keys()).index(config[selected_edge].get('target', list(config.keys())[0]))
+                                default=current_target,
+                                key=f"{selected_edge}_target"
                             )
-                            config[selected_edge]['target'] = target
+                            # Store as string if single value, list if multiple
+                            config[selected_edge]['target'] = target[0] if len(target) == 1 else target
                         
                         edit_node_properties(config, selected_edge)  # Reuse for edge properties
                 
@@ -667,8 +683,11 @@ try:
             
             st.subheader(f"Properties for {node_type}")
             
-            # Add new property
-            new_prop = st.text_input("Add new property:")
+            # Add new property with unique key
+            new_prop = st.text_input(
+                "Add new property:",
+                key=f"new_prop_{node_type}"  # Add unique key
+            )
             if new_prop and new_prop not in properties:
                 properties[new_prop] = 'string'  # default type in simple format
             
@@ -696,11 +715,11 @@ try:
                                    else '')
                     
                 with col3:
-                    # Optional description field
+                    # Optional description field with unique key
                     description = st.text_input(
                         "Description (optional)",
                         value=existing_desc,
-                        key=f"{node_type}_{prop}_description",
+                        key=f"{node_type}_{prop}_description_{hash(prop)}",  # Add hash to ensure uniqueness
                         placeholder="Enter property description..."
                     )
                     
@@ -715,7 +734,7 @@ try:
                         properties[prop] = prop_type
                         
                 with col4:
-                    if st.button("Delete", key=f"delete_{node_type}_{prop}"):
+                    if st.button("Delete", key=f"delete_prop_{node_type}_{hash(prop)}"):  # Add hash to ensure uniqueness
                         del properties[prop]
             
             config[node_type]['properties'] = properties
