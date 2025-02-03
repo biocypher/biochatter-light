@@ -31,9 +31,12 @@ def create_toy_schema() -> dict:
         "Person": {
             "represented_as": "node",
             "properties": {
-                "name": {"type": "string"},
-                "age": {"type": "integer"},
-                "email": {"type": "string"}
+                "name": "string",  # Simple format for self-explanatory property
+                "age": "integer",  # Simple format for self-explanatory property
+                "email": {
+                    "type": "string",
+                    "description": "Primary contact email address for the person"
+                }
             },
             "input_label": "Person",
             "is_a": "Agent"
@@ -41,9 +44,15 @@ def create_toy_schema() -> dict:
         "Organization": {
             "represented_as": "node",
             "properties": {
-                "name": {"type": "string"},
-                "founded_year": {"type": "integer"},
-                "location": {"type": "string"}
+                "name": "string",  # Simple format
+                "founded_year": {
+                    "type": "integer",
+                    "description": "Year when the organization was officially established"
+                },
+                "location": {
+                    "type": "string",
+                    "description": "Primary headquarters location or main office address"
+                }
             },
             "input_label": "Organization",
             "is_a": "Institution"
@@ -53,8 +62,14 @@ def create_toy_schema() -> dict:
             "source": "Person",
             "target": "Organization",
             "properties": {
-                "start_date": {"type": "string"},
-                "role": {"type": "string"}
+                "start_date": {
+                    "type": "string",
+                    "description": "Date when the person started working for the organization (YYYY-MM-DD)"
+                },
+                "role": {
+                    "type": "string",
+                    "description": "Job title or position within the organization"
+                }
             },
             "is_a": "Employment"
         },
@@ -63,17 +78,29 @@ def create_toy_schema() -> dict:
             "source": "Person",
             "target": "Person",
             "properties": {
-                "since": {"type": "string"},
-                "relationship_type": {"type": "string"}
+                "since": {
+                    "type": "string",
+                    "description": "Date when the relationship was established (YYYY-MM-DD)"
+                },
+                "relationship_type": {
+                    "type": "string",
+                    "description": "Nature of the relationship (e.g., colleague, friend, mentor)"
+                }
             },
             "is_a": "SocialRelation"
         },
         "Project": {
             "represented_as": "node",
             "properties": {
-                "name": {"type": "string"},
-                "budget": {"type": "float"},
-                "status": {"type": "string"}
+                "name": {"type": "string"},  # Self-explanatory
+                "budget": {
+                    "type": "float",
+                    "description": "Total allocated budget in the project's base currency"
+                },
+                "status": {
+                    "type": "string",
+                    "description": "Current project status (e.g., planned, active, completed, on-hold)"
+                }
             }
         },
         "Collaboration": {
@@ -81,8 +108,14 @@ def create_toy_schema() -> dict:
             "source": ["Person", "Organization"],
             "target": "Project",
             "properties": {
-                "role": {"type": "string"},
-                "contribution": {"type": "string"}
+                "role": {
+                    "type": "string",
+                    "description": "Role of the participant (Person or Organization) in the collaboration"
+                },
+                "contribution": {
+                    "type": "string",
+                    "description": "Specific contribution or responsibility in the project"
+                }
             },
             "is_a": "Partnership"
         },
@@ -91,8 +124,14 @@ def create_toy_schema() -> dict:
             "source": "Person",
             "target": ["Project", "Organization"],
             "properties": {
-                "level": {"type": "string"},
-                "department": {"type": "string"}
+                "level": {
+                    "type": "string",
+                    "description": "Management level (e.g., project manager, department head, CEO)"
+                },
+                "department": {
+                    "type": "string",
+                    "description": "Department or division where the management role is exercised"
+                }
             }
         }
     }
@@ -140,7 +179,7 @@ def schema_config_panel():
             config[new_node_type] = {'properties': {}, 'relationships': []}
         
         # Tabs for different views
-        tab1, tab2, tab3 = st.tabs(["Graph View", "Node Configuration", "Ontology Mapping"])
+        tab1, tab2, tab3, tab4 = st.tabs(["Graph View", "Node Configuration", "Ontology Mapping", "YAML Preview"])
         
         with tab1:
             st.subheader("Schema Graph Visualization")
@@ -167,6 +206,14 @@ def schema_config_panel():
         with tab3:
             st.subheader("Ontology Mapping")
             st.info("Ontology mapping functionality coming soon...")
+            
+        with tab4:
+            st.subheader("YAML Preview")
+            if config:
+                yaml_str = yaml.dump(config, sort_keys=False, default_flow_style=False)
+                st.code(yaml_str, language="yaml")
+            else:
+                st.info("Upload or create a schema configuration to see its YAML representation.")
         
         # Save configuration
         if config:
@@ -511,24 +558,51 @@ try:
             # Add new property
             new_prop = st.text_input("Add new property:")
             if new_prop and new_prop not in properties:
-                properties[new_prop] = {'type': 'string'}  # default type
+                properties[new_prop] = 'string'  # default type in simple format
             
             # Edit existing properties
             for prop in list(properties.keys()):
-                col1, col2, col3 = st.columns([3, 2, 1])
+                col1, col2, col3, col4 = st.columns([2, 2, 3, 1])
                 with col1:
                     st.text(prop)
                 with col2:
+                    # Handle both simple string type and dict format
+                    current_type = (properties[prop].get('type', properties[prop]) 
+                                  if isinstance(properties[prop], dict) 
+                                  else properties[prop])
+                    
                     prop_type = st.selectbox(
                         "Type",
                         options=['string', 'integer', 'float', 'boolean'],
                         key=f"{node_type}_{prop}_type",
-                        index=['string', 'integer', 'float', 'boolean'].index(
-                            properties[prop].get('type', 'string')
-                        )
+                        index=['string', 'integer', 'float', 'boolean'].index(current_type)
                     )
-                    properties[prop]['type'] = prop_type
+                    
+                    # Get existing description if any
+                    existing_desc = (properties[prop].get('description', '') 
+                                   if isinstance(properties[prop], dict) 
+                                   else '')
+                    
                 with col3:
+                    # Optional description field
+                    description = st.text_input(
+                        "Description (optional)",
+                        value=existing_desc,
+                        key=f"{node_type}_{prop}_description",
+                        placeholder="Enter property description..."
+                    )
+                    
+                    # Update property format based on whether there's a description
+                    if description:
+                        properties[prop] = {
+                            'type': prop_type,
+                            'description': description
+                        }
+                    else:
+                        # Use simple format if no description
+                        properties[prop] = prop_type
+                        
+                with col4:
                     if st.button("Delete", key=f"delete_{node_type}_{prop}"):
                         del properties[prop]
             
