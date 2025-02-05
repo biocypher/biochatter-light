@@ -592,7 +592,17 @@ try:
                 st.info("No nodes to visualize. Add some nodes to see the graph.")
                 return
 
-            pos = nx.spring_layout(G)
+            # Use Kamada-Kawai layout for better edge routing
+            # Then refine with spring layout for fine-tuning
+            pos = nx.kamada_kawai_layout(G)
+            pos = nx.spring_layout(
+                G,
+                pos=pos,  # Use Kamada-Kawai as initial positions
+                k=1.5,    # Optimal distance between nodes
+                iterations=50,  # More iterations for better convergence
+                weight=None,  # Don't use edge weights
+                scale=2.0     # Scale up the layout
+            )
             
             # Create traces for nodes and edges
             node_trace = {
@@ -633,7 +643,8 @@ try:
                 is_a = data.get('is_a', '')
                 hover_text = [
                     f"Name: {node}",
-                    f"Label: {input_label}",
+                    f"Input Label: {input_label}",
+                    f"Output Label: {to_pascal_case(node)}",
                 ]
                 if is_a:
                     if isinstance(is_a, list):
@@ -670,24 +681,29 @@ try:
                 
                 if source == target:
                     # Self-relationship: create a circular arc
-                    radius = 0.15
+                    height = 0.4  # Height of the loop
+                    width = height * 0.2  # Make width 30% of height for better proportions
                     center_x = x0
-                    center_y = y0 + radius
+                    center_y = y0 + height  # Center point at full radius height
                     
+                    # Create points for a complete loop
                     t = np.linspace(0, 2*np.pi, 50)
-                    arc_x = center_x + radius * np.cos(t)
-                    arc_y = center_y + radius * np.sin(t)
+                    arc_x = center_x + width * np.cos(t)  # Reduced width
+                    arc_y = center_y + height * np.sin(t)  # Full height semicircle
                     
+                    # Add the points
                     edge_list_x.extend(list(arc_x) + [None])
                     edge_list_y.extend(list(arc_y) + [None])
                     
+                    # Position label at the top of the arc
                     label_x = center_x
-                    label_y = center_y + radius
+                    label_y = y0 + 2 * height  # Position label at the top of the loop
                 else:
                     # Regular edge
                     edge_list_x.extend([x0, x1, None])
                     edge_list_y.extend([y0, y1, None])
                     
+                    # Position label at midpoint with slight offset
                     label_x = (x0 + x1) / 2
                     label_y = (y0 + y1) / 2 + 0.05
                 
