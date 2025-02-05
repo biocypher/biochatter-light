@@ -515,7 +515,17 @@ try:
                             'is_a': is_a
                         })
             
-            # Second pass: Process edges and relationship nodes
+            # Second pass: Add inheritance edges
+            for entity_type, entity_info in config.items():
+                if isinstance(entity_info, dict):
+                    is_a = entity_info.get('is_a', '')
+                    if is_a and is_a in G:  # Only add edge if parent exists in graph
+                        G.add_edge(entity_type, is_a, 
+                                 type='inheritance',
+                                 name='is_a',
+                                 label='is_a')
+            
+            # Third pass: Process edges and relationship nodes
             for entity_type, entity_info in config.items():
                 if isinstance(entity_info, dict):
                     # Get source and target information if present
@@ -595,15 +605,18 @@ try:
                 'name': 'Nodes'
             }
             
-            edge_trace = {
-                'x': [], 'y': [], 
-                'text': [],  # Edge labels
-                'hovertext': [],  # Detailed hover information
-                'mode': 'lines+text',
-                'textposition': 'middle center',
-                'line': {'width': 1, 'color': '#888'},
-                'name': 'Edges'
-            }
+            # Separate edge traces for regular edges and inheritance
+            edge_x = []
+            edge_y = []
+            edge_text = []
+            edge_text_pos = []
+            edge_hovertext = []
+            
+            inheritance_x = []
+            inheritance_y = []
+            inheritance_text = []
+            inheritance_text_pos = []
+            inheritance_hovertext = []
             
             # Collect node information
             for node, data in G.nodes(data=True):
@@ -633,54 +646,59 @@ try:
                 node_trace['hovertext'].append("<br>".join(hover_text))
             
             # Collect edge information
-            edge_labels = {}  # Store edge labels for positioning
-            edge_x = []
-            edge_y = []
-            edge_text = []
-            edge_text_pos = []
-            edge_hovertext = []
-            
             for source, target, data in G.edges(data=True):
                 # Get positions
                 x0, y0 = pos[source]
                 x1, y1 = pos[target]
                 
+                # Determine if this is an inheritance edge
+                is_inheritance = data.get('type') == 'inheritance'
+                
+                # Choose the appropriate lists based on edge type
+                if is_inheritance:
+                    edge_list_x = inheritance_x
+                    edge_list_y = inheritance_y
+                    text_list = inheritance_text
+                    text_pos_list = inheritance_text_pos
+                    hover_list = inheritance_hovertext
+                else:
+                    edge_list_x = edge_x
+                    edge_list_y = edge_y
+                    text_list = edge_text
+                    text_pos_list = edge_text_pos
+                    hover_list = edge_hovertext
+                
                 if source == target:
                     # Self-relationship: create a circular arc
-                    radius = 0.15  # Size of the arc
+                    radius = 0.15
                     center_x = x0
                     center_y = y0 + radius
                     
-                    # Create points for a smooth arc
                     t = np.linspace(0, 2*np.pi, 50)
                     arc_x = center_x + radius * np.cos(t)
                     arc_y = center_y + radius * np.sin(t)
                     
-                    edge_x.extend(list(arc_x) + [None])
-                    edge_y.extend(list(arc_y) + [None])
+                    edge_list_x.extend(list(arc_x) + [None])
+                    edge_list_y.extend(list(arc_y) + [None])
                     
-                    # Position label above the arc
                     label_x = center_x
                     label_y = center_y + radius
                 else:
                     # Regular edge
-                    edge_x.extend([x0, x1, None])
-                    edge_y.extend([y0, y1, None])
+                    edge_list_x.extend([x0, x1, None])
+                    edge_list_y.extend([y0, y1, None])
                     
-                    # Position label at midpoint
                     label_x = (x0 + x1) / 2
-                    label_y = (y0 + y1) / 2 + 0.05  # Slight offset above the line
+                    label_y = (y0 + y1) / 2 + 0.05
                 
                 # Create edge label and hover text
                 label = data.get('label', '')
                 name = data.get('name', '')
                 is_a = data.get('is_a', '')
                 
-                # Add label position
-                edge_text.append(name)
-                edge_text_pos.append([label_x, label_y])
+                text_list.append(name)
+                text_pos_list.append([label_x, label_y])
                 
-                # Detailed hover text
                 hover_text = [f"Name: {name}"]
                 if label:
                     hover_text.append(f"Label: {label}")
@@ -689,25 +707,38 @@ try:
                         hover_text.append(f"Is a: {', '.join(is_a)}")
                     else:
                         hover_text.append(f"Is a: {is_a}")
-                edge_hovertext.append("<br>".join(hover_text))
+                hover_list.append("<br>".join(hover_text))
             
             # Create figure
             traces = []
             
-            # Add edge lines
-            traces.append(go.Scatter(
-                x=edge_x,
-                y=edge_y,
-                mode='lines',
-                line={'width': 1, 'color': '#888'},
-                hoverinfo='none',
-                name='Edges',  # Add name for legend
-                showlegend=True  # Show in legend
-            ))
+            # Add regular edge lines
+            if edge_x:  # Only add if there are regular edges
+                traces.append(go.Scatter(
+                    x=edge_x,
+                    y=edge_y,
+                    mode='lines',
+                    line={'width': 1, 'color': '#888'},
+                    hoverinfo='none',
+                    name='Relationships',
+                    showlegend=True
+                ))
             
-            # Add edge labels separately
+            # Add inheritance edge lines
+            if inheritance_x:  # Only add if there are inheritance edges
+                traces.append(go.Scatter(
+                    x=inheritance_x,
+                    y=inheritance_y,
+                    mode='lines',
+                    line={'width': 2, 'color': '#e41a1c', 'dash': 'dot'},  # Red, dotted line
+                    hoverinfo='none',
+                    name='Inheritance',
+                    showlegend=True
+                ))
+            
+            # Add regular edge labels
             for i in range(len(edge_text)):
-                if edge_text[i]:  # Only add if there's a label
+                if edge_text[i]:
                     traces.append(go.Scatter(
                         x=[edge_text_pos[i][0]],
                         y=[edge_text_pos[i][1]],
@@ -717,7 +748,22 @@ try:
                         hovertext=[edge_hovertext[i]],
                         hoverinfo='text',
                         showlegend=False,
-                        name=f'Edge Label {i+1}'  # Name for potential future use
+                        name=f'Edge Label {i+1}'
+                    ))
+            
+            # Add inheritance edge labels
+            for i in range(len(inheritance_text)):
+                if inheritance_text[i]:
+                    traces.append(go.Scatter(
+                        x=[inheritance_text_pos[i][0]],
+                        y=[inheritance_text_pos[i][1]],
+                        mode='text',
+                        text=[inheritance_text[i]],
+                        textposition='middle center',
+                        hovertext=[inheritance_hovertext[i]],
+                        hoverinfo='text',
+                        showlegend=False,
+                        name=f'Inheritance Label {i+1}'
                     ))
             
             # Add node trace
@@ -731,7 +777,7 @@ try:
                 hoverinfo='text',
                 textposition=node_trace['textposition'],
                 name='Nodes',
-                showlegend=True  # Explicitly show in legend
+                showlegend=True
             ))
             
             # Create figure with improved legend
@@ -757,8 +803,8 @@ try:
                             color='white'
                         )
                     ),
-                    plot_bgcolor='rgba(0, 0, 0, 0)',  # Transparent background
-                    paper_bgcolor='rgba(0, 0, 0, 0)'  # Transparent background
+                    plot_bgcolor='rgba(0, 0, 0, 0)',
+                    paper_bgcolor='rgba(0, 0, 0, 0)'
                 )
             )
             
