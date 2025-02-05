@@ -25,74 +25,66 @@ def check_dependencies():
     
     return missing_deps
 
+def to_pascal_case(text: str) -> str:
+    """Convert a space-separated string to PascalCase."""
+    return ''.join(word.capitalize() for word in text.split())
+
+def normalize_class_name(text: str) -> str:
+    """Normalize a class name to lowercase sentence case."""
+    # Replace dashes and underscores with spaces
+    text = text.replace('-', ' ').replace('_', ' ')
+    # Convert to lowercase
+    text = text.lower()
+    # Remove extra spaces
+    text = ' '.join(text.split())
+    return text
+
+def validate_class_name(text: str) -> tuple[bool, str]:
+    """Validate a class name and return (is_valid, message)."""
+    if not text:
+        return False, "Name cannot be empty"
+    if text != text.lower():
+        return False, "Name should be in lowercase"
+    if '-' in text or '_' in text:
+        return False, "Use spaces instead of dashes or underscores"
+    return True, ""
+
 def create_toy_schema() -> dict:
     """Create a toy schema demonstrating all BioCypher schema features."""
     return {
-        "Person": {
+        "person": {
             "represented_as": "node",
             "properties": {
-                "name": "string",  # Simple format for self-explanatory property
-                "age": "integer",  # Simple format for self-explanatory property
+                "name": "string",
+                "age": "integer",
                 "email": {
                     "type": "string",
                     "description": "Primary contact email address for the person"
                 }
             },
-            "input_label": "Person",
-            "is_a": "Agent"
+            "input_label": "PERSON_ID",  # Example of database ID column
+            "is_a": "agent"
         },
-        "Organization": {
+        "project manager": {
             "represented_as": "node",
             "properties": {
-                "name": "string",  # Simple format
-                "founded_year": {
+                "name": "string",
+                "certification": {
+                    "type": "string",
+                    "description": "Project management certification (e.g., PMP, PRINCE2)"
+                },
+                "experience years": {
                     "type": "integer",
-                    "description": "Year when the organization was officially established"
-                },
-                "location": {
-                    "type": "string",
-                    "description": "Primary headquarters location or main office address"
+                    "description": "Years of project management experience"
                 }
             },
-            "input_label": "Organization",
-            "is_a": "Institution"
+            "input_label": "manager_type",  # Example of raw data column name
+            "is_a": "person"
         },
-        "WORKS_FOR": {
-            "represented_as": "edge",
-            "source": "Person",
-            "target": "Organization",
-            "properties": {
-                "start_date": {
-                    "type": "string",
-                    "description": "Date when the person started working for the organization (YYYY-MM-DD)"
-                },
-                "role": {
-                    "type": "string",
-                    "description": "Job title or position within the organization"
-                }
-            },
-            "is_a": "Employment"
-        },
-        "KNOWS": {
-            "represented_as": "edge",
-            "source": "Person",
-            "target": "Person",
-            "properties": {
-                "since": {
-                    "type": "string",
-                    "description": "Date when the relationship was established (YYYY-MM-DD)"
-                },
-                "relationship_type": {
-                    "type": "string",
-                    "description": "Nature of the relationship (e.g., colleague, friend, mentor)"
-                }
-            },
-            "is_a": "SocialRelation"
-        },
-        "Project": {
+        "project": {
             "represented_as": "node",
             "properties": {
-                "name": {"type": "string"},  # Self-explanatory
+                "name": "string",
                 "budget": {
                     "type": "float",
                     "description": "Total allocated budget in the project's base currency"
@@ -101,12 +93,80 @@ def create_toy_schema() -> dict:
                     "type": "string",
                     "description": "Current project status (e.g., planned, active, completed, on-hold)"
                 }
-            }
+            },
+            "input_label": "project_id"  # Example of database ID
         },
-        "Collaboration": {
+        "manages": {
+            "represented_as": "edge",
+            "source": "project manager",  # Changed from person to project manager
+            "target": "project",  # Now only manages projects
+            "properties": {
+                "start date": {
+                    "type": "string",
+                    "description": "Date when the manager started managing this project (YYYY-MM-DD)"
+                },
+                "responsibility level": {
+                    "type": "string",
+                    "description": "Level of management responsibility (e.g., lead, assistant, interim)"
+                }
+            },
+            "input_label": "project_management",  # Example of a database relation
+            "is_a": "management relation"
+        },
+        "organization": {
             "represented_as": "node",
-            "source": ["Person", "Organization"],
-            "target": "Project",
+            "properties": {
+                "name": "string",
+                "founded year": {
+                    "type": "integer",
+                    "description": "Year when the organization was officially established"
+                },
+                "location": {
+                    "type": "string",
+                    "description": "Primary headquarters location or main office address"
+                }
+            },
+            "input_label": "org.name",  # Example of dotted notation from JSON
+            "is_a": "institution"
+        },
+        "works for": {
+            "represented_as": "edge",
+            "source": "person",
+            "target": "organization",
+            "properties": {
+                "start date": {
+                    "type": "string",
+                    "description": "Date when the person started working for the organization (YYYY-MM-DD)"
+                },
+                "role": {
+                    "type": "string",
+                    "description": "Job title or position within the organization"
+                }
+            },
+            "input_label": "employment_relation",
+            "is_a": "employment"
+        },
+        "knows": {
+            "represented_as": "edge",
+            "source": "person",
+            "target": "person",
+            "properties": {
+                "since": {
+                    "type": "string",
+                    "description": "Date when the relationship was established (YYYY-MM-DD)"
+                },
+                "relationship type": {
+                    "type": "string",
+                    "description": "Nature of the relationship (e.g., colleague, friend, mentor)"
+                }
+            },
+            "input_label": "Knows",
+            "is_a": "social relation"
+        },
+        "collaboration": {
+            "represented_as": "node",
+            "source": ["person", "organization"],
+            "target": "project",
             "properties": {
                 "role": {
                     "type": "string",
@@ -117,22 +177,8 @@ def create_toy_schema() -> dict:
                     "description": "Specific contribution or responsibility in the project"
                 }
             },
-            "is_a": "Partnership"
-        },
-        "MANAGES": {
-            "represented_as": "edge",
-            "source": "Person",
-            "target": ["Project", "Organization"],
-            "properties": {
-                "level": {
-                    "type": "string",
-                    "description": "Management level (e.g., project manager, department head, CEO)"
-                },
-                "department": {
-                    "type": "string",
-                    "description": "Department or division where the management role is exercised"
-                }
-            }
+            "input_label": "Collaboration",
+            "is_a": "partnership"
         }
     }
 
@@ -222,7 +268,25 @@ def schema_config_panel():
                     st.subheader("Add New Entity")
                     col1, col2 = st.columns([3, 1])
                     with col1:
-                        new_entity = st.text_input("Entity name:")
+                        new_entity = st.text_input(
+                            "Entity class name (lower sentence case, use spaces instead of dashes or underscores):",
+                            help="Enter the ontology class name in lowercase. Use spaces instead of dashes or underscores."
+                        )
+                        if new_entity:
+                            normalized = normalize_class_name(new_entity)
+                            if normalized != new_entity:
+                                st.info(f"Suggested name: {normalized}")
+                            
+                            is_valid, message = validate_class_name(normalized)
+                            if not is_valid:
+                                st.warning(message)
+                        
+                        # Add input label field
+                        input_label = st.text_input(
+                            "Input label (from raw data):",
+                            help="Enter the label as it appears in your raw data (e.g., column name, JSON field, etc.)"
+                        )
+                    
                     with col2:
                         entity_type = st.selectbox(
                             "Type",
@@ -231,33 +295,63 @@ def schema_config_panel():
                         )
                     
                     if new_entity and st.button("Add Entity"):
-                        if new_entity not in config:
-                            logger.info(f"Adding new entity: {new_entity}")
-                            config[new_entity] = {
-                                'represented_as': entity_type,
-                                'properties': {}
-                            }
-                            st.success(f"Added {entity_type}: {new_entity}")
+                        normalized = normalize_class_name(new_entity)
+                        is_valid, message = validate_class_name(normalized)
+                        
+                        if is_valid:
+                            if normalized not in config:
+                                logger.info(f"Adding new entity: {normalized}")
+                                config[normalized] = {
+                                    'represented_as': entity_type,
+                                    'properties': {},
+                                    'input_label': input_label if input_label else normalized
+                                }
+                                st.success(f"Added {entity_type}: {normalized}")
+                            else:
+                                st.error(
+                                    f"Entity {normalized} already exists. "
+                                    "If you want to modify it, use the Modify Entities tab."
+                                )
+                        else:
+                            st.error(message)
                 
                 with edit_tab2:
                     st.subheader("Add New Relationship")
-                    col1, col2, col3 = st.columns(3)
+                    col1, col2 = st.columns(2)
                     with col1:
                         source = st.selectbox("Source entity:", options=list(config.keys()))
-                    with col2:
                         target = st.selectbox("Target entity:", options=list(config.keys()))
-                    with col3:
-                        rel_type = st.text_input("Relationship type:")
+                    with col2:
+                        rel_type = st.text_input(
+                            "Relationship class name:",
+                            help="Enter the ontology class name in lowercase. Use spaces instead of dashes or underscores."
+                        )
+                        input_label = st.text_input(
+                            "Input label (from raw data):",
+                            help="Enter the label as it appears in your raw data (e.g., column name, relation type, etc.)"
+                        )
                     
                     if source and target and rel_type and st.button("Add Relationship"):
-                        if rel_type not in config:
-                            config[rel_type] = {
-                                'represented_as': 'edge',
-                                'source': source,
-                                'target': target,
-                                'properties': {}
-                            }
-                            st.success(f"Added relationship: {rel_type}")
+                        normalized = normalize_class_name(rel_type)
+                        is_valid, message = validate_class_name(normalized)
+                        
+                        if is_valid:
+                            if normalized not in config:
+                                config[normalized] = {
+                                    'represented_as': 'edge',
+                                    'source': source,
+                                    'target': target,
+                                    'properties': {},
+                                    'input_label': input_label if input_label else normalized
+                                }
+                                st.success(f"Added relationship: {normalized}")
+                            else:
+                                st.error(
+                                    f"Relationship {normalized} already exists. "
+                                    "If you want to modify it, use the Modify Relationships tab."
+                                )
+                        else:
+                            st.error(message)
                 
                 with edit_tab3:
                     st.subheader("Modify Entity Properties")
