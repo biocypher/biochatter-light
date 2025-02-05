@@ -242,7 +242,7 @@ def schema_config_panel():
         tab1, tab2, tab3, tab4 = st.tabs(["Graph View", "Schema Editor", "Ontology Mapping", "YAML Preview"])
         
         with tab1:
-            st.subheader("Schema Graph Visualization")
+            st.subheader("Schema Visualization")
             if config:
                 logger.info("Creating and visualizing schema graph")
                 G = create_schema_graph(config)
