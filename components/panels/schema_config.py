@@ -240,7 +240,6 @@ def schema_config_panel():
                 
                 with edit_tab4:
                     st.subheader("Modify Relationships")
-                    # Filter for edges
                     edges = [k for k, v in config.items() 
                             if v.get('represented_as') == 'edge']
                     selected_edge = st.selectbox(
@@ -250,46 +249,69 @@ def schema_config_panel():
                     )
                     if selected_edge and selected_edge != 'No edges available':
                         st.subheader("Edge Configuration")
-                        col1, col2 = st.columns(2)
                         
-                        # Get current source and target
-                        current_source = config[selected_edge].get('source', [])
-                        current_target = config[selected_edge].get('target', [])
+                        # Initialize or get edge state from session state
+                        edge_state_key = f"edge_state_{selected_edge}"
+                        if edge_state_key not in ss:
+                            ss[edge_state_key] = {
+                                'source': config[selected_edge].get('source', []),
+                                'target': config[selected_edge].get('target', []),
+                                'changes_applied': True
+                            }
                         
-                        # Convert to list if not already
-                        if isinstance(current_source, str):
-                            current_source = [current_source]
-                        if isinstance(current_target, str):
-                            current_target = [current_target]
+                        # Ensure source/target are lists
+                        if isinstance(ss[edge_state_key]['source'], str):
+                            ss[edge_state_key]['source'] = [ss[edge_state_key]['source']]
+                        if isinstance(ss[edge_state_key]['target'], str):
+                            ss[edge_state_key]['target'] = [ss[edge_state_key]['target']]
                         
-                        # Ensure current values exist in options
                         available_nodes = list(config.keys())
-                        current_source = [s for s in current_source if s in available_nodes]
-                        current_target = [t for t in current_target if t in available_nodes]
                         
+                        col1, col2 = st.columns(2)
                         with col1:
-                            # Multi-select for sources
                             source = st.multiselect(
                                 "Source entities",
                                 options=available_nodes,
-                                default=current_source,
+                                default=ss[edge_state_key]['source'],
                                 key=f"{selected_edge}_source"
                             )
-                            # Store as string if single value, list if multiple
-                            config[selected_edge]['source'] = source[0] if len(source) == 1 else source
-                            
+                        
                         with col2:
-                            # Multi-select for targets
                             target = st.multiselect(
                                 "Target entities",
                                 options=available_nodes,
-                                default=current_target,
+                                default=ss[edge_state_key]['target'],
                                 key=f"{selected_edge}_target"
                             )
-                            # Store as string if single value, list if multiple
-                            config[selected_edge]['target'] = target[0] if len(target) == 1 else target
                         
-                        edit_node_properties(config, selected_edge)  # Reuse for edge properties
+                        # Check if changes were made
+                        changes_made = (
+                            set(source) != set(ss[edge_state_key]['source']) or 
+                            set(target) != set(ss[edge_state_key]['target'])
+                        )
+                        
+                        if changes_made:
+                            ss[edge_state_key]['changes_applied'] = False
+                            
+                        if not ss[edge_state_key]['changes_applied']:
+                            col1, col2 = st.columns([3, 1])
+                            with col1:
+                                st.info("⚠️ You have unsaved changes. Click 'Apply Changes' to update the schema.")
+                            with col2:
+                                if st.button("Apply Changes", type="primary", use_container_width=True):
+                                    working_config = dict(config)
+                                    working_config[selected_edge]['source'] = source[0] if len(source) == 1 else source
+                                    working_config[selected_edge]['target'] = target[0] if len(target) == 1 else target
+                                    
+                                    # Update edge state before updating schema
+                                    ss[edge_state_key]['source'] = source
+                                    ss[edge_state_key]['target'] = target
+                                    ss[edge_state_key]['changes_applied'] = True
+                                    
+                                    # Update schema which will trigger rerun
+                                    update_schema(working_config)
+                        
+                        edit_node_properties(config, selected_edge)
                 
                 with edit_tab5:
                     st.subheader("Delete Elements")
