@@ -182,6 +182,11 @@ def create_toy_schema() -> dict:
         }
     }
 
+def update_schema(new_config: dict):
+    """Global function to update schema state."""
+    ss['schema_config'] = dict(new_config)  # Create a deep copy
+    st.rerun()  # Ensure UI reflects changes
+
 def schema_config_panel():
     """Main function for the Schema Configuration panel."""
     try:
@@ -204,39 +209,54 @@ def schema_config_panel():
         logger.info("Starting schema configuration panel")
         display_info()
         
-        # File upload and save in 3 columns
-        col1, col2, col3 = st.columns([4, 4, 1])
+        # Initialize schema state tracking
+        if 'schema_initialized' not in ss:
+            ss['schema_initialized'] = False
+        
+        # Schema initialization section
+        if not ss['schema_initialized']:
+            st.info("Please initialize your schema by either uploading a YAML file or using the toy dataset.")
+            
+            col1, col2 = st.columns(2)
+            with col1:
+                uploaded_file = st.file_uploader(label="Upload BioCypher schema configuration (YAML)", type=['yaml', 'yml'])
+                if uploaded_file is not None:
+                    logger.info(f"Loading schema config from uploaded file: {uploaded_file.name}")
+                    new_config = yaml.safe_load(uploaded_file)
+                    ss['schema_config'] = new_config
+                    ss['schema_initialized'] = True
+                    st.rerun()
+            
+            with col2:
+                if st.button("Use Toy Dataset", use_container_width=True):
+                    logger.info("Initializing with toy schema")
+                    ss['schema_config'] = create_toy_schema()
+                    ss['schema_initialized'] = True
+                    st.rerun()
+            
+            # Return early if schema not initialized
+            if not ss['schema_initialized']:
+                return
+        
+        # Create a working copy of the schema
+        config = dict(ss['schema_config'])
+        
+        # Display schema reset notice and save functionality
+        col1, col2 = st.columns([3, 1])
         with col1:
-            # File upload
-            uploaded_file = st.file_uploader("Upload BioCypher schema configuration (YAML)", type=['yaml', 'yml'])
+            st.info("⚠️ To start with a new schema, please reset the app.")
         
         with col2:
-            # Save configuration filename input
-            save_path = st.text_input("Save configuration as:", value="schema_config.yaml")
-            
-        with col3:
-            # Save button in its own column, vertically centered
-            st.write("")  # Add some vertical spacing
-            if st.button("Save", use_container_width=True):
-                if save_path:
-                    try:
-                        logger.info(f"Saving schema config to: {save_path}")
-                        save_schema_config(ss.get('schema_config', create_toy_schema()), Path(save_path))
-                        st.success(f"Configuration saved to {save_path}")
-                    except Exception as e:
-                        logger.error(f"Error saving configuration: {str(e)}")
-                        st.error(f"Error saving configuration: {str(e)}")
-        
-        if 'schema_config' not in ss:
-            logger.info("Initializing with toy schema")
-            ss.schema_config = create_toy_schema()
-        
-        if uploaded_file is not None:
-            logger.info(f"Loading schema config from uploaded file: {uploaded_file.name}")
-            ss.schema_config = yaml.safe_load(uploaded_file)
-        
-        # Initialize or load configuration
-        config = ss.schema_config
+            # Save configuration filename input and button
+            save_path = st.text_input("Save as:", value="schema_config.yaml", label_visibility="collapsed")
+            if save_path and st.button("Save", use_container_width=True):
+                try:
+                    logger.info(f"Saving schema config to: {save_path}")
+                    save_schema_config(ss['schema_config'], Path(save_path))
+                    st.success(f"Configuration saved to {save_path}")
+                except Exception as e:
+                    logger.error(f"Error saving configuration: {str(e)}")
+                    st.error(f"Error saving configuration: {str(e)}")
         
         # Tabs for different views
         tab1, tab2, tab3, tab4 = st.tabs(["Graph View", "Schema Editor", "Ontology Mapping", "YAML Preview"])
@@ -269,7 +289,7 @@ def schema_config_panel():
                     col1, col2 = st.columns([3, 1])
                     with col1:
                         new_entity = st.text_input(
-                            "Entity class name (lower sentence case, use spaces instead of dashes or underscores):",
+                            "Entity class name:",
                             help="Enter the ontology class name in lowercase. Use spaces instead of dashes or underscores."
                         )
                         if new_entity:
@@ -281,10 +301,9 @@ def schema_config_panel():
                             if not is_valid:
                                 st.warning(message)
                         
-                        # Add input label field
                         input_label = st.text_input(
                             "Input label (from raw data):",
-                            help="Enter the label as it appears in your raw data (e.g., column name, JSON field, etc.)"
+                            help="Enter the label as it appears in your raw data"
                         )
                     
                     with col2:
@@ -300,18 +319,16 @@ def schema_config_panel():
                         
                         if is_valid:
                             if normalized not in config:
-                                logger.info(f"Adding new entity: {normalized}")
-                                config[normalized] = {
+                                new_config = dict(config)
+                                new_config[normalized] = {
                                     'represented_as': entity_type,
                                     'properties': {},
                                     'input_label': input_label if input_label else normalized
                                 }
+                                update_schema(new_config)
                                 st.success(f"Added {entity_type}: {normalized}")
                             else:
-                                st.error(
-                                    f"Entity {normalized} already exists. "
-                                    "If you want to modify it, use the Modify Entities tab."
-                                )
+                                st.error(f"Entity {normalized} already exists")
                         else:
                             st.error(message)
                 
@@ -421,20 +438,91 @@ def schema_config_panel():
                         options=list(config.keys()),
                         key='delete_selector'
                     )
+                    
                     if element_to_delete:
                         col1, col2 = st.columns([3, 1])
                         with col1:
                             element_type = config[element_to_delete].get('represented_as', 'node')
                             st.info(f"Selected: {element_to_delete} ({element_type})")
+                            
+                            # Show references to this element
+                            references = []
+                            for k, v in config.items():
+                                if k == element_to_delete:
+                                    continue
+                                if isinstance(v.get('source'), str) and v['source'] == element_to_delete:
+                                    references.append(f"'{k}' uses this as source")
+                                elif isinstance(v.get('source'), list) and element_to_delete in v['source']:
+                                    references.append(f"'{k}' uses this as source")
+                                if isinstance(v.get('target'), str) and v['target'] == element_to_delete:
+                                    references.append(f"'{k}' uses this as target")
+                                elif isinstance(v.get('target'), list) and element_to_delete in v['target']:
+                                    references.append(f"'{k}' uses this as target")
+                                if v.get('is_a') == element_to_delete:
+                                    references.append(f"'{k}' inherits from this")
+                            
+                            if references:
+                                st.warning(
+                                    "⚠️ This element is referenced by:\n" + 
+                                    "\n".join(f"- {ref}" for ref in references)
+                                )
+                        
                         with col2:
-                            if st.button("Delete", type="secondary", key=f"delete_{element_to_delete}"):
-                                confirm = st.checkbox(f"Confirm deletion of {element_to_delete}")
-                                if confirm:
-                                    # Delete from both config and session state
-                                    del config[element_to_delete]
-                                    ss.schema_config = config
-                                    st.success(f"Deleted {element_to_delete}")
-                                    st.experimental_rerun()
+                            # Initialize deletion state in session state if not present
+                            if f"delete_{element_to_delete}" not in ss:
+                                ss[f"delete_{element_to_delete}"] = False
+                            
+                            # First button to initiate deletion
+                            if not ss[f"delete_{element_to_delete}"]:
+                                if st.button("Delete", type="secondary", use_container_width=True, key=f"init_delete_{element_to_delete}"):
+                                    ss[f"delete_{element_to_delete}"] = True
+                                    st.rerun()
+                            # Confirmation and cancel buttons
+                            else:
+                                if st.button("Cancel", type="secondary", use_container_width=True, key=f"cancel_delete_{element_to_delete}"):
+                                    del ss[f"delete_{element_to_delete}"]
+                                    st.rerun()
+                                if st.button("Confirm Deletion", type="primary", use_container_width=True, key=f"confirm_delete_{element_to_delete}"):
+                                    new_config = dict(config)
+                                    
+                                    # Update all references first
+                                    for k, v in new_config.items():
+                                        if k == element_to_delete:
+                                            continue
+                                        # Update source references
+                                        if isinstance(v.get('source'), str):
+                                            if v['source'] == element_to_delete:
+                                                del v['source']
+                                        elif isinstance(v.get('source'), list):
+                                            if element_to_delete in v['source']:
+                                                v['source'] = [s for s in v['source'] if s != element_to_delete]
+                                                if len(v['source']) == 1:
+                                                    v['source'] = v['source'][0]
+                                                elif not v['source']:
+                                                    del v['source']
+                                        
+                                        # Update target references
+                                        if isinstance(v.get('target'), str):
+                                            if v['target'] == element_to_delete:
+                                                del v['target']
+                                        elif isinstance(v.get('target'), list):
+                                            if element_to_delete in v['target']:
+                                                v['target'] = [t for t in v['target'] if t != element_to_delete]
+                                                if len(v['target']) == 1:
+                                                    v['target'] = v['target'][0]
+                                                elif not v['source']:
+                                                    del v['target']
+                                        
+                                        # Update is_a references
+                                        if v.get('is_a') == element_to_delete:
+                                            del v['is_a']
+                                    
+                                    # Then delete the element
+                                    del new_config[element_to_delete]
+                                    # Clear the deletion state
+                                    del ss[f"delete_{element_to_delete}"]
+                                    update_schema(new_config)
+                                    st.success(f"Deleted {element_to_delete} and updated all references")
             else:
                 st.info("Upload or create a schema configuration to edit it.")
         
@@ -835,25 +923,25 @@ try:
             if node_type not in config:
                 config[node_type] = {'properties': {}}
             
-            properties = config[node_type].get('properties', {})
+            properties = dict(config[node_type].get('properties', {}))
             
             st.subheader(f"Properties for {node_type}")
             
-            # Add new property with unique key
             new_prop = st.text_input(
                 "Add new property:",
-                key=f"new_prop_{node_type}"  # Add unique key
+                key=f"new_prop_{node_type}"
             )
             if new_prop and new_prop not in properties:
-                properties[new_prop] = 'string'  # default type in simple format
+                new_config = dict(config)
+                new_config[node_type]['properties'] = dict(properties)
+                new_config[node_type]['properties'][new_prop] = 'string'
+                update_schema(new_config)
             
-            # Edit existing properties
             for prop in list(properties.keys()):
                 col1, col2, col3, col4 = st.columns([2, 2, 3, 1])
                 with col1:
                     st.text(prop)
                 with col2:
-                    # Handle both simple string type and dict format
                     current_type = (properties[prop].get('type', properties[prop]) 
                                   if isinstance(properties[prop], dict) 
                                   else properties[prop])
@@ -865,35 +953,43 @@ try:
                         index=['string', 'integer', 'float', 'boolean'].index(current_type)
                     )
                     
-                    # Get existing description if any
+                    if prop_type != current_type:
+                        new_config = dict(config)
+                        if isinstance(properties[prop], dict):
+                            new_config[node_type]['properties'][prop]['type'] = prop_type
+                        else:
+                            new_config[node_type]['properties'][prop] = prop_type
+                        update_schema(new_config)
+                
+                with col3:
                     existing_desc = (properties[prop].get('description', '') 
                                    if isinstance(properties[prop], dict) 
                                    else '')
                     
-                with col3:
-                    # Optional description field with unique key
                     description = st.text_input(
                         "Description (optional)",
                         value=existing_desc,
-                        key=f"{node_type}_{prop}_description_{hash(prop)}",  # Add hash to ensure uniqueness
+                        key=f"{node_type}_{prop}_description",
                         placeholder="Enter property description..."
                     )
                     
-                    # Update property format based on whether there's a description
-                    if description:
-                        properties[prop] = {
-                            'type': prop_type,
-                            'description': description
-                        }
-                    else:
-                        # Use simple format if no description
-                        properties[prop] = prop_type
-                        
+                    if description != existing_desc:
+                        new_config = dict(config)
+                        if description:
+                            new_config[node_type]['properties'][prop] = {
+                                'type': prop_type,
+                                'description': description
+                            }
+                        else:
+                            new_config[node_type]['properties'][prop] = prop_type
+                        update_schema(new_config)
+                
                 with col4:
-                    if st.button("Delete", key=f"delete_prop_{node_type}_{hash(prop)}"):  # Add hash to ensure uniqueness
-                        del properties[prop]
+                    if st.button("Delete", key=f"delete_{node_type}_{prop}"):
+                        new_config = dict(config)
+                        del new_config[node_type]['properties'][prop]
+                        update_schema(new_config)
             
-            config[node_type]['properties'] = properties
         except Exception as e:
             logger.error(f"Error editing node properties: {str(e)}")
             st.error(f"Error editing node properties: {str(e)}")
