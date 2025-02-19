@@ -219,7 +219,11 @@ def schema_config_panel():
             
             col1, col2 = st.columns(2)
             with col1:
-                uploaded_file = st.file_uploader(label="Upload BioCypher schema configuration (YAML)", type=['yaml', 'yml'])
+                uploaded_file = st.file_uploader(
+                    label="Upload BioCypher schema configuration (YAML)", 
+                    type=['yaml', 'yml'],
+                    label_visibility="collapsed"  # Hide label but keep spacing
+                )
                 if uploaded_file is not None:
                     logger.info(f"Loading schema config from uploaded file: {uploaded_file.name}")
                     new_config = yaml.safe_load(uploaded_file)
@@ -242,14 +246,16 @@ def schema_config_panel():
         config = dict(ss['schema_config'])
         
         # Display schema reset notice and save functionality
-        col1, col2 = st.columns([3, 1])
+        col1, col2, col3 = st.columns([4, 3, 1])
         with col1:
             st.info("⚠️ To start with a new schema, please reset the app.")
         
         with col2:
-            # Save configuration filename input and button
-            save_path = st.text_input("Save as:", value="schema_config.yaml", label_visibility="collapsed")
-            if save_path and st.button("Save", use_container_width=True):
+            # Save configuration filename input
+            save_path = st.text_input("Save as:", value="schema_config.yaml")
+        
+        with col3:
+            if st.button("Save", use_container_width=True):
                 try:
                     logger.info(f"Saving schema config to: {save_path}")
                     save_schema_config(ss['schema_config'], Path(save_path))
