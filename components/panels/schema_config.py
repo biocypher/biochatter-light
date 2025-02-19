@@ -390,16 +390,16 @@ def schema_config_panel():
                             if v.get('represented_as') == 'edge']
                     selected_edge = st.selectbox(
                         "Select relationship to modify:",
-                        options=edges,
+                        options=edges if edges else ['No edges available'],
                         key='modify_edge_selector'
                     )
-                    if selected_edge:
+                    if selected_edge and selected_edge != 'No edges available':
                         st.subheader("Edge Configuration")
                         col1, col2 = st.columns(2)
                         
                         # Get current source and target
-                        current_source = config[selected_edge].get('source', '')
-                        current_target = config[selected_edge].get('target', '')
+                        current_source = config[selected_edge].get('source', [])
+                        current_target = config[selected_edge].get('target', [])
                         
                         # Convert to list if not already
                         if isinstance(current_source, str):
@@ -407,11 +407,16 @@ def schema_config_panel():
                         if isinstance(current_target, str):
                             current_target = [current_target]
                         
+                        # Ensure current values exist in options
+                        available_nodes = list(config.keys())
+                        current_source = [s for s in current_source if s in available_nodes]
+                        current_target = [t for t in current_target if t in available_nodes]
+                        
                         with col1:
                             # Multi-select for sources
                             source = st.multiselect(
                                 "Source entities",
-                                options=list(config.keys()),
+                                options=available_nodes,
                                 default=current_source,
                                 key=f"{selected_edge}_source"
                             )
@@ -422,7 +427,7 @@ def schema_config_panel():
                             # Multi-select for targets
                             target = st.multiselect(
                                 "Target entities",
-                                options=list(config.keys()),
+                                options=available_nodes,
                                 default=current_target,
                                 key=f"{selected_edge}_target"
                             )
