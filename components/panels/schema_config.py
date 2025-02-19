@@ -830,9 +830,25 @@ try:
                     
                     prop_type = st.selectbox(
                         "Type",
-                        options=['string', 'integer', 'float', 'boolean'],
+                        options=[
+                            'string', 'str', 
+                            'integer', 'int',
+                            'float',
+                            'boolean', 'bool',
+                            'string[]', 'str[]',
+                            'integer[]', 'int[]',
+                            'float[]',
+                            'boolean[]', 'bool[]'
+                        ],
                         key=f"{node_type}_{prop}_type",
-                        index=['string', 'integer', 'float', 'boolean'].index(current_type)
+                        index=['string', 'str', 
+                               'integer', 'int',
+                               'float',
+                               'boolean', 'bool',
+                               'string[]', 'str[]',
+                               'integer[]', 'int[]',
+                               'float[]',
+                               'boolean[]', 'bool[]'].index(current_type)
                     )
                     
                     if prop_type != current_type:
