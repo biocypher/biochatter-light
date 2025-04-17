@@ -38,6 +38,7 @@ are available:
     - `RAG_TAB`: Show the retrieval-augmented generation tab.
     - `KNOWLEDGE_GRAPH_TAB`: Show the knowledge graph tab.
 - Special use cases
+    - `SCHEMA_CONFIG_TAB`: Show the BioCypher schema configuration tab.
     - `CELL_TYPE_ANNOTATION_TAB`: Show the cell type annotation tab.
     - `EXPERIMENTAL_DESIGN_TAB`: Show the experimental design tab.
     - `GENETICS_ANNOTATION_TAB`: Show the genetics annotation tab.
