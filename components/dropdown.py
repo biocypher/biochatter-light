@@ -1,4 +1,4 @@
-from biochatter.llm_connect import (
+from biochatter.llm_connect.available_models import (
     OPENAI_MODELS,
     HUGGINGFACE_MODELS,
     XINFERENCE_MODELS,

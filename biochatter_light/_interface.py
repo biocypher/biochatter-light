@@ -12,6 +12,9 @@ from biochatter.llm_connect import (
     BloomConversation,
     XinferenceConversation,
     OllamaConversation,
+)
+
+from biochatter.llm_connect.available_models import (
     OPENAI_MODELS,
     HUGGINGFACE_MODELS,
     TOKEN_LIMITS,

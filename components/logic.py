@@ -6,7 +6,7 @@ import os
 
 from biochatter_light._interface import BioChatterLight
 from biochatter_light._interface import community_possible
-from biochatter.llm_connect import (
+from biochatter.llm_connect.available_models import (
     OPENAI_MODELS,
     HUGGINGFACE_MODELS,
     XINFERENCE_MODELS,
