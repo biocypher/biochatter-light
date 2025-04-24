@@ -10,7 +10,9 @@ from biochatter.llm_connect.available_models import (
     OPENAI_MODELS,
     HUGGINGFACE_MODELS,
     XINFERENCE_MODELS,
+    GEMINI_MODELS,
 )
+
 
 from .config import TABS_TO_SHOW
 from components.constants import (
@@ -54,6 +56,7 @@ from .display import (
 
 from .input import (
     openai_key_chat_box,
+    gemini_key_chat_box,
     huggingface_key_chat_box,
     file_uploader,
     chat_line,
@@ -90,7 +93,7 @@ def main_logic():
 
     # DEFAULT MODEL
     if not ss.get("primary_model"):
-        ss["primary_model"] = "gpt-3.5-turbo"
+        ss["primary_model"] = "gemini-2.0-flash"
 
     # INTERFACE
     if not ss.get("bcl"):
@@ -251,7 +254,7 @@ def main_logic():
                     app_info()
                 if (
                     ss.get("show_community_select", False)
-                    and ss.get("primary_model") in OPENAI_MODELS
+                    and (ss.get("primary_model") in OPENAI_MODELS or ss.get("primary_model") in GEMINI_MODELS)
                     and community_possible()
                 ):
                     remaining_tokens()
@@ -268,10 +271,11 @@ def main_logic():
                     model_select()
 
             # CHAT BOX
-
             if ss.mode == "getting_key":
                 if ss.primary_model in OPENAI_MODELS:
                     openai_key_chat_box()
+                elif ss.primary_model in GEMINI_MODELS:
+                    gemini_key_chat_box()
                 elif ss.primary_model in HUGGINGFACE_MODELS:
                     huggingface_key_chat_box()
                 elif os.getenv("OLLAMA_MODEL") or os.getenv("XINFERENCE_MODEL"):
@@ -310,14 +314,14 @@ def main_logic():
                 "perform similarity search on the embeddings of the documents' "
                 "contents."
             )
-            if ss.get("openai_api_key"):
+            if ss.get("openai_api_key") or ss.get("google_api_key"):
                 rag_agent_panel()
                 if ss.get("first_document_uploaded"):
                     ss.first_document_uploaded = False
                     refresh()
             else:
                 st.info(
-                    "Please enter your OpenAI API key to use the "
+                    "Please enter your OpenAI API key / Google API key to use the "
                     "Retrieval-Augmented Generation functionality."
                 )
 

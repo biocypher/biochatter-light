@@ -2,6 +2,7 @@ from biochatter.llm_connect.available_models import (
     OPENAI_MODELS,
     HUGGINGFACE_MODELS,
     XINFERENCE_MODELS,
+    GEMINI_MODELS,
 )
 import streamlit as st
 
@@ -27,7 +28,7 @@ def model_select():
             return
 
         # concatenate OPENAI_MODELS and HUGGINGFACE_MODELS
-        models = OPENAI_MODELS  # + HUGGINGFACE_MODELS  + XINFERENCE_MODELS
+        models = GEMINI_MODELS + OPENAI_MODELS  # + HUGGINGFACE_MODELS  + XINFERENCE_MODELS
         st.selectbox(
             "Primary model",
             options=models,

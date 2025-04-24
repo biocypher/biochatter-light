@@ -25,6 +25,8 @@ def update_api_keys():
         ss.openai_api_key = os.environ["OPENAI_API_KEY"]
     if "HUGGINGFACEHUB_API_TOKEN" in os.environ:
         ss.huggingfacehub_api_key = os.environ["HUGGINGFACEHUB_API_TOKEN"]
+    if "GOOGLE_API_KEY" in os.environ:
+        ss.google_api_key = os.environ["GOOGLE_API_KEY"]
 
     if "OPENAI_API_TYPE" in os.environ:
         if os.environ["OPENAI_API_TYPE"] == "azure":
@@ -68,6 +70,7 @@ def set_azure_mode():
     ss.openai_api_version = os.environ["OPENAI_API_VERSION"]
     ss.openai_api_base = os.environ["OPENAI_API_BASE"]
     ss.openai_api_key = os.environ["OPENAI_API_KEY"]
+    ss.google_api_key = os.environ["GOOGLE_API_KEY"]
     # check for key validity?
     ss.mode = "getting_name"
 
@@ -139,6 +142,7 @@ def use_community_key():
     Use the community key for the conversation.
     """
     ss.openai_api_key = os.environ["OPENAI_COMMUNITY_KEY"]
+    ss.google_api_key = os.environ["GOOGLE_API_KEY"]
     ss.bcl._history_only("📎 Assistant", "Using community key!")
     ss.user = "community"
     ss.mode = "using_community_key"
@@ -242,6 +246,7 @@ def demo_mode():
     Enter the demo mode for the conversation.
     """
     ss.openai_api_key = os.environ["OPENAI_COMMUNITY_KEY"]
+    ss.google_api_key = os.environ["GOOGLE_API_KEY"]
     ss.bcl._history_only("📎 Assistant", "Using community key!")
     ss.user = "community"
     ss.show_community_select = False

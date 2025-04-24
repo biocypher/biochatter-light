@@ -12,11 +12,13 @@ from biochatter.llm_connect import (
     BloomConversation,
     XinferenceConversation,
     OllamaConversation,
+    GeminiConversation,
 )
 
 from biochatter.llm_connect.available_models import (
     OPENAI_MODELS,
     HUGGINGFACE_MODELS,
+    GEMINI_MODELS,
     TOKEN_LIMITS,
 )
 
@@ -34,9 +36,9 @@ ss = st.session_state
 # ENVIRONMENT VARIABLES
 def community_possible():
     return (
-        "OPENAI_COMMUNITY_KEY" in os.environ
+        "GOOGLE_API_KEY" in os.environ
         and "REDIS_PW" in os.environ
-        and ss.primary_model == "gpt-3.5-turbo"
+        and ss.primary_model == "gemini-2.0-flash"
     )
 
 
@@ -70,8 +72,8 @@ def use_xinference():
 
 API_KEY_REQUIRED = "The currently selected model requires an API key."
 COMMUNITY_SELECT = (
-    "You can use your own [OpenAI API "
-    "key](https://platform.openai.com/account/api-keys), or try the platform "
+    "You can use your own [Google API "
+    "key](https://aistudio.google.com/prompts/new_chat), or try the platform "
     "using our community key by pressing the `Use The Community Key` button."
 )
 DEMO_MODE = (
@@ -206,6 +208,14 @@ class BioChatterLight:
                 base=ss.get("openai_api_base"),
             )
 
+        elif model_name in GEMINI_MODELS:
+            ss.conversation = GeminiConversation(
+                model_name=model_name,
+                prompts=ss.prompts,
+                correct=ss.correct,
+                split_correction=ss.split_correction,
+            )
+
         elif model_name in OPENAI_MODELS:
             ss.conversation = GptConversation(
                 model_name=model_name,
@@ -254,6 +264,9 @@ class BioChatterLight:
         if ss.primary_model in OPENAI_MODELS:
             key = ss.get("openai_api_key")
             ss.token_limit = TOKEN_LIMITS[ss.primary_model]
+        elif ss.primary_model in GEMINI_MODELS:
+            key = ss.get("google_api_key")
+            ss.token_limit = 1000000
         else:
             key = None
             ss.token_limit = 2000
@@ -277,6 +290,9 @@ class BioChatterLight:
 
                 if ss.primary_model in OPENAI_MODELS:
                     ss.openai_api_key = key
+
+                elif ss.primary_model in GEMINI_MODELS:
+                    ss.google_api_key = key
 
                 return "getting_name"
 
@@ -307,7 +323,7 @@ class BioChatterLight:
                     "please use your own key. "
                 )
             msg += (
-                "Using GPT-3.5-turbo, a full conversation (4000 tokens) "
+                "Using Gemini-2.0-flash, a full conversation (1000000000 tokens) "
                 f"costs about 0.01 USD. "
             )
             if community_possible():
@@ -328,6 +344,17 @@ class BioChatterLight:
             )
             self._setup_only("📎 Assistant", msg)
             ss.show_setup = True
+        
+        elif ss.primary_model in GEMINI_MODELS:
+            print(ss.primary_model)
+            msg = (
+                f"{API_KEY_REQUIRED} Please enter your [Google API "
+                "key](https://aistudio.google.com/prompts/new_chat). You "
+                "can get one by signing up "
+                "[here](https://aistudio.google.com/prompts/new_chat)."
+            )
+            self._setup_only("📎 Assistant", msg)
+            ss.show_community_select = True
 
         return "getting_key"
 
@@ -345,6 +372,8 @@ class BioChatterLight:
 
         if ss.primary_model in OPENAI_MODELS:
             ss.openai_api_key = key
+        elif ss.primary_model in GEMINI_MODELS:
+            ss.google_api_key = key
 
         return True
 
