@@ -3,24 +3,24 @@
 
 import json
 import os
-from loguru import logger
+
 import pandas as pd
 import streamlit as st
 from biochatter.llm_connect import (
-    GptConversation,
     AzureGptConversation,
     BloomConversation,
-    XinferenceConversation,
-    OllamaConversation,
     GeminiConversation,
+    GptConversation,
+    OllamaConversation,
+    XinferenceConversation,
 )
-
 from biochatter.llm_connect.available_models import (
-    OPENAI_MODELS,
-    HUGGINGFACE_MODELS,
     GEMINI_MODELS,
+    HUGGINGFACE_MODELS,
+    OPENAI_MODELS,
     TOKEN_LIMITS,
 )
+from loguru import logger
 
 XINFERENCE_MODELS = [
     "llama-3.1-instruct",
@@ -35,20 +35,13 @@ ss = st.session_state
 
 # ENVIRONMENT VARIABLES
 def community_possible():
-    return (
-        "GOOGLE_API_KEY" in os.environ
-        and "REDIS_PW" in os.environ
-        and ss.primary_model == "gemini-2.0-flash"
-    )
+    return "GOOGLE_API_KEY" in os.environ and "REDIS_PW" in os.environ and ss.primary_model == "gemini-2.0-flash"
 
 
 def use_ollama():
     if "OLLAMA_MODEL" in os.environ:
         if "XINFERENCE_MODEL" in os.environ:
-            raise ValueError(
-                "Both Ollama and Xinference models are set in the environment. "
-                "Please only set one."
-            )
+            raise ValueError("Both Ollama and Xinference models are set in the environment. Please only set one.")
 
         ss.primary_model = os.getenv("OLLAMA_MODEL")
         OLLAMA_MODELS.append(os.getenv("OLLAMA_MODEL"))
@@ -59,10 +52,7 @@ def use_ollama():
 def use_xinference():
     if "XINFERENCE_MODEL" in os.environ:
         if "OLLAMA_MODEL" in os.environ:
-            raise ValueError(
-                "Both Ollama and Xinference models are set in the environment. "
-                "Please only set one."
-            )
+            raise ValueError("Both Ollama and Xinference models are set in the environment. Please only set one.")
 
         ss.primary_model = os.getenv("XINFERENCE_MODEL")
         XINFERENCE_MODELS.append(os.getenv("XINFERENCE_MODEL"))
@@ -109,8 +99,7 @@ class BioChatterLight:
             ss.setup_messages = []
 
     def _display_setup(self):
-        """
-        Renders setup messages on each reload. Conditionally shown only at setup
+        """Renders setup messages on each reload. Conditionally shown only at setup
         stage.
         """
         for item in ss.setup_messages:
@@ -118,8 +107,7 @@ class BioChatterLight:
                 st.markdown(self._render_msg(role, msg))
 
     def _display_history(self):
-        """
-        Renders the history of the conversation on each reload. Also saves a
+        """Renders the history of the conversation on each reload. Also saves a
         JSON to the session state for download.
         """
         for item in ss.history:
@@ -135,15 +123,11 @@ class BioChatterLight:
                     st.markdown(self._render_msg(role, msg))
 
     def update_json_history(self):
-        """
-        Write ss.history to JSON and put it into session state.
-        """
+        """Write ss.history to JSON and put it into session state."""
         ss.json_history = json.dumps(ss.history)
 
     def complete_history(self):
-        """
-        Write ss.messages to JSON and put it into session state.
-        """
+        """Write ss.messages to JSON and put it into session state."""
         return ss.conversation.get_msg_json()
 
     @staticmethod
@@ -168,9 +152,7 @@ class BioChatterLight:
         ss.setup_messages.append({role: msg})
 
     def set_model(self, model_name: str):
-        """
-        Set the LLM model to use for the conversation.
-        """
+        """Set the LLM model to use for the conversation."""
         if ss.get("conversation"):
             logger.warning("Conversation already exists, overwriting.")
 
@@ -183,10 +165,8 @@ class BioChatterLight:
                 split_correction=ss.split_correction,
             )
             return
-        elif use_xinference():
-            st.error(
-                "Xinference not implemented yet. Please use Ollama for now."
-            )
+        if use_xinference():
+            st.error("Xinference not implemented yet. Please use Ollama for now.")
             return
             ss.conversation = XinferenceConversation(
                 base_url=ss.get("base_url"),
@@ -250,8 +230,7 @@ class BioChatterLight:
             )
 
     def _check_for_api_key(self, write: bool = True, input: str = None):
-        """
-        Upon app start, check for the validity of any API key in the session
+        """Upon app start, check for the validity of any API key in the session
         state. If there is none, or the given is invalid, ask again.
 
         Args:
@@ -260,6 +239,7 @@ class BioChatterLight:
 
         Returns:
             The next state to go to (either "getting_key" or "getting_name")
+
         """
         if ss.primary_model in OPENAI_MODELS:
             key = ss.get("openai_api_key")
@@ -296,14 +276,10 @@ class BioChatterLight:
 
                 return "getting_name"
 
-            else:
-                msg = (
-                    "The API key in your environment is not valid. Please enter a "
-                    "valid key."
-                )
-                self._setup_only("📎 Assistant", msg)
+            msg = "The API key in your environment is not valid. Please enter a valid key."
+            self._setup_only("📎 Assistant", msg)
 
-                return "getting_key"
+            return "getting_key"
 
         # If we get here, we either have no key, or the key is invalid.
         if ss.primary_model in OPENAI_MODELS:
@@ -322,10 +298,7 @@ class BioChatterLight:
                     "other users; if you use the platform extensively, "
                     "please use your own key. "
                 )
-            msg += (
-                "Using Gemini-2.0-flash, a full conversation (1000000000 tokens) "
-                f"costs about 0.01 USD. "
-            )
+            msg += "Using Gemini-2.0-flash, a full conversation (1000000000 tokens) costs about 0.01 USD. "
             if community_possible():
                 msg += f"{DEMO_MODE}"
             self._setup_only("📎 Assistant", msg)
@@ -344,7 +317,7 @@ class BioChatterLight:
             )
             self._setup_only("📎 Assistant", msg)
             ss.show_setup = True
-        
+
         elif ss.primary_model in GEMINI_MODELS:
             print(ss.primary_model)
             msg = (
@@ -381,10 +354,7 @@ class BioChatterLight:
         logger.info("Getting API Key.")
         sucess = self._try_api_key(key)
         if not sucess:
-            msg = (
-                "The API key you entered is not valid. Please enter a valid "
-                "key."
-            )
+            msg = "The API key you entered is not valid. Please enter a valid key."
             self._write_and_setup("📎 Assistant", msg)
 
             return "getting_key"
@@ -487,9 +457,7 @@ class BioChatterLight:
 
         known_tools = list(ss.prompts["tool_prompts"].keys())
 
-        if not (
-            ss.get("tool_data") or ss.get("tool_list")
-        ) and not "demo" in ss.get("mode"):
+        if not (ss.get("tool_data") or ss.get("tool_list")) and "demo" not in ss.get("mode"):
             msg = (
                 "No files detected. Please upload your files in the sidebar, "
                 "or press 'No' to continue without providing any files."
@@ -519,10 +487,7 @@ class BioChatterLight:
             ss.read_tools = []
 
         if len(ss.read_tools) == len(ss.tool_list):
-            msg = (
-                "I have read all the files you provided. "
-                f"{PLEASE_ENTER_QUESTIONS}"
-            )
+            msg = f"I have read all the files you provided. {PLEASE_ENTER_QUESTIONS}"
             self._write_and_history("📎 Assistant", msg)
             return "chat"
 
@@ -586,10 +551,7 @@ class BioChatterLight:
 
         if response.lower() in ["n", "no", "no."]:
             logger.info("No additional data input provided.")
-            msg = (
-                "Okay, I will use the information from the tool without "
-                "further specification."
-            )
+            msg = "Okay, I will use the information from the tool without further specification."
             self._write_and_history("📎 Assistant", msg)
             return self._get_data_input()
 
@@ -622,9 +584,7 @@ class BioChatterLight:
             ss.input,
         )
 
-        data_input_response = (
-            "Thank you for the input. " f"{PLEASE_ENTER_QUESTIONS}"
-        )
+        data_input_response = f"Thank you for the input. {PLEASE_ENTER_QUESTIONS}"
         self._write_and_history("📎 Assistant", data_input_response)
 
         return "chat"
@@ -632,10 +592,7 @@ class BioChatterLight:
     def _start_chat(self):
         logger.info("Starting chat.")
 
-        msg = (
-            f"You have selected `{ss.conversation.context}` as your context. "
-            f"{PLEASE_ENTER_QUESTIONS}"
-        )
+        msg = f"You have selected `{ss.conversation.context}` as your context. {PLEASE_ENTER_QUESTIONS}"
 
         self._write_and_history(
             "📎 Assistant",

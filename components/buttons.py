@@ -1,29 +1,27 @@
+import streamlit as st
+
 from biochatter_light._interface import BioChatterLight
+
 from .handlers import (
-    reset_app,
-    data_input_yes,
     data_input_no,
-    use_community_key,
+    data_input_yes,
     demo_mode,
     demo_next,
-    get_remaining_tokens,
-    community_tokens_refresh_in,
+    reset_app,
     set_both_mode,
     set_data_mode,
     set_papers_mode,
 )
 
-import streamlit as st
-
 ss = st.session_state
 
 
 def download_chat_history(bcl: BioChatterLight):
-    """
-    Button to download the chat history as a JSON file.
+    """Button to download the chat history as a JSON file.
 
     Args:
         bcl: current biochatter-light instance
+
     """
     bcl.update_json_history()
     st.download_button(
@@ -36,12 +34,12 @@ def download_chat_history(bcl: BioChatterLight):
 
 
 def download_complete_history(bcl: BioChatterLight):
-    """
-    Button to download the complete message history (i.e., including the
+    """Button to download the complete message history (i.e., including the
     system prompts) as a JSON file.
 
     Args:
         bcl: current biochatter-light instance
+
     """
     d = bcl.complete_history()
 
@@ -64,9 +62,7 @@ def download_complete_history(bcl: BioChatterLight):
 
 
 def reset_button():
-    """
-    Button to reset the entire app.
-    """
+    """Button to reset the entire app."""
     st.button(
         "♻️ Reset App",
         on_click=reset_app,
@@ -75,34 +71,19 @@ def reset_button():
 
 
 def demo_next_button():
-    """
-    Show the "Next Step" button for the demo mode.
-    """
+    """Show the "Next Step" button for the demo mode."""
     st.button("Next Step", on_click=demo_next, use_container_width=True)
 
 
-def community_select():
-    """
-    Show buttons to select the community key or the demo mode (which also
-    uses the community key).
-    """
-    if not get_remaining_tokens() > 0:
-        st.warning(
-            "No community tokens remaining for the day. "
-            f"Refreshes in {community_tokens_refresh_in()}."
-        )
-        return
+def demo_button():
+    """Show button for the demo mode which uses the community key."""
+    # TODO: check the gemini key
 
-    b1, b2 = st.columns([1, 1])
-    with b1:
-        st.button("Use Community Key", on_click=use_community_key)
-    with b2:
-        st.button("Show Demonstration", on_click=demo_mode)
+    st.button("Show Demonstration", on_click=demo_mode, use_container_width=True)
 
 
 def data_input_buttons():
-    """
-    Buttons for asking the user if they want to upload a file containing their
+    """Buttons for asking the user if they want to upload a file containing their
     tool data.
     """
     c1, c2 = st.columns([1, 1])

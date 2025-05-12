@@ -1,24 +1,25 @@
 # HANDLERS
 import datetime
+
 import streamlit as st
 
 ss = st.session_state
 import os
 
+import pandas as pd
 import streamlit.components.v1 as components
 from biochatter._stats import get_community_usage_cost
+from streamlit.proto.Common_pb2 import FileURLs
 from streamlit.runtime.uploaded_file_manager import (
     UploadedFile,
     UploadedFileRec,
 )
-from streamlit.proto.Common_pb2 import FileURLs
-import pandas as pd
+
 from .kg import _connect_to_neo4j
 
 
 def update_api_keys():
-    """
-    Looks for API keys of supported services in the environment variables and
+    """Looks for API keys of supported services in the environment variables and
     updates the session state accordingly.
     """
     if "OPENAI_API_KEY" in os.environ:
@@ -34,35 +35,34 @@ def update_api_keys():
 
 
 def set_azure_mode():
-    if not "OPENAI_DEPLOYMENT_NAME" in os.environ:
+    if "OPENAI_DEPLOYMENT_NAME" not in os.environ:
         raise ValueError(
             "OPENAI_DEPLOYMENT_NAME must be set to use Azure API. Please use it to "
             "set the deployment name, e.g. OPENAI_DEPLOYMENT_NAME=your-deployment-name"
         )
 
-    if not "OPENAI_MODEL_NAME" in os.environ:
+    if "OPENAI_MODEL_NAME" not in os.environ:
         raise ValueError(
             "OPENAI_MODEL_NAME must be set to use Azure API. Please use it to set "
             "the model name, e.g. OPENAI_MODEL_NAME=gpt-35-turbo"
         )
 
-    if not "OPENAI_API_VERSION" in os.environ:
+    if "OPENAI_API_VERSION" not in os.environ:
         raise ValueError(
             "OPENAI_API_VERSION must be set to use Azure API. Please use it to "
             "set the API version, e.g. OPENAI_API_VERSION=2023-03-15-preview"
         )
 
-    if not "OPENAI_API_BASE" in os.environ:
+    if "OPENAI_API_BASE" not in os.environ:
         raise ValueError(
             "OPENAI_API_BASE must be set to use Azure API. Please use it to "
             "set the API base, e.g. "
             "OPENAI_API_BASE=https://your-resource-name.openai.azure.com"
         )
 
-    if not "OPENAI_API_KEY" in os.environ:
+    if "OPENAI_API_KEY" not in os.environ:
         raise ValueError(
-            "OPENAI_API_KEY must be set to use Azure API, e.g. "
-            "OPENAI_API_KEY=sk-1234567890abcdef1234567890abcdef"
+            "OPENAI_API_KEY must be set to use Azure API, e.g. OPENAI_API_KEY=sk-1234567890abcdef1234567890abcdef"
         )
 
     ss.openai_api_type = "azure"
@@ -76,17 +76,13 @@ def set_azure_mode():
 
 
 def on_submit():
-    """
-    Handles the submission of the input text.
-    """
+    """Handles the submission of the input text."""
     ss.input = ss.get("widget")
     ss.widget = ""
 
 
 def autofocus_line():
-    """
-    Autofocuses the input line. A bit hacky, but works.
-    """
+    """Autofocuses the input line. A bit hacky, but works."""
     if "counter" not in ss:
         ss["counter"] = 0
     components.html(
@@ -105,9 +101,7 @@ def autofocus_line():
 
 
 def autofocus_area():
-    """
-    Autofocuses the input area. A bit hacky, but works.
-    """
+    """Autofocuses the input area. A bit hacky, but works."""
     if "counter" not in ss:
         ss["counter"] = 0
     components.html(
@@ -126,9 +120,7 @@ def autofocus_area():
 
 
 def _change_model():
-    """
-    Handles the user changing the primary model.
-    """
+    """Handles the user changing the primary model."""
     if ss.primary_model == ss._primary_model:
         return
 
@@ -138,12 +130,10 @@ def _change_model():
 
 
 def use_community_key():
-    """
-    Use the community key for the conversation.
-    """
+    """Use the community key for the conversation."""
     ss.openai_api_key = os.environ["OPENAI_COMMUNITY_KEY"]
     ss.google_api_key = os.environ["GOOGLE_API_KEY"]
-    ss.bcl._history_only("📎 Assistant", "Using community key!")
+    # ss.bcl._history_only("📎 Assistant", "Using community key!")
     ss.user = "community"
     ss.mode = "using_community_key"
     ss.show_community_select = False
@@ -151,9 +141,7 @@ def use_community_key():
 
 
 def get_remaining_tokens():
-    """
-    Fetch the percentage of remaining tokens for the day from the _stats module.
-    """
+    """Fetch the percentage of remaining tokens for the day from the _stats module."""
     used = get_community_usage_cost()
     limit = float(99 / 30)
     pct = (100.0 * (limit - used) / limit) if limit else 0
@@ -163,9 +151,7 @@ def get_remaining_tokens():
 
 
 def community_tokens_refresh_in():
-    """
-    Display the time remaining until the community tokens refresh.
-    """
+    """Display the time remaining until the community tokens refresh."""
     x = datetime.datetime.now()
     dt = (x.replace(hour=23, minute=59, second=59) - x).seconds
     h = dt // 3600
@@ -174,9 +160,7 @@ def community_tokens_refresh_in():
 
 
 def demo_next():
-    """
-    Handle demo mode logic.
-    """
+    """Handle demo mode logic."""
     if ss.mode == "demo_key":
         ss.input = "Demo User"
         ss.mode = "demo_start"
@@ -200,9 +184,7 @@ def demo_next():
             data=data,
         )
 
-        ss.demo_tool_data = [
-            UploadedFile(record=uploaded_file, file_urls=FileURLs())
-        ]
+        ss.demo_tool_data = [UploadedFile(record=uploaded_file, file_urls=FileURLs())]
         ss.mode = "demo_tool"
         ss.input = "done"
 
@@ -216,16 +198,13 @@ def demo_next():
 
 
 def reset_app():
-    """
-    Reset the app to its initial state.
-    """
+    """Reset the app to its initial state."""
     ss.clear()
     ss._primary_model = "gpt-3.5-turbo"
 
 
 def data_input_yes():
-    """
-    Handles the user clicking the "Yes" button for uploading a file containing
+    """Handles the user clicking the "Yes" button for uploading a file containing
     their tool data.
     """
     ss.mode = "getting_data_file_input"
@@ -233,8 +212,7 @@ def data_input_yes():
 
 
 def data_input_no():
-    """
-    Handles the user clicking the "No" button for uploading a file containing
+    """Handles the user clicking the "No" button for uploading a file containing
     their tool data.
     """
     ss.mode = "asking_for_manual_data_input"
@@ -242,12 +220,10 @@ def data_input_no():
 
 
 def demo_mode():
-    """
-    Enter the demo mode for the conversation.
-    """
-    ss.openai_api_key = os.environ["OPENAI_COMMUNITY_KEY"]
+    """Enter the demo mode for the conversation."""
+    # ss.openai_api_key = os.environ["OPENAI_COMMUNITY_KEY"] TODO: maybe should be made more flexible
     ss.google_api_key = os.environ["GOOGLE_API_KEY"]
-    ss.bcl._history_only("📎 Assistant", "Using community key!")
+    # ss.bcl._history_only("📎 Assistant", "Using community key!")
     ss.user = "community"
     ss.show_community_select = False
     ss.input = "Demo User"
@@ -256,7 +232,8 @@ def demo_mode():
 
 def shuffle_messages(l: list, i: int):
     """Replaces the message at position i with the message at position 3, and
-    moves the replaced message to the end of the list."""
+    moves the replaced message to the end of the list.
+    """
     l[i], l[3] = (
         l[3],
         l[i],
@@ -285,23 +262,17 @@ def refresh():
 
 
 def _rerun_query():
-    """
-    Rerun the query using the modified query.
-    """
+    """Rerun the query using the modified query."""
     ss.generate_query = False
 
 
 def _regenerate_query():
-    """
-    Regenerate the query using the new question.
-    """
+    """Regenerate the query using the new question."""
     ss.generate_query = True
 
 
 def _get_gene_data(gene_name):
-    """
-    Get gene data from the API.
-    """
+    """Get gene data from the API."""
     _connect_to_neo4j()
 
     gene_id = "hgnc:" + gene_name
@@ -327,8 +298,8 @@ def _get_gene_data(gene_name):
     read_name = str(gene["id"]).replace("hgnc:", "")
     st.markdown(
         f"""
-                ### Gene: {read_name} ({gene['ID']})
-                chr: {gene['chr']}, start: {gene['start']}, end: {gene['end']}
+                ### Gene: {read_name} ({gene["ID"]})
+                chr: {gene["chr"]}, start: {gene["start"]}, end: {gene["end"]}
                 """
     )
     # format result as dataframe
@@ -437,9 +408,7 @@ def _get_gene_data(gene_name):
 
     # aggregate cn_df grouping samples in new column "sample_ids", drop
     # "sample_id" and duplicate rows
-    cn_df["sample_ids"] = cn_df.groupby("alteration_id")["sample_id"].transform(
-        lambda x: ",".join(x)
-    )
+    cn_df["sample_ids"] = cn_df.groupby("alteration_id")["sample_id"].transform(lambda x: ",".join(x))
     cn_df = cn_df.drop(columns=["sample_id"])
     cn_df = cn_df.drop_duplicates()
 

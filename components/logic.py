@@ -4,85 +4,73 @@ ss = st.session_state
 
 import os
 
-from biochatter_light._interface import BioChatterLight
-from biochatter_light._interface import community_possible
 from biochatter.llm_connect.available_models import (
-    OPENAI_MODELS,
-    HUGGINGFACE_MODELS,
-    XINFERENCE_MODELS,
     GEMINI_MODELS,
+    HUGGINGFACE_MODELS,
+    OPENAI_MODELS,
 )
 
-
-from .config import TABS_TO_SHOW
+from biochatter_light._interface import BioChatterLight
 from components.constants import (
+    CORRECTING_AGENT_PROMPTS,
     DEV_FUNCTIONALITY,
     OFFLINE_FUNCTIONALITY,
     PRIMARY_MODEL_PROMPTS,
-    CORRECTING_AGENT_PROMPTS,
-    TOOL_PROMPTS,
     RAG_PROMPTS,
     SCHEMA_PROMPTS,
-)
-
-from .handlers import (
-    refresh,
-    autofocus_line,
-    autofocus_area,
-    update_api_keys,
-)
-
-from .static import (
-    app_header,
-    app_info,
+    TOOL_PROMPTS,
 )
 
 from .buttons import (
-    reset_button,
-    mode_select,
     data_input_buttons,
+    demo_button,
     demo_next_button,
     download_chat_history,
     download_complete_history,
-    community_select,
+    mode_select,
+    reset_button,
 )
-
+from .config import TABS_TO_SHOW
 from .display import (
-    remaining_tokens,
-    display_token_usage,
     show_about_section,
     waiting_for_rag_agent,
 )
-
+from .dropdown import model_select
+from .handlers import (
+    autofocus_area,
+    autofocus_line,
+    refresh,
+    update_api_keys,
+)
 from .input import (
-    openai_key_chat_box,
+    chat_box,
+    chat_line,
+    file_uploader,
     gemini_key_chat_box,
     huggingface_key_chat_box,
-    file_uploader,
-    chat_line,
-    chat_box,
+    openai_key_chat_box,
 )
-
-from .dropdown import model_select
-
 from .panels import (
-    rag_agent_panel,
     correcting_agent_panel,
+    filling_template_panel,
     genetics_panel,
     kg_panel,
+    rag_agent_panel,
     summary_panel,
-    tasks_panel,
     task_settings_panel,
-    filling_template_panel,
+    tasks_panel,
 )
-
 from .prompts import (
     prompt_save_button,
     prompt_save_load_reset,
-    show_primary_model_prompts,
     show_correcting_agent_prompts,
-    show_tool_prompts,
+    show_primary_model_prompts,
     show_rag_agent_prompts,
+    show_tool_prompts,
+)
+from .static import (
+    app_header,
+    app_info,
 )
 
 
@@ -107,14 +95,6 @@ def main_logic():
         ss.mode = bcl._check_for_api_key(write=False, input=ss.input)
         # TODO: warn user that we are resetting?
 
-    # TOKEN USAGE
-    if not ss.get("token_usage"):
-        ss.token_usage = {
-            "prompt_tokens": 0,
-            "completion_tokens": 0,
-            "total_tokens": 0,
-        }
-
     # UPDATE RAG AGENT
     if ss.get("rag_agent"):
         if ss.rag_agent.use_prompt:
@@ -123,7 +103,7 @@ def main_logic():
     # TABS
     tabs_to_show = [tab for tab, show in TABS_TO_SHOW.items() if show]
     tabs = st.tabs(tabs_to_show)
-    tab_dict = dict(zip(tabs_to_show, tabs))
+    tab_dict = dict(zip(tabs_to_show, tabs, strict=False))
 
     if "Chat" in tabs_to_show:
         with tab_dict["Chat"]:
@@ -170,12 +150,11 @@ def main_logic():
                     bcl._get_context()
                     if ss.conversation_mode in ["data", "both"]:
                         ss.mode = bcl._ask_for_data_input()
+                    elif not ss.get("embedder_used"):
+                        st.write("Please embed at least one document.")
+                        ss.mode = "waiting_for_rag_agent"
                     else:
-                        if not ss.get("embedder_used"):
-                            st.write("Please embed at least one document.")
-                            ss.mode = "waiting_for_rag_agent"
-                        else:
-                            ss.mode = bcl._start_chat()
+                        ss.mode = bcl._start_chat()
 
                 elif ss.mode == "waiting_for_rag_agent":
                     if ss.get("embedder_used"):
@@ -218,8 +197,7 @@ def main_logic():
                 elif ss.mode == "demo_manual":
                     bcl._get_data_input_manual()
                     st.write(
-                        "(The next step will involve sending a basic query to the "
-                        "model. This may take a few seconds.)"
+                        "(The next step will involve sending a basic query to the model. This may take a few seconds.)"
                     )
 
                 elif ss.mode == "demo_chat":
@@ -252,22 +230,13 @@ def main_logic():
                     file_uploader()
                 with st.expander("About"):
                     app_info()
-                if (
-                    ss.get("show_community_select", False)
-                    and (ss.get("primary_model") in OPENAI_MODELS or ss.get("primary_model") in GEMINI_MODELS)
-                    and community_possible()
-                ):
-                    remaining_tokens()
-                    community_select()
-                display_token_usage()
+
                 d1, d2 = st.columns(2)
                 with d1:
                     download_chat_history(bcl)
                 with d2:
                     download_complete_history(bcl)
-                if not os.getenv("OLLAMA_MODEL") and not os.getenv(
-                    "XINFERENCE_MODEL"
-                ):
+                if not os.getenv("OLLAMA_MODEL") and not os.getenv("XINFERENCE_MODEL"):
                     model_select()
 
             # CHAT BOX
@@ -289,14 +258,14 @@ def main_logic():
             elif ss.mode in ["getting_name", "getting_context"]:
                 chat_line()
                 autofocus_line()
+                demo_button()
             elif ss.mode == "waiting_for_rag_agent":
                 waiting_for_rag_agent()
             elif "demo" in ss.mode:
                 demo_next_button()
-            else:
-                if not ss.get("error"):
-                    chat_box()
-                    autofocus_area()
+            elif not ss.get("error"):
+                chat_box()
+                autofocus_area()
 
     if "Retrieval-Augmented Generation" in tabs_to_show:
         with tab_dict["Retrieval-Augmented Generation"]:
@@ -354,10 +323,7 @@ def main_logic():
                     "annotation with minimal human input (see e.g. [this arXiv "
                     "preprint](https://www.biorxiv.org/content/10.1101/2023.04.16.537094v1))."
                 )
-                st.markdown(
-                    "`📎 Assistant`: Cell type annotation "
-                    f"{OFFLINE_FUNCTIONALITY}"
-                )
+                st.markdown(f"`📎 Assistant`: Cell type annotation {OFFLINE_FUNCTIONALITY}")
 
     if "Experimental Design" in tabs_to_show:
         with tab_dict["Experimental Design"]:
@@ -370,9 +336,7 @@ def main_logic():
                 "which traditionally focus on either the biological or the "
                 "statistical aspects of experimental design."
             )
-            st.markdown(
-                f"`📎 Assistant`: Experimental design {OFFLINE_FUNCTIONALITY}"
-            )
+            st.markdown(f"`📎 Assistant`: Experimental design {OFFLINE_FUNCTIONALITY}")
 
     if "Prompt Engineering" in tabs_to_show:
         with tab_dict["Prompt Engineering"]:
@@ -386,7 +350,7 @@ def main_logic():
                 "facilitate testing, reproducibility, and sharing."
             )
 
-            if not ss.mode in [
+            if ss.mode not in [
                 "getting_key",
                 "using_community_key",
                 "getting_name",
@@ -440,18 +404,14 @@ def main_logic():
     if "Genetics Annotation" in tabs_to_show:
         with tab_dict["Genetics Annotation"]:
             if ss.get("online"):
-                st.markdown(
-                    f"`📎 Assistant`: Genetics annotation {OFFLINE_FUNCTIONALITY}"
-                )
+                st.markdown(f"`📎 Assistant`: Genetics annotation {OFFLINE_FUNCTIONALITY}")
             else:
                 genetics_panel()
 
     if "Knowledge Graph" in tabs_to_show:
         with tab_dict["Knowledge Graph"]:
             if ss.get("online"):
-                st.markdown(
-                    f"`📎 Assistant`: Knowledge graph {OFFLINE_FUNCTIONALITY}"
-                )
+                st.markdown(f"`📎 Assistant`: Knowledge graph {OFFLINE_FUNCTIONALITY}")
             else:
                 kg_panel()
 
