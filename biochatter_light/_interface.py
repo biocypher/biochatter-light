@@ -266,7 +266,7 @@ class BioChatterLight:
             ss.token_limit = TOKEN_LIMITS[ss.primary_model]
         elif ss.primary_model in GEMINI_MODELS:
             key = ss.get("google_api_key")
-            ss.token_limit = 1000000
+            ss.token_limit = TOKEN_LIMITS[ss.primary_model]
         else:
             key = None
             ss.token_limit = 2000
