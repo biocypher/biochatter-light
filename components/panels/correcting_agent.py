@@ -37,6 +37,4 @@ def correcting_agent_panel():
         if str(correction).lower() in ["ok", "ok."]:
             st.success("The model found no correction to be required.")
         else:
-            st.error(
-                f"The model found the following correction: `{correction}`"
-            )
+            st.error(f"The model found the following correction: `{correction}`")

@@ -1,24 +1,24 @@
-import streamlit as st
 import json
 
-ss = st.session_state
+import streamlit as st
 
-from components.kg import (
-    _summarise,
-    _summarise_individual,
-    _plan_tasks,
-    _plan_tasks_individual,
-)
+ss = st.session_state
 
 from components.constants import (
     SUMMARY_INSTRUCTION,
     SUMMARY_INSTRUCTION_INDIVIDUAL,
-    TASKS_INSTRUCTION,
-    TASKS_INSTRUCTION_INDIVIDUAL,
     SUMMARY_QUERY,
     SUMMARY_QUERY_INDIVIDUAL,
+    TASKS_INSTRUCTION,
+    TASKS_INSTRUCTION_INDIVIDUAL,
     TASKS_QUERY,
     TASKS_QUERY_INDIVIDUAL,
+)
+from components.kg import (
+    _plan_tasks,
+    _plan_tasks_individual,
+    _summarise,
+    _summarise_individual,
 )
 
 
@@ -81,27 +81,21 @@ demonstration purposes of this use case, this functionality is not implemented.
                 conv = ss.get("conversation")
                 conv.reset()
                 conv.correct = False
-                conv.append_system_message(
-                    ss.get("summary_instruction", SUMMARY_INSTRUCTION)
-                )
+                conv.append_system_message(ss.get("summary_instruction", SUMMARY_INSTRUCTION))
                 query_return = ss.get("summary_query_result", "")
                 if query_return:
                     msg, _, _ = conv.query(json.dumps(query_return[0]))
                     ss["summary"] = msg
                 else:
-                    st.error(
-                        "No results from query. Please check the database or query for errors."
-                    )
+                    st.error("No results from query. Please check the database or query for errors.")
 
         if ss.get("summary"):
-            st.markdown("## Group summary\n\n" f'{ss.get("summary")}')
+            st.markdown(f"## Group summary\n\n{ss.get('summary')}")
 
     with individual:
         summarise = st.button(
             "Summarise for individual (choose in Settings)",
-            on_click=_summarise_individual(
-                ss.get("individual", "slobentanzer")
-            ),
+            on_click=_summarise_individual(ss.get("individual", "slobentanzer")),
             use_container_width=True,
         )
         if summarise:
@@ -120,14 +114,10 @@ demonstration purposes of this use case, this functionality is not implemented.
                     msg, _, _ = conv.query(json.dumps(query_return[0]))
                     ss["summary_individual"] = msg
                 else:
-                    st.error(
-                        "No results from query. Please check the database or query for errors."
-                    )
+                    st.error("No results from query. Please check the database or query for errors.")
 
         if ss.get("summary_individual"):
-            st.markdown(
-                "## Individual summary\n\n" f'{ss.get("summary_individual")}'
-            )
+            st.markdown(f"## Individual summary\n\n{ss.get('summary_individual')}")
 
 
 def tasks_panel():
@@ -175,26 +165,20 @@ def tasks_panel():
         if tasks:
             with st.spinner("Planning ..."):
                 conv = ss.get("conversation")
-                conv.append_system_message(
-                    ss.get("tasks_instruction", TASKS_INSTRUCTION)
-                )
+                conv.append_system_message(ss.get("tasks_instruction", TASKS_INSTRUCTION))
                 query_return = ss.get("tasks_query_result", "")
                 if query_return:
                     msg, _, _ = conv.query(json.dumps(query_return[0]))
                     ss["tasks"] = msg
                 else:
-                    st.error(
-                        "No results from query. Please check the database or query for errors."
-                    )
+                    st.error("No results from query. Please check the database or query for errors.")
 
         if ss.get("tasks"):
-            st.markdown("## Group tasks\n\n" f'{ss.get("tasks")}')
+            st.markdown(f"## Group tasks\n\n{ss.get('tasks')}")
     with individual:
         tasks = st.button(
             "Plan Tasks for individual (choose in Settings)",
-            on_click=_plan_tasks_individual(
-                ss.get("individual", "slobentanzer")
-            ),
+            on_click=_plan_tasks_individual(ss.get("individual", "slobentanzer")),
             use_container_width=True,
         )
         if tasks:
@@ -211,19 +195,14 @@ def tasks_panel():
                     msg, _, _ = conv.query(json.dumps(query_return[0]))
                     ss["tasks_individual"] = msg
                 else:
-                    st.error(
-                        "No results from query. Please check the database or query for errors."
-                    )
+                    st.error("No results from query. Please check the database or query for errors.")
 
         if ss.get("tasks_individual"):
-            st.markdown(
-                "## Individual tasks\n\n" f'{ss.get("tasks_individual")}'
-            )
+            st.markdown(f"## Individual tasks\n\n{ss.get('tasks_individual')}")
 
 
 def task_settings_panel():
-    """
-    Allow the user to modify the Cypher queries and the LLM instructions used
+    """Allow the user to modify the Cypher queries and the LLM instructions used
     fror the summary and tasks panels.
     """
     st.markdown(
@@ -235,9 +214,7 @@ def task_settings_panel():
         """
     )
 
-    llm, neo4j, who = st.tabs(
-        ["LLM Instructions", "Neo4j Queries", "Individual"]
-    )
+    llm, neo4j, who = st.tabs(["LLM Instructions", "Neo4j Queries", "Individual"])
 
     with llm:
         st.markdown(

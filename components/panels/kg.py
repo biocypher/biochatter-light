@@ -1,16 +1,18 @@
-from biochatter.prompts import BioCypherPromptEngine
 import streamlit as st
+from biochatter.prompts import BioCypherPromptEngine
+
 from components.handlers import (
     _regenerate_query,
     _rerun_query,
 )
 from components.kg import (
-    _run_neo4j_query,
     _connect_to_neo4j,
     _determine_neo4j_connection,
+    _run_neo4j_query,
 )
 
 ss = st.session_state
+
 
 def display_info():
     """Display introductory information about the KG panel."""
@@ -24,6 +26,7 @@ def display_info():
         "KG has been created, using the method "
         "[`write_schema_info(as_node=True)`](https://biocypher.org/modules/biocypher.BioCypher.html#biocypher.BioCypher)."
     )
+
 
 def setup_dbms_connection(dbms_select, connection, auth, connection_status, schema_status):
     """Set up database connection UI and handle connection."""
@@ -54,8 +57,9 @@ def setup_dbms_connection(dbms_select, connection, auth, connection_status, sche
         display_connection_status(success, dbms_type)
     with schema_status:
         display_schema_status()
-    
+
     return dbms_type, success
+
 
 def handle_connection(dbms_type):
     """Handle database connection based on type."""
@@ -63,38 +67,33 @@ def handle_connection(dbms_type):
         return _connect_to_neo4j()
     return False
 
+
 def display_connection_status(success, dbms_type):
     """Display connection status messages."""
     if not success:
         if dbms_type == "Neo4j":
-            st.error(
-                "Could not connect to the database. Please check your "
-                "connection settings."
-            )
+            st.error("Could not connect to the database. Please check your connection settings.")
             st.button(
                 "Retry",
                 on_click=_connect_to_neo4j,
                 use_container_width=True,
             )
         else:
-            st.error(
-                "This database type is not yet supported. Please select "
-                "Neo4j."
-            )
+            st.error("This database type is not yet supported. Please select Neo4j.")
     else:
         st.success(f"Connected to Neo4j database at {ss.get('db_ip')}.")
+
 
 def display_schema_status():
     """Display schema loading status."""
     if ss.get("schema_dict"):
-        st.success(
-            "Schema configuration loaded from graph!"
-        )
+        st.success("Schema configuration loaded from graph!")
     else:
         st.error(
             "Please provide a graph with a schema info node, using the "
             "BioCypher method `write_schema_info(as_node=True)`."
         )
+
 
 def handle_query(dbms_type):
     """Handle query generation and execution."""
@@ -108,8 +107,10 @@ def handle_query(dbms_type):
         result = generate_and_execute_query(prompt_engine, dbms_type, question)
         display_query_results(result)
 
+
 def create_prompt_engine():
     """Create BioCypherPromptEngine instance."""
+
     def conversation_factory():
         if ss.get("conversation"):
             return ss.conversation
@@ -119,20 +120,17 @@ def create_prompt_engine():
         conversation_factory=conversation_factory,
     )
 
+
 def generate_and_execute_query(prompt_engine, dbms_type, question):
     """Generate and execute query based on question."""
     if ss.get("generate_query"):
         with st.spinner("Generating query ..."):
             if dbms_type == "Neo4j":
                 try:
-                    ss.current_query = prompt_engine.generate_query(
-                        question, dbms_type
-                    )
+                    ss.current_query = prompt_engine.generate_query(question, dbms_type)
                 except AttributeError as e:
                     if "object has no attribute 'chat'" in str(e):
-                        st.error(
-                            "Your API key may not be configured correctly. Please check your API key settings."
-                        )
+                        st.error("Your API key may not be configured correctly. Please check your API key settings.")
                         return None
                     raise e
                 except ValueError as e:
@@ -159,10 +157,11 @@ def generate_and_execute_query(prompt_engine, dbms_type, question):
 
     if dbms_type == "Neo4j":
         return _run_neo4j_query(ss.current_query)
-    elif dbms_type == "PostgreSQL":
+    if dbms_type == "PostgreSQL":
         return [("Here would be a result if we had a PostgreSQL implementation.")]
-    elif dbms_type == "ArangoDB":
+    if dbms_type == "ArangoDB":
         return [("Here would be a result if we had an ArangoDB implementation.")]
+
 
 def display_query_results(result):
     """Display query results and schema info."""
@@ -184,9 +183,9 @@ def display_query_results(result):
         st.markdown("### Schema Info")
         st.write(ss.schema_dict)
 
+
 def kg_panel():
-    """
-    Allow connecting to a BioCypher knowledge graph and querying by asking the
+    """Allow connecting to a BioCypher knowledge graph and querying by asking the
     LLM to answer questions about the graph.
     """
     display_info()

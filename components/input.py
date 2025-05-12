@@ -3,13 +3,12 @@ import streamlit as st
 ss = st.session_state
 
 from biochatter_light._interface import community_possible
-from .handlers import on_submit, use_community_key, demo_mode
+
+from .handlers import demo_mode, on_submit, use_community_key
 
 
 def chat_line():
-    """
-    Renders a chat line for smaller inputs.
-    """
+    """Renders a chat line for smaller inputs."""
     st.text_input(
         "Input:",
         on_change=on_submit,
@@ -20,17 +19,12 @@ def chat_line():
 
 
 def chat_box():
-    """
-    Renders a chat box for larger inputs. Used for all main chat functionality.
-    """
+    """Renders a chat box for larger inputs. Used for all main chat functionality."""
     st.text_area(
         "Input:",
         on_change=on_submit,
         key="widget",
-        placeholder=(
-            "Write here. Press [Enter] for a new line, and [CTRL+Enter] or "
-            "[⌘+Enter] to submit."
-        ),
+        placeholder=("Write here. Press [Enter] for a new line, and [CTRL+Enter] or [⌘+Enter] to submit."),
         label_visibility="collapsed",
     )
     if ss.get("conversation_mode") == "both" and not ss.get("embedder_used"):
@@ -43,8 +37,7 @@ def chat_box():
 
 
 def openai_key_chat_box():
-    """
-    Field for entering the OpenAI API key. Not shown if the key is found in
+    """Field for entering the OpenAI API key. Not shown if the key is found in
     the environment variables. If the community key is available (i.e., we
     are running on self-hosted, connected to Redis, and have credits remaining)
     we show a button to use the community key and a button to show a demo.
@@ -82,14 +75,13 @@ def openai_key_chat_box():
             placeholder="(sk-...) Press [Enter] to submit.",
         )
 
+
 def gemini_key_chat_box():
-    """
-    Field for entering the Google API key. Not shown if the key is found in
+    """Field for entering the Google API key. Not shown if the key is found in
     the environment variables. If the community key is available (i.e., we
     are running on self-hosted, connected to Redis, and have credits remaining)
     we show a button to use the community key and a button to show a demo.
     """
-    
     if community_possible():
         demo, community, field = st.columns([1, 1, 3])
 
@@ -123,9 +115,9 @@ def gemini_key_chat_box():
             placeholder="(AIza...) Press [Enter] to submit.",
         )
 
+
 def huggingface_key_chat_box():
-    """
-    Field for entering the Hugging Face Hub API key. Not shown if the key is
+    """Field for entering the Hugging Face Hub API key. Not shown if the key is
     found in the environment variables.
     """
     st.text_input(
@@ -137,8 +129,7 @@ def huggingface_key_chat_box():
 
 
 def file_uploader():
-    """
-    File uploader for uploading a CSV, TSV, or TXT file containing the user's
+    """File uploader for uploading a CSV, TSV, or TXT file containing the user's
     tool data to be used for the prompt.
     """
     st.file_uploader(
