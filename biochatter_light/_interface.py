@@ -292,12 +292,6 @@ class BioChatterLight:
                 "billing. We will not store your key, and only use it for "
                 "the requests made in this session. "
             )
-            if community_possible():
-                msg += (
-                    "If you use community credits, please be considerate of "
-                    "other users; if you use the platform extensively, "
-                    "please use your own key. "
-                )
             msg += "Using Gemini-2.0-flash, a full conversation (1000000000 tokens) costs about 0.01 USD. "
             if community_possible():
                 msg += f"{DEMO_MODE}"
