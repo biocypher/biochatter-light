@@ -38,8 +38,8 @@ class TestCoreModelConfiguration:
                 mock_init.return_value = MagicMock()
                 model, provider = get_default_model()
                 assert model == "gemini-1.5-pro"
-                assert provider is None
-                mock_init.assert_called_once_with(model="gemini-1.5-pro", model_provider=None, temperature=0)
+                assert provider == "google_genai"
+                mock_init.assert_called_once_with(model="gemini-1.5-pro", model_provider="google_genai", temperature=0)
 
     def test_default_model_with_provider(self):
         """Test that the default model works with explicit provider."""
@@ -59,8 +59,8 @@ class TestCoreModelConfiguration:
             mock_init.return_value = MagicMock()
             model, provider = get_default_model()
             assert model == "gemini-2.0-flash"
-            assert provider is None
-            mock_init.assert_called_once_with(model="gemini-2.0-flash", model_provider=None, temperature=0)
+            assert provider == "google_genai"
+            mock_init.assert_called_once_with(model="gemini-2.0-flash", model_provider="google_genai", temperature=0)
 
     def test_default_model_invalid_fallback(self):
         """Test that the function falls back to gemini-2.0-flash when model initialization fails."""
@@ -122,12 +122,12 @@ class TestEnvironmentVariableFlexibility:
             {
                 "env": {"BIOCHATTER_DEFAULT_MODEL": "gemini-2.0-flash"},
                 "expected_model": "gemini-2.0-flash",
-                "expected_provider": None,
+                "expected_provider": "google_genai",
             },
             {
                 "env": {"BIOCHATTER_DEFAULT_MODEL": "gemini-1.5-pro"},
                 "expected_model": "gemini-1.5-pro",
-                "expected_provider": None,
+                "expected_provider": "google_genai",
             },
             {
                 "env": {"BIOCHATTER_DEFAULT_MODEL": "gpt-4", "BIOCHATTER_MODEL_PROVIDER": "openai"},
