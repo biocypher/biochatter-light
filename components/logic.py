@@ -83,7 +83,7 @@ from .static import (
 def get_default_model():
     """Get the default model from environment variables or fallback to gemini-2.0-flash"""
     default_model = os.getenv("BIOCHATTER_DEFAULT_MODEL", "gemini-2.0-flash")
-    model_provider = os.getenv("BIOCHATTER_MODEL_PROVIDER")
+    model_provider = os.getenv("BIOCHATTER_MODEL_PROVIDER", "google_genai")
 
     # Validate that we can initialize the model
     try:
