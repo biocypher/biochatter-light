@@ -20,12 +20,19 @@ def model_select():
             st.warning("You are currently using the community key. Please reload the app to change the model.")
             return
 
-        # concatenate OPENAI_MODELS and HUGGINGFACE_MODELS
+        # concatenate GEMINI_MODELS and OPENAI_MODELS
         models = GEMINI_MODELS + OPENAI_MODELS  # + HUGGINGFACE_MODELS  + XINFERENCE_MODELS
+
+        # Find the index of the current primary model, default to 0 if not found
+        try:
+            current_model_index = models.index(ss.primary_model)
+        except (ValueError, AttributeError):
+            current_model_index = 0
+
         st.selectbox(
             "Primary model",
             options=models,
-            index=0,
+            index=current_model_index,
             on_change=_change_model,
             key="_primary_model",
             help=(

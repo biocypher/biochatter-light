@@ -32,7 +32,7 @@ def correcting_agent_panel():
             st.write("No model loaded. Please load a model first.")
             return
 
-        correction = ss.conversation._correct_response(test_correct)
+        correction = ss.conversation._correct_response(test_correct)[0]
 
         if str(correction).lower() in ["ok", "ok."]:
             st.success("The model found no correction to be required.")

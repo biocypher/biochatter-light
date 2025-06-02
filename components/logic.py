@@ -10,6 +10,12 @@ from biochatter.llm_connect.available_models import (
     OPENAI_MODELS,
 )
 
+try:
+    from langchain.chat_models import init_chat_model
+except ImportError:
+    # Fallback import for older versions
+    from langchain_core.chat_models import init_chat_model
+
 from biochatter_light._interface import BioChatterLight
 from components.constants import (
     CORRECTING_AGENT_PROMPTS,
@@ -74,6 +80,23 @@ from .static import (
 )
 
 
+def get_default_model():
+    """Get the default model from environment variables or fallback to gemini-2.0-flash"""
+    default_model = os.getenv("BIOCHATTER_DEFAULT_MODEL", "gemini-2.0-flash")
+    model_provider = os.getenv("BIOCHATTER_MODEL_PROVIDER")
+
+    # Validate that we can initialize the model
+    try:
+        # Use explicit provider if specified
+        test_model = init_chat_model(model=default_model, model_provider=model_provider, temperature=0)
+        return default_model, model_provider
+
+    except Exception as e:
+        # Log the error and fallback to gemini-2.0-flash
+        st.warning(f"Failed to initialize model '{default_model}': {e}. Falling back to 'gemini-2.0-flash'")
+        return "gemini-2.0-flash", "google_genai"
+
+
 def main_logic():
     # NEW SESSION
     if not ss.get("mode"):
@@ -81,7 +104,7 @@ def main_logic():
 
     # DEFAULT MODEL
     if not ss.get("primary_model"):
-        ss["primary_model"] = "gemini-2.0-flash"
+        ss["primary_model"], ss["primary_model_provider"] = get_default_model()
 
     # INTERFACE
     if not ss.get("bcl"):
@@ -90,7 +113,7 @@ def main_logic():
 
     # CHANGE MODEL
     if not ss.get("active_model") == ss.primary_model:
-        bcl.set_model(ss.primary_model)
+        bcl.set_model(ss.primary_model, ss.primary_model_provider)
         ss.active_model = ss.primary_model
         ss.mode = bcl._check_for_api_key(write=False, input=ss.input)
         # TODO: warn user that we are resetting?

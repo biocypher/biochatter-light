@@ -70,7 +70,8 @@ def set_azure_mode():
     ss.openai_api_version = os.environ["OPENAI_API_VERSION"]
     ss.openai_api_base = os.environ["OPENAI_API_BASE"]
     ss.openai_api_key = os.environ["OPENAI_API_KEY"]
-    ss.google_api_key = os.environ["GOOGLE_API_KEY"]
+    if "GOOGLE_API_KEY" in os.environ:
+        ss.google_api_key = os.environ["GOOGLE_API_KEY"]
     # check for key validity?
     ss.mode = "getting_name"
 
@@ -131,9 +132,9 @@ def _change_model():
 
 def use_community_key():
     """Use the community key for the conversation."""
-    ss.openai_api_key = os.environ["OPENAI_COMMUNITY_KEY"]
-    ss.google_api_key = os.environ["GOOGLE_API_KEY"]
-    # ss.bcl._history_only("📎 Assistant", "Using community key!")
+    # Only use Google API key for community features (no more OpenAI community key)
+    if "GOOGLE_API_KEY" in os.environ:
+        ss.google_api_key = os.environ["GOOGLE_API_KEY"]
     ss.user = "community"
     ss.mode = "using_community_key"
     ss.show_community_select = False
@@ -193,14 +194,17 @@ def demo_next():
         ss.mode = "demo_manual"
 
     elif ss.mode == "demo_manual":
-        ss.input = "Please explain my findings."
+        ss.input = "Please explain my findings by interpreting the results of the pathway activity analysis."
         ss.mode = "demo_chat"
 
 
 def reset_app():
     """Reset the app to its initial state."""
     ss.clear()
-    ss._primary_model = "gpt-3.5-turbo"
+    # Use the default model from environment variables instead of hardcoded gpt-3.5-turbo
+    from .logic import get_default_model
+
+    ss._primary_model, = get_default_model()
 
 
 def data_input_yes():
@@ -221,9 +225,9 @@ def data_input_no():
 
 def demo_mode():
     """Enter the demo mode for the conversation."""
-    # ss.openai_api_key = os.environ["OPENAI_COMMUNITY_KEY"] TODO: maybe should be made more flexible
-    ss.google_api_key = os.environ["GOOGLE_API_KEY"]
-    # ss.bcl._history_only("📎 Assistant", "Using community key!")
+    # Only use Google API key for demo mode (no more OpenAI community key)
+    if "GOOGLE_API_KEY" in os.environ:
+        ss.google_api_key = os.environ["GOOGLE_API_KEY"]
     ss.user = "community"
     ss.show_community_select = False
     ss.input = "Demo User"

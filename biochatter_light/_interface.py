@@ -7,10 +7,7 @@ import os
 import pandas as pd
 import streamlit as st
 from biochatter.llm_connect import (
-    AzureGptConversation,
-    BloomConversation,
-    GeminiConversation,
-    GptConversation,
+    LangChainConversation,
     OllamaConversation,
     XinferenceConversation,
 )
@@ -151,7 +148,7 @@ class BioChatterLight:
         st.markdown(self._render_msg(role, msg))
         ss.setup_messages.append({role: msg})
 
-    def set_model(self, model_name: str):
+    def set_model(self, model_name: str,model_provider:str):
         """Set the LLM model to use for the conversation."""
         if ss.get("conversation"):
             logger.warning("Conversation already exists, overwriting.")
@@ -177,39 +174,6 @@ class BioChatterLight:
             )
             return
 
-        if ss.get("openai_api_type") == "azure":
-            ss.conversation = AzureGptConversation(
-                deployment_name=ss.get("openai_deployment_name"),
-                model_name=model_name,
-                prompts=ss.prompts,
-                correct=ss.correct,
-                split_correction=ss.split_correction,
-                version=ss.get("openai_api_version"),
-                base=ss.get("openai_api_base"),
-            )
-
-        elif model_name in GEMINI_MODELS:
-            ss.conversation = GeminiConversation(
-                model_name=model_name,
-                prompts=ss.prompts,
-                correct=ss.correct,
-                split_correction=ss.split_correction,
-            )
-
-        elif model_name in OPENAI_MODELS:
-            ss.conversation = GptConversation(
-                model_name=model_name,
-                prompts=ss.prompts,
-                correct=ss.correct,
-                split_correction=ss.split_correction,
-            )
-        elif model_name in HUGGINGFACE_MODELS:
-            ss.conversation = BloomConversation(
-                model_name=model_name,
-                prompts=ss.prompts,
-                correct=ss.correct,
-                split_correction=ss.split_correction,
-            )
         elif model_name in XINFERENCE_MODELS:
             # not used in env definition case
             ss.conversation = XinferenceConversation(
@@ -219,11 +183,11 @@ class BioChatterLight:
                 correct=ss.correct,
                 split_correction=ss.split_correction,
             )
-        elif model_name in OLLAMA_MODELS:
-            # not used in env definition case
-            ss.conversation = OllamaConversation(
-                base_url=ss.get("ollama_base_url"),
+
+        else:
+            ss.conversation = LangChainConversation(
                 model_name=model_name,
+                model_provider=model_provider,
                 prompts=ss.prompts,
                 correct=ss.correct,
                 split_correction=ss.split_correction,
