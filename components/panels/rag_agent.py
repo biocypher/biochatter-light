@@ -4,7 +4,7 @@ from biochatter.vectorstore import (
     DocumentEmbedder,
     DocumentReader,
 )
-from langchain.embeddings import OpenAIEmbeddings
+from langchain_google_genai import GoogleGenerativeAIEmbeddings
 from pymilvus.exceptions import MilvusException
 
 ss = st.session_state
@@ -35,15 +35,15 @@ def rag_agent_panel():
             # running on host machine from the milvus docker compose
             connection_args = {"host": "localhost", "port": "19530"}
 
-        embedding_func = OpenAIEmbeddings(
-            api_key=ss.get("openai_api_key"),
-            model="text-embedding-ada-002",
+        embedding_func = GoogleGenerativeAIEmbeddings(
+            model="models/gemini-embedding-exp-03-07", google_api_key=ss.get("google_api_key")
         )
 
         ss.conversation.set_rag_agent(
             RagAgent(
                 mode="vectorstore",
-                model_name="gpt-3.5-turbo",
+                model_provider="google_genai",
+                model_name="gemini-2.0-flash",
                 connection_args=connection_args,
                 use_prompt=True,
                 embedding_func=embedding_func,
