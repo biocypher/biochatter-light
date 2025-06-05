@@ -40,9 +40,7 @@ def model_select():
             ),
         )
 
-        if ss.primary_model == "bigscience/bloom":
-            st.warning("BLOOM support is currently experimental. Queries may return unexpected results.")
-        elif ss.primary_model == "custom-endpoint":
+        if ss.primary_model == "custom-endpoint":
             # ask for base url of endpoint, target is ss.xinference_base_url,
             # default value is also ss.xinference_base_url
             ss.xinference_base_url = st.text_input(
