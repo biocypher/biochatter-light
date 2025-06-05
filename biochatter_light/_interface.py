@@ -256,7 +256,9 @@ class BioChatterLight:
                 "billing. We will not store your key, and only use it for "
                 "the requests made in this session. "
             )
-            msg += "Using Gemini-2.0-flash, a full conversation (1000000000 tokens) costs about 0.01 USD. "
+            msg += (
+                "Using Gemini-2.0-flash, total context size of 1,048,576 tokens (within thresholds the usage is free)"
+            )
             if community_possible():
                 msg += f"{DEMO_MODE}"
             self._setup_only("📎 Assistant", msg)
