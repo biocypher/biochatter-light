@@ -87,7 +87,7 @@ def get_default_model():
     # Validate that we can initialize the model
     try:
         # Use explicit provider if specified
-        test_model = init_chat_model(model=default_model, model_provider=model_provider, temperature=0)
+        _ = init_chat_model(model=default_model, model_provider=model_provider, temperature=0)
         return default_model, model_provider
 
     except Exception as e:
