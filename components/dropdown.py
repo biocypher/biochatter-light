@@ -16,8 +16,8 @@ def model_select():
             st.markdown("Please reload the app to change the model.")
             return
 
-        if ss.user == "community":
-            st.warning("You are currently using the community key. Please reload the app to change the model.")
+        if ss.user == "demo":
+            st.info("You are currently in demo mode. Please reload the app to change the model.")
             return
 
         # concatenate GEMINI_MODELS and OPENAI_MODELS

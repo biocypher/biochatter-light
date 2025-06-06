@@ -31,8 +31,8 @@ ss = st.session_state
 
 
 # ENVIRONMENT VARIABLES
-def community_possible():
-    return "GOOGLE_API_KEY" in os.environ and "REDIS_PW" in os.environ and ss.primary_model == "gemini-2.0-flash"
+def demo_available():
+    return "GOOGLE_API_KEY" in os.environ and ss.primary_model == "gemini-2.0-flash"
 
 
 def use_ollama():
@@ -58,15 +58,15 @@ def use_xinference():
 
 
 API_KEY_REQUIRED = "The currently selected model requires an API key."
-COMMUNITY_SELECT = (
+DEMO_SELECT = (
     "You can use your own [Google API "
     "key](https://aistudio.google.com/prompts/new_chat), or try the platform "
-    "using our community key by pressing the `Use The Community Key` button."
+    "using our demo key by pressing the `Use The Demo Key` button."
 )
 DEMO_MODE = (
     "You can also try a `Demonstration` setup with toy data by pressing the "
     "first button below. After guiding you through the initial steps, this "
-    "will also take you to a functional chat using the community key."
+    "will also take you to a functional chat using the demo key."
 )
 API_KEY_SUCCESS = (
     "Hello! I am the model's assistant. For more explanation, "
@@ -148,7 +148,7 @@ class BioChatterLight:
         st.markdown(self._render_msg(role, msg))
         ss.setup_messages.append({role: msg})
 
-    def set_model(self, model_name: str,model_provider:str):
+    def set_model(self, model_name: str, model_provider: str):
         """Set the LLM model to use for the conversation."""
         if ss.get("conversation"):
             logger.warning("Conversation already exists, overwriting.")
@@ -174,7 +174,7 @@ class BioChatterLight:
             )
             return
 
-        elif model_name in XINFERENCE_MODELS:
+        if model_name in XINFERENCE_MODELS:
             # not used in env definition case
             ss.conversation = XinferenceConversation(
                 base_url=ss.get("xinference_base_url"),
@@ -248,8 +248,8 @@ class BioChatterLight:
         # If we get here, we either have no key, or the key is invalid.
         if ss.primary_model in OPENAI_MODELS:
             msg = f"{API_KEY_REQUIRED} "
-            if community_possible():
-                msg += f"{COMMUNITY_SELECT} "
+            if demo_available():
+                msg += f"{DEMO_SELECT} "
             msg += (
                 "You can get a key by signing up "
                 "[here](https://platform.openai.com/) and enabling "
@@ -259,7 +259,7 @@ class BioChatterLight:
             msg += (
                 "Using Gemini-2.0-flash, total context size of 1,048,576 tokens (within thresholds the usage is free)"
             )
-            if community_possible():
+            if demo_available():
                 msg += f"{DEMO_MODE}"
             self._setup_only("📎 Assistant", msg)
             ss.show_community_select = True

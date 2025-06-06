@@ -2,9 +2,9 @@ import streamlit as st
 
 ss = st.session_state
 
-from biochatter_light._interface import community_possible
+from biochatter_light._interface import demo_available
 
-from .handlers import demo_mode, on_submit, use_community_key
+from .handlers import demo_mode, on_submit, use_demo_key
 
 
 def chat_line():
@@ -38,11 +38,11 @@ def chat_box():
 
 def openai_key_chat_box():
     """Field for entering the OpenAI API key. Not shown if the key is found in
-    the environment variables. If the community key is available (i.e., we
-    are running on self-hosted, connected to Redis, and have credits remaining)
-    we show a button to use the community key and a button to show a demo.
+    the environment variables. If the demo is available (i.e., we
+    are running with Google API key and Gemini model)
+    we show a button to start the demo and a button to try the demo key.
     """
-    if community_possible():
+    if demo_available():
         demo, community, field = st.columns([1, 1, 3])
 
         with demo:
@@ -54,8 +54,8 @@ def openai_key_chat_box():
 
         with community:
             st.button(
-                "Use The Community Key",
-                on_click=use_community_key,
+                "Use The Demo Key",
+                on_click=use_demo_key,
                 use_container_width=True,
             )
 
@@ -78,11 +78,11 @@ def openai_key_chat_box():
 
 def gemini_key_chat_box():
     """Field for entering the Google API key. Not shown if the key is found in
-    the environment variables. If the community key is available (i.e., we
-    are running on self-hosted, connected to Redis, and have credits remaining)
-    we show a button to use the community key and a button to show a demo.
+    the environment variables. If the demo is available (i.e., we
+    are running with Google API key and Gemini model)
+    we show a button to start the demo and a button to try the demo key.
     """
-    if community_possible():
+    if demo_available():
         demo, community, field = st.columns([1, 1, 3])
 
         with demo:
@@ -94,8 +94,8 @@ def gemini_key_chat_box():
 
         with community:
             st.button(
-                "Use The Community Key",
-                on_click=use_community_key,
+                "Use The Demo Key",
+                on_click=use_demo_key,
                 use_container_width=True,
             )
 

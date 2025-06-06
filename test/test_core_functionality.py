@@ -11,7 +11,7 @@ import sys
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
 from components.logic import get_default_model
-from biochatter_light._interface import community_possible
+from biochatter_light._interface import demo_available
 
 
 class TestCoreModelConfiguration:
@@ -25,7 +25,6 @@ class TestCoreModelConfiguration:
             "BIOCHATTER_MODEL_PROVIDER",
             "GOOGLE_API_KEY",
             "OPENAI_API_KEY",
-            "REDIS_PW",
         ]
         for var in env_vars_to_clear:
             if var in os.environ:
@@ -73,43 +72,34 @@ class TestCoreModelConfiguration:
                     assert provider == "google_genai"
                     mock_warning.assert_called_once()
 
-    def test_community_possible_with_requirements(self):
-        """Test that community_possible returns True when all requirements are met."""
-        with patch.dict(os.environ, {"GOOGLE_API_KEY": "test-key", "REDIS_PW": "test-password"}):
-            mock_ss = MagicMock()
-            mock_ss.primary_model = "gemini-2.0-flash"
-
-            with patch("biochatter_light._interface.ss", mock_ss):
-                result = community_possible()
-                assert result is True
-
-    def test_community_possible_missing_requirements(self):
-        """Test that community_possible returns False when requirements are missing."""
-        # Test without GOOGLE_API_KEY
-        with patch.dict(os.environ, {"REDIS_PW": "test-password"}):
-            mock_ss = MagicMock()
-            mock_ss.primary_model = "gemini-2.0-flash"
-
-            with patch("biochatter_light._interface.ss", mock_ss):
-                result = community_possible()
-                assert result is False
-
-        # Test without REDIS_PW
+    def test_demo_available_with_requirements(self):
+        """Test that demo_available returns True when all requirements are met."""
         with patch.dict(os.environ, {"GOOGLE_API_KEY": "test-key"}):
             mock_ss = MagicMock()
             mock_ss.primary_model = "gemini-2.0-flash"
 
             with patch("biochatter_light._interface.ss", mock_ss):
-                result = community_possible()
+                result = demo_available()
+                assert result is True
+
+    def test_demo_available_missing_requirements(self):
+        """Test that demo_available returns False when requirements are missing."""
+        # Test without GOOGLE_API_KEY
+        with patch.dict(os.environ, {}):
+            mock_ss = MagicMock()
+            mock_ss.primary_model = "gemini-2.0-flash"
+
+            with patch("biochatter_light._interface.ss", mock_ss):
+                result = demo_available()
                 assert result is False
 
         # Test with wrong model
-        with patch.dict(os.environ, {"GOOGLE_API_KEY": "test-key", "REDIS_PW": "test-password"}):
+        with patch.dict(os.environ, {"GOOGLE_API_KEY": "test-key"}):
             mock_ss = MagicMock()
             mock_ss.primary_model = "gpt-4"
 
             with patch("biochatter_light._interface.ss", mock_ss):
-                result = community_possible()
+                result = demo_available()
                 assert result is False
 
 

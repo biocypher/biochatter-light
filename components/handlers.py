@@ -1,5 +1,4 @@
 # HANDLERS
-import datetime
 
 import streamlit as st
 
@@ -8,7 +7,6 @@ import os
 
 import pandas as pd
 import streamlit.components.v1 as components
-from biochatter._stats import get_community_usage_cost
 from streamlit.proto.Common_pb2 import FileURLs
 from streamlit.runtime.uploaded_file_manager import (
     UploadedFile,
@@ -130,34 +128,15 @@ def _change_model():
     ss.input = ""
 
 
-def use_community_key():
-    """Use the community key for the conversation."""
-    # Only use Google API key for community features (no more OpenAI community key)
+def use_demo_key():
+    """Use the demo key for the conversation."""
+    # Use Google API key for demo features
     if "GOOGLE_API_KEY" in os.environ:
         ss.google_api_key = os.environ["GOOGLE_API_KEY"]
-    ss.user = "community"
-    ss.mode = "using_community_key"
+    ss.user = "demo"
+    ss.mode = "using_demo_key"
     ss.show_community_select = False
     ss.input = "done"  # just to enter main logic; more elegant solution?
-
-
-def get_remaining_tokens():
-    """Fetch the percentage of remaining tokens for the day from the _stats module."""
-    used = get_community_usage_cost()
-    limit = float(99 / 30)
-    pct = (100.0 * (limit - used) / limit) if limit else 0
-    pct = max(0, pct)
-    pct = min(100, pct)
-    return pct
-
-
-def community_tokens_refresh_in():
-    """Display the time remaining until the community tokens refresh."""
-    x = datetime.datetime.now()
-    dt = (x.replace(hour=23, minute=59, second=59) - x).seconds
-    h = dt // 3600
-    m = dt % 3600 // 60
-    return f"{h} h {m} min"
 
 
 def demo_next():
@@ -204,7 +183,7 @@ def reset_app():
     # Use the default model from environment variables instead of hardcoded gpt-3.5-turbo
     from .logic import get_default_model
 
-    ss._primary_model, = get_default_model()
+    ss._primary_model, ss._primary_model_provider = get_default_model()
 
 
 def data_input_yes():
@@ -225,10 +204,10 @@ def data_input_no():
 
 def demo_mode():
     """Enter the demo mode for the conversation."""
-    # Only use Google API key for demo mode (no more OpenAI community key)
+    # Use Google API key for demo mode
     if "GOOGLE_API_KEY" in os.environ:
         ss.google_api_key = os.environ["GOOGLE_API_KEY"]
-    ss.user = "community"
+    ss.user = "demo"
     ss.show_community_select = False
     ss.input = "Demo User"
     ss.mode = "demo_key"

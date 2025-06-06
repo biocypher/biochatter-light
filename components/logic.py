@@ -19,7 +19,6 @@ except ImportError:
 from biochatter_light._interface import BioChatterLight
 from components.constants import (
     CORRECTING_AGENT_PROMPTS,
-    DEV_FUNCTIONALITY,
     OFFLINE_FUNCTIONALITY,
     PRIMARY_MODEL_PROMPTS,
     RAG_PROMPTS,
@@ -152,7 +151,7 @@ def main_logic():
                     ss.show_intro = False
                     refresh()
 
-                elif ss.mode == "using_community_key":
+                elif ss.mode == "using_demo_key":
                     ss.input = ""  # ugly
                     ss.mode = bcl._check_for_api_key()
                     ss.show_intro = False
@@ -332,21 +331,19 @@ def main_logic():
 
     if "Cell Type Annotation" in tabs_to_show:
         with tab_dict["Cell Type Annotation"]:
-            if ss.user == "community":
-                st.markdown(f"{DEV_FUNCTIONALITY}")
-            else:
-                st.markdown(
-                    "A common repetitive task in bioinformatics is to annotate "
-                    "single-cell datasets with cell type labels. This task is usually "
-                    "performed by a human expert, who will look at the expression of "
-                    "marker genes and assign a cell type label based on their "
-                    "knowledge of the cell types present in the tissue of interest. "
-                    "Large Language Models have been shown to be able to perform this "
-                    "task with high accuracy, and can be used to automate cell type "
-                    "annotation with minimal human input (see e.g. [this arXiv "
-                    "preprint](https://www.biorxiv.org/content/10.1101/2023.04.16.537094v1))."
-                )
-                st.markdown(f"`📎 Assistant`: Cell type annotation {OFFLINE_FUNCTIONALITY}")
+            # Cell type annotation is available for all users
+            st.markdown(
+                "A common repetitive task in bioinformatics is to annotate "
+                "single-cell datasets with cell type labels. This task is usually "
+                "performed by a human expert, who will look at the expression of "
+                "marker genes and assign a cell type label based on their "
+                "knowledge of the cell types present in the tissue of interest. "
+                "Large Language Models have been shown to be able to perform this "
+                "task with high accuracy, and can be used to automate cell type "
+                "annotation with minimal human input (see e.g. [this arXiv "
+                "preprint](https://www.biorxiv.org/content/10.1101/2023.04.16.537094v1))."
+            )
+            st.markdown(f"`📎 Assistant`: Cell type annotation {OFFLINE_FUNCTIONALITY}")
 
     if "Experimental Design" in tabs_to_show:
         with tab_dict["Experimental Design"]:
@@ -375,7 +372,7 @@ def main_logic():
 
             if ss.mode not in [
                 "getting_key",
-                "using_community_key",
+                "using_demo_key",
                 "getting_name",
                 "getting_context",
             ]:
