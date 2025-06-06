@@ -77,8 +77,6 @@ def demo_next_button():
 
 def demo_button():
     """Show button for the demo mode which uses the community key."""
-    # TODO: check the gemini key
-
     st.button("Show Demonstration", on_click=demo_mode, use_container_width=True)
 
 
