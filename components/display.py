@@ -61,3 +61,27 @@ def show_about_section():
 
 def waiting_for_rag_agent():
     st.info("Use the 'Retrieval-Augmented Generation' tab to embed documents.")
+
+
+def display_token_usage():
+    """Display current token usage without limits."""
+
+    # Always display the token usage section
+    st.markdown("### 📊 Token Usage")
+
+    current_tokens = ss.get("token_usage", 0)
+    ss.cumulative_tokens += current_tokens
+    ss.token_usage = 0
+
+    # Always display the metrics (even if 0)
+    col1, col2 = st.columns(2)
+
+    with col1:
+        st.metric(label="Last Query", value=f"{current_tokens}", help="Tokens used in the most recent query")
+
+    with col2:
+        st.metric(
+            label="Session Total",
+            value=f"{ss.cumulative_tokens}",
+            help="Total tokens used in this session",
+        )

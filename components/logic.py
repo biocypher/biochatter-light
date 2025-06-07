@@ -37,6 +37,7 @@ from .buttons import (
 )
 from .config import TABS_TO_SHOW
 from .display import (
+    display_token_usage,
     show_about_section,
     waiting_for_rag_agent,
 )
@@ -197,6 +198,7 @@ def main_logic():
                 elif ss.mode == "chat":
                     with st.spinner("Thinking ..."):
                         ss.response, ss.token_usage = bcl._get_response()
+                        ss.token_usage_updated = True
 
                 # DEMO LOGIC
                 elif ss.mode == "demo_key":
@@ -225,6 +227,7 @@ def main_logic():
                 elif ss.mode == "demo_chat":
                     with st.spinner("Thinking ..."):
                         ss.response, ss.token_usage = bcl._get_response()
+                        ss.token_usage_updated = True
                     bcl._write_and_history(
                         "📎 Assistant",
                         "🎉 This concludes the demonstration. You can chat with the "
@@ -260,6 +263,9 @@ def main_logic():
                     download_complete_history(bcl)
                 if not os.getenv("OLLAMA_MODEL") and not os.getenv("XINFERENCE_MODEL"):
                     model_select()
+
+                # Display token usage
+                display_token_usage()
 
             # CHAT BOX
             if ss.mode == "getting_key":
@@ -489,3 +495,7 @@ def _startup():
     # SHOW INTRO MESSAGE AND SETUP INSTRUCTIONS
     ss.show_intro = True
     ss.show_setup = True
+
+    # INITIALIZE TOKEN TRACKING
+    ss.cumulative_tokens = 0
+    ss.token_usage = 0
