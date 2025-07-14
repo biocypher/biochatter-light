@@ -1,8 +1,7 @@
 # GLOBALS
 
 DEV_FUNCTIONALITY = (
-    "This functionality is not available when using the community API key, as "
-    "it can involve many requests to the API."
+    "This functionality is not available when using the community API key, as it can involve many requests to the API."
 )
 
 OFFLINE_FUNCTIONALITY = (
@@ -25,8 +24,7 @@ PRIMARY_MODEL_PROMPTS = [
 
 CORRECTING_AGENT_PROMPTS = [
     "You are a biomedical researcher.",
-    "Your task is to check for factual correctness and consistency of the "
-    "statements of another agent.",
+    "Your task is to check for factual correctness and consistency of the statements of another agent.",
     "Please correct the following message. Ignore references to previous "
     "statements, only correct the current input. If there is nothing to "
     "correct, please respond with just 'OK', and nothing else!",
@@ -56,15 +54,13 @@ TOOL_PROMPTS = {
     ),
 }
 RAG_PROMPTS = [
-    "The user has provided additional background information from scientific "
-    "articles.",
+    "The user has provided additional background information from scientific articles.",
     "Take the following statements into account and specifically comment on "
     "consistencies and inconsistencies with all other information available to "
     "you: {statements}",
 ]
 SCHEMA_PROMPTS = [
-    "The user has provided database access. The database contents are "
-    "detailed in the following YAML config.",
+    "The user has provided database access. The database contents are detailed in the following YAML config.",
     "The top-level entries in the YAML config refer to the types of "
     "entities included in the database. Entities can additionally have a "
     "`properties` attribute that informs of their attached information. Here "

@@ -1,11 +1,11 @@
+import streamlit as st
+from biochatter.rag_agent import RagAgent
 from biochatter.vectorstore import (
     DocumentEmbedder,
     DocumentReader,
 )
-from biochatter.rag_agent import RagAgent
+from langchain_google_genai import GoogleGenerativeAIEmbeddings
 from pymilvus.exceptions import MilvusException
-from langchain.embeddings import OpenAIEmbeddings
-import streamlit as st
 
 ss = st.session_state
 import os
@@ -17,9 +17,7 @@ from components.handlers import (
 
 
 def rag_agent_panel():
-    """
-
-    Upload files for Retrieval-Augmented Generation, one file at a time. Upon
+    """Upload files for Retrieval-Augmented Generation, one file at a time. Upon
     upload, document is split and embedded into a connected vector DB using the
     `vectorstore.py` module of biochatter. The top k results of similarity
     search of the user's query will be injected into the prompt to the primary
@@ -29,7 +27,6 @@ def rag_agent_panel():
     closest matches to the last executed query.
 
     """
-
     if ss.use_rag_agent:
         if os.getenv("DOCKER_COMPOSE", "false") == "true":
             # running in same docker compose as biochatter-light
@@ -38,15 +35,15 @@ def rag_agent_panel():
             # running on host machine from the milvus docker compose
             connection_args = {"host": "localhost", "port": "19530"}
 
-        embedding_func = OpenAIEmbeddings(
-            api_key=ss.get("openai_api_key"),
-            model="text-embedding-ada-002",
+        embedding_func = GoogleGenerativeAIEmbeddings(
+            model="models/gemini-embedding-exp-03-07", google_api_key=ss.get("google_api_key")
         )
 
         ss.conversation.set_rag_agent(
             RagAgent(
                 mode="vectorstore",
-                model_name="gpt-3.5-turbo",
+                model_provider="google_genai",
+                model_name="gemini-2.0-flash",
                 connection_args=connection_args,
                 use_prompt=True,
                 embedding_func=embedding_func,
@@ -72,9 +69,7 @@ def rag_agent_panel():
             "📄 Upload Document"
         )
         if disabled:
-            st.warning(
-                "To use the feature, please enable it in the settings panel. →"
-            )
+            st.warning("To use the feature, please enable it in the settings panel. →")
         if ss.get("online"):
             st.warning(
                 "This feature is currently not available in online mode, as it "
@@ -95,9 +90,7 @@ def rag_agent_panel():
                 label_visibility="collapsed",
                 disabled=disabled,
             )
-            submitted = st.form_submit_button(
-                "Upload", use_container_width=True
-            )
+            submitted = st.form_submit_button("Upload", use_container_width=True)
         if submitted and uploaded_file is not None:
             if not ss.get("uploaded_files"):
                 ss.uploaded_files = []
@@ -138,19 +131,13 @@ def rag_agent_panel():
                     "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"
                     "🔍 Search Results"
                 )
-                st.info(
-                    "The following are the closest matches to the last executed "
-                    "query."
-                )
+                st.info("The following are the closest matches to the last executed query.")
                 out = ""
                 for s in ss.conversation.current_statements:
                     out += f"- {s}\n"
                 st.markdown(out)
             else:
-                st.info(
-                    "The search results will be displayed here once you've executed "
-                    "a query."
-                )
+                st.info("The search results will be displayed here once you've executed a query.")
 
     with settings:
         st.markdown(
@@ -183,9 +170,7 @@ def rag_agent_panel():
             )
 
             ss.embedder.chunk_size = st.slider(
-                label=(
-                    "Chunk size: how large should the embedded text fragments be?"
-                ),
+                label=("Chunk size: how large should the embedded text fragments be?"),
                 min_value=100,
                 max_value=5000,
                 value=1000,
@@ -214,10 +199,7 @@ def rag_agent_panel():
             #     disabled=disabled,
             # )
             ss.conversation.rag_agents[0].n_results = st.slider(
-                label=(
-                    "Number of results: how many chunks should be used to "
-                    "supplement the prompt?"
-                ),
+                label=("Number of results: how many chunks should be used to supplement the prompt?"),
                 min_value=1,
                 max_value=20,
                 value=3,
@@ -243,7 +225,4 @@ def rag_agent_panel():
                 s += "- " + f + "\n"
             st.markdown(s)
         else:
-            st.info(
-                "Uploaded documents will be displayed here once you have "
-                "uploaded them."
-            )
+            st.info("Uploaded documents will be displayed here once you have uploaded them.")

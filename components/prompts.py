@@ -1,14 +1,12 @@
 import streamlit as st
 
 ss = st.session_state
-import json
 import datetime
+import json
 
 
 def show_primary_model_prompts():
-    """
-    Prompt engineering panel: primary model.
-    """
+    """Prompt engineering panel: primary model."""
     st.markdown(
         "`📎 Assistant`: Here you can edit the prompts used to set up the primary "
         "LLM. You can modify or remove the existing prompts, as well as add new "
@@ -41,9 +39,7 @@ def show_primary_model_prompts():
 
 
 def show_correcting_agent_prompts():
-    """
-    Prompt engineering panel: correcting agent.
-    """
+    """Prompt engineering panel: correcting agent."""
     st.markdown(
         "`📎 Assistant`: Here you can edit the prompts used to set up the "
         "correcting agent. You can modify or remove the existing prompts, as "
@@ -77,9 +73,7 @@ def show_correcting_agent_prompts():
 
 
 def show_rag_agent_prompts():
-    """
-    Prompt engineering panel: Retrieval-Augmented Generation.
-    """
+    """Prompt engineering panel: Retrieval-Augmented Generation."""
     st.markdown(
         "`📎 Assistant`: Here you can edit the prompts used to set up the "
         "Retrieval-Augmented Generation task. Text passages from any uploaded "
@@ -115,9 +109,7 @@ def show_rag_agent_prompts():
 
 
 def show_tool_prompts():
-    """
-    Prompt engineering panel: tool-specific.
-    """
+    """Prompt engineering panel: tool-specific."""
     st.markdown(
         "`📎 Assistant`: Here you can edit the tool-specific prompts given to the "
         "primary LLM. You can modify the names as well as the prompts "
@@ -163,9 +155,7 @@ def show_tool_prompts():
             )
 
         if nunam != nam:
-            ss.prompts["tool_prompts"][nunam] = ss.prompts["tool_prompts"].pop(
-                nam
-            )
+            ss.prompts["tool_prompts"][nunam] = ss.prompts["tool_prompts"].pop(nam)
             st.experimental_rerun()
         elif numsg != msg:
             ss.prompts["tool_prompts"][nunam] = numsg
@@ -177,36 +167,27 @@ def show_tool_prompts():
 
 
 def add_prompt(prompt_list):
-    """
-    Add a new prompt to the given list.
-    """
+    """Add a new prompt to the given list."""
     prompt_list.append("")
 
 
 def remove_prompt(prompt_list, num):
-    """
-    Remove the prompt with the given number from the given list.
-    """
+    """Remove the prompt with the given number from the given list."""
     del prompt_list[num]
 
 
 def add_tool_prompt():
-    """
-    Add a new tool prompt.
-    """
+    """Add a new tool prompt."""
     ss.prompts["tool_prompts"][""] = ""
 
 
 def remove_tool_prompt(nam):
-    """
-    Remove the tool prompt with the given name.
-    """
+    """Remove the tool prompt with the given name."""
     ss.prompts["tool_prompts"].pop(nam)
 
 
 def prompt_save_load_reset():
-    """
-    Prompt engineering panel: save and load prompt set JSON files. Reset not
+    """Prompt engineering panel: save and load prompt set JSON files. Reset not
     implemented yet.
     """
     save, load = st.columns(2)
@@ -225,9 +206,7 @@ def prompt_save_load_reset():
 
 
 def prompt_save_button():
-    """
-    Save the current prompt set as a JSON file.
-    """
+    """Save the current prompt set as a JSON file."""
     now = datetime.datetime.now()
     date = now.strftime("%Y-%m-%d_%H-%M-%S")
     st.download_button(
@@ -239,20 +218,20 @@ def prompt_save_button():
 
 
 def save_prompt_set():
-    """
-    Return JSON serialisation of the current prompt set.
+    """Return JSON serialisation of the current prompt set.
 
     Returns:
         str: JSON serialisation of the current prompt set.
+
     """
     return json.dumps(ss.prompts)
 
 
 def load_prompt_set(uploaded_file):
-    """
-    Given an uploaded JSON file, load the prompts from it.
+    """Given an uploaded JSON file, load the prompts from it.
 
     Args:
         uploaded_file (FileUploader): The uploaded JSON file.
+
     """
     ss.prompts = json.load(uploaded_file)

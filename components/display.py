@@ -2,65 +2,12 @@ import streamlit as st
 
 ss = st.session_state
 
-from .handlers import get_remaining_tokens, shuffle_messages
-
 from components.constants import (
-    WHAT_MESSAGES,
     HOW_MESSAGES,
+    WHAT_MESSAGES,
 )
 
-
-def remaining_tokens():
-    """
-    Display remaining community tokens for the day coloured by percentage.
-    """
-    rt = get_remaining_tokens()
-    col = ":green" if rt > 25 else ":orange" if rt > 0 else ":red"
-    pct = f"{rt:.1f}"
-    st.markdown(f"Daily community tokens remaining: {col}[{pct}%]")
-    st.progress(rt / 100)
-
-
-def display_token_usage():
-    """
-    Display the token usage for the current conversation.
-    """
-    with st.expander("Token usage", expanded=True):
-        maximum = ss.get("token_limit", 0)
-
-        if not ss.get("token_usage"):
-            ss.token_usage = {
-                "prompt_tokens": 0,
-                "completion_tokens": 0,
-                "total_tokens": 0,
-            }
-        elif isinstance(ss.token_usage, int):
-            ss.token_usage = {
-                "prompt_tokens": 0,
-                "completion_tokens": 0,
-                "total_tokens": ss.token_usage,
-            }
-
-        st.markdown(
-            f"""
-            Last query: {ss.token_usage["prompt_tokens"]}
-
-            Last response: {ss.token_usage["completion_tokens"]}
-
-            Total usage: {ss.token_usage["total_tokens"]}
-
-            Model maximum: {maximum}
-            """
-        )
-
-        # display warning within 20% of maximum
-        if ss.token_usage["total_tokens"] > maximum * 0.8:
-            st.warning(
-                "You are approaching the maximum number of tokens allowed by "
-                "the model. Please consider using a different model or "
-                "reducing the number of queries. You can reset the app to "
-                "start over the conversation."
-            )
+from .handlers import shuffle_messages
 
 
 def show_about_section():
@@ -114,3 +61,27 @@ def show_about_section():
 
 def waiting_for_rag_agent():
     st.info("Use the 'Retrieval-Augmented Generation' tab to embed documents.")
+
+
+def display_token_usage():
+    """Display current token usage without limits."""
+
+    # Always display the token usage section
+    st.markdown("### 📊 Token Usage")
+
+    current_tokens = ss.get("token_usage", 0)
+    ss.cumulative_tokens += current_tokens
+    ss.token_usage = 0
+
+    # Always display the metrics (even if 0)
+    col1, col2 = st.columns(2)
+
+    with col1:
+        st.metric(label="Last Query", value=f"{current_tokens}", help="Tokens used in the most recent query")
+
+    with col2:
+        st.metric(
+            label="Session Total",
+            value=f"{ss.cumulative_tokens}",
+            help="Total tokens used in this session",
+        )

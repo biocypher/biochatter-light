@@ -1,10 +1,11 @@
 import streamlit as st
 
 ss = st.session_state
-import requests
-import pandas as pd
-from io import StringIO
 import os
+from io import StringIO
+
+import pandas as pd
+import requests
 
 
 def fetch_csv_files():
@@ -32,12 +33,10 @@ def fetch_csv_files():
             ]
             ss.template_directory = csv_files
             return csv_files
-        else:
-            st.error("Error fetching data from the GitHub repository")
-            return []
+        st.error("Error fetching data from the GitHub repository")
+        return []
 
-    else:
-        return ss.template_directory
+    return ss.template_directory
 
 
 def read_csv_from_github(file_info):
@@ -49,14 +48,12 @@ def read_csv_from_github(file_info):
         csv_data = StringIO(response.text)
         df = pd.read_csv(csv_data)
         return df
-    else:
-        st.error(f"Error fetching CSV file: {file_info['name']}")
-        return None
+    st.error(f"Error fetching CSV file: {file_info['name']}")
+    return None
 
 
 def filling_template_panel():
-    """
-    Display a panel that lists CSV files from the specified GitHub repository,
+    """Display a panel that lists CSV files from the specified GitHub repository,
     allows the user to select one from a dropdown, and lets them add empty rows
     dynamically to the DataFrame with inline editing support.
     """
@@ -66,22 +63,16 @@ def filling_template_panel():
 
     if csv_files:
         # Track the selected file in session state
-        selected_file = st.selectbox(
-            "Choose a CSV file:", csv_files, format_func=lambda x: x["name"]
-        )
+        selected_file = st.selectbox("Choose a CSV file:", csv_files, format_func=lambda x: x["name"])
 
         # Check if a new file is selected, reset the DataFrame if necessary
         if "selected_file" not in ss or ss.selected_file != selected_file:
             ss.selected_file = selected_file  # Update selected file
-            ss.df = read_csv_from_github(
-                selected_file
-            )  # Load new CSV into DataFrame
+            ss.df = read_csv_from_github(selected_file)  # Load new CSV into DataFrame
 
         if ss.df is not None:
             if st.button("Add Empty Row"):
-                empty_row = pd.DataFrame(
-                    [[None] * len(ss.df.columns)], columns=ss.df.columns
-                )
+                empty_row = pd.DataFrame([[None] * len(ss.df.columns)], columns=ss.df.columns)
                 ss.df = pd.concat([ss.df, empty_row], ignore_index=True)
 
             st.markdown("### Editable DataFrame")

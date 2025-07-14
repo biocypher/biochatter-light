@@ -8,16 +8,9 @@ ss = st.session_state
 
 
 def _connect_to_neo4j():
-    """
-    Connect to the Neo4j database.
-    """
+    """Connect to the Neo4j database."""
     _determine_neo4j_connection()
-    db_uri = (
-        "bolt://"
-        + ss.get("db_ip", "localhost")
-        + ":"
-        + ss.get("db_port", "7687")
-    )
+    db_uri = "bolt://" + ss.get("db_ip", "localhost") + ":" + ss.get("db_port", "7687")
     ss.neodriver = nu.Driver(
         db_name=ss.get("db_name", "neo4j"),
         db_uri=db_uri,
@@ -28,15 +21,12 @@ def _connect_to_neo4j():
     # return True if connected, False if no DB found
     if ss.get("neodriver").status == "no connection":
         return False
-    else:
-        _find_schema_info_node()
-        return True
+    _find_schema_info_node()
+    return True
 
 
 def _determine_neo4j_connection():
-    """
-    Determine the connection details for the Neo4j database.
-    """
+    """Determine the connection details for the Neo4j database."""
     uri = None
     if os.getenv("NEO4J_URI"):
         uri = os.getenv("NEO4J_URI")
@@ -63,8 +53,7 @@ def _determine_neo4j_connection():
 
 
 def _find_schema_info_node():
-    """
-    Look for a schema info node in the connected BioCypher graph and load the
+    """Look for a schema info node in the connected BioCypher graph and load the
     schema info if present.
     """
     result = ss.neodriver.query("MATCH (n:Schema_info) RETURN n LIMIT 1")
@@ -91,9 +80,7 @@ def _summarise_individual(person):
         st.error("No individual summary query found.")
         return
 
-    result = ss.neodriver.query(
-        ss.get("summary_query_individual").format(person=person)
-    )
+    result = ss.neodriver.query(ss.get("summary_query_individual").format(person=person))
 
     ss["summary_query_result_individual"] = result
 
@@ -115,17 +102,13 @@ def _plan_tasks_individual(person):
         st.error("No individual tasks query found.")
         return
 
-    result = ss.neodriver.query(
-        ss.get("tasks_query_individual").format(person=person)
-    )
+    result = ss.neodriver.query(ss.get("tasks_query_individual").format(person=person))
 
     ss["tasks_query_result_individual"] = result
 
 
 def _run_neo4j_query(query):
-    """
-    Run cypher query against the Neo4j database.
-    """
+    """Run cypher query against the Neo4j database."""
     _connect_to_neo4j()
 
     result = ss.neodriver.query(query)

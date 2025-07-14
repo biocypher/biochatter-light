@@ -42,8 +42,7 @@ def gene_panel():
 
         # genomespy link
         st.markdown(
-            f"{cnas} {cna_text}, {vnas} {vna_text}. Links: "
-            f"[GenomeSpy](https://genomespy.app/decider/gene/{gene_name}) "
+            f"{cnas} {cna_text}, {vnas} {vna_text}. Links: [GenomeSpy](https://genomespy.app/decider/gene/{gene_name}) "
         )
 
         if cn_df is None and vn_df is None:

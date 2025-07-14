@@ -3,19 +3,21 @@
 
 import json
 import os
-from loguru import logger
+
 import pandas as pd
 import streamlit as st
 from biochatter.llm_connect import (
-    GptConversation,
-    AzureGptConversation,
-    BloomConversation,
-    XinferenceConversation,
+    LangChainConversation,
     OllamaConversation,
-    OPENAI_MODELS,
+    XinferenceConversation,
+)
+from biochatter.llm_connect.available_models import (
+    GEMINI_MODELS,
     HUGGINGFACE_MODELS,
+    OPENAI_MODELS,
     TOKEN_LIMITS,
 )
+from loguru import logger
 
 XINFERENCE_MODELS = [
     "llama-3.1-instruct",
@@ -29,21 +31,14 @@ ss = st.session_state
 
 
 # ENVIRONMENT VARIABLES
-def community_possible():
-    return (
-        "OPENAI_COMMUNITY_KEY" in os.environ
-        and "REDIS_PW" in os.environ
-        and ss.primary_model == "gpt-3.5-turbo"
-    )
+def demo_available():
+    return "GOOGLE_API_KEY" in os.environ and ss.primary_model == "gemini-2.0-flash"
 
 
 def use_ollama():
     if "OLLAMA_MODEL" in os.environ:
         if "XINFERENCE_MODEL" in os.environ:
-            raise ValueError(
-                "Both Ollama and Xinference models are set in the environment. "
-                "Please only set one."
-            )
+            raise ValueError("Both Ollama and Xinference models are set in the environment. Please only set one.")
 
         ss.primary_model = os.getenv("OLLAMA_MODEL")
         OLLAMA_MODELS.append(os.getenv("OLLAMA_MODEL"))
@@ -54,10 +49,7 @@ def use_ollama():
 def use_xinference():
     if "XINFERENCE_MODEL" in os.environ:
         if "OLLAMA_MODEL" in os.environ:
-            raise ValueError(
-                "Both Ollama and Xinference models are set in the environment. "
-                "Please only set one."
-            )
+            raise ValueError("Both Ollama and Xinference models are set in the environment. Please only set one.")
 
         ss.primary_model = os.getenv("XINFERENCE_MODEL")
         XINFERENCE_MODELS.append(os.getenv("XINFERENCE_MODEL"))
@@ -66,15 +58,15 @@ def use_xinference():
 
 
 API_KEY_REQUIRED = "The currently selected model requires an API key."
-COMMUNITY_SELECT = (
-    "You can use your own [OpenAI API "
-    "key](https://platform.openai.com/account/api-keys), or try the platform "
-    "using our community key by pressing the `Use The Community Key` button."
+DEMO_SELECT = (
+    "You can use your own [Google API "
+    "key](https://aistudio.google.com/prompts/new_chat), or try the platform "
+    "using our demo key by pressing the `Use The Demo Key` button."
 )
 DEMO_MODE = (
     "You can also try a `Demonstration` setup with toy data by pressing the "
     "first button below. After guiding you through the initial steps, this "
-    "will also take you to a functional chat using the community key."
+    "will also take you to a functional chat using the demo key."
 )
 API_KEY_SUCCESS = (
     "Hello! I am the model's assistant. For more explanation, "
@@ -104,8 +96,7 @@ class BioChatterLight:
             ss.setup_messages = []
 
     def _display_setup(self):
-        """
-        Renders setup messages on each reload. Conditionally shown only at setup
+        """Renders setup messages on each reload. Conditionally shown only at setup
         stage.
         """
         for item in ss.setup_messages:
@@ -113,8 +104,7 @@ class BioChatterLight:
                 st.markdown(self._render_msg(role, msg))
 
     def _display_history(self):
-        """
-        Renders the history of the conversation on each reload. Also saves a
+        """Renders the history of the conversation on each reload. Also saves a
         JSON to the session state for download.
         """
         for item in ss.history:
@@ -130,15 +120,11 @@ class BioChatterLight:
                     st.markdown(self._render_msg(role, msg))
 
     def update_json_history(self):
-        """
-        Write ss.history to JSON and put it into session state.
-        """
+        """Write ss.history to JSON and put it into session state."""
         ss.json_history = json.dumps(ss.history)
 
     def complete_history(self):
-        """
-        Write ss.messages to JSON and put it into session state.
-        """
+        """Write ss.messages to JSON and put it into session state."""
         return ss.conversation.get_msg_json()
 
     @staticmethod
@@ -162,10 +148,8 @@ class BioChatterLight:
         st.markdown(self._render_msg(role, msg))
         ss.setup_messages.append({role: msg})
 
-    def set_model(self, model_name: str):
-        """
-        Set the LLM model to use for the conversation.
-        """
+    def set_model(self, model_name: str, model_provider: str):
+        """Set the LLM model to use for the conversation."""
         if ss.get("conversation"):
             logger.warning("Conversation already exists, overwriting.")
 
@@ -178,10 +162,8 @@ class BioChatterLight:
                 split_correction=ss.split_correction,
             )
             return
-        elif use_xinference():
-            st.error(
-                "Xinference not implemented yet. Please use Ollama for now."
-            )
+        if use_xinference():
+            st.error("Xinference not implemented yet. Please use Ollama for now.")
             return
             ss.conversation = XinferenceConversation(
                 base_url=ss.get("base_url"),
@@ -192,32 +174,7 @@ class BioChatterLight:
             )
             return
 
-        if ss.get("openai_api_type") == "azure":
-            ss.conversation = AzureGptConversation(
-                deployment_name=ss.get("openai_deployment_name"),
-                model_name=model_name,
-                prompts=ss.prompts,
-                correct=ss.correct,
-                split_correction=ss.split_correction,
-                version=ss.get("openai_api_version"),
-                base=ss.get("openai_api_base"),
-            )
-
-        elif model_name in OPENAI_MODELS:
-            ss.conversation = GptConversation(
-                model_name=model_name,
-                prompts=ss.prompts,
-                correct=ss.correct,
-                split_correction=ss.split_correction,
-            )
-        elif model_name in HUGGINGFACE_MODELS:
-            ss.conversation = BloomConversation(
-                model_name=model_name,
-                prompts=ss.prompts,
-                correct=ss.correct,
-                split_correction=ss.split_correction,
-            )
-        elif model_name in XINFERENCE_MODELS:
+        if model_name in XINFERENCE_MODELS:
             # not used in env definition case
             ss.conversation = XinferenceConversation(
                 base_url=ss.get("xinference_base_url"),
@@ -226,19 +183,18 @@ class BioChatterLight:
                 correct=ss.correct,
                 split_correction=ss.split_correction,
             )
-        elif model_name in OLLAMA_MODELS:
-            # not used in env definition case
-            ss.conversation = OllamaConversation(
-                base_url=ss.get("ollama_base_url"),
+
+        else:
+            ss.conversation = LangChainConversation(
                 model_name=model_name,
+                model_provider=model_provider,
                 prompts=ss.prompts,
                 correct=ss.correct,
                 split_correction=ss.split_correction,
             )
 
     def _check_for_api_key(self, write: bool = True, input: str = None):
-        """
-        Upon app start, check for the validity of any API key in the session
+        """Upon app start, check for the validity of any API key in the session
         state. If there is none, or the given is invalid, ask again.
 
         Args:
@@ -247,9 +203,13 @@ class BioChatterLight:
 
         Returns:
             The next state to go to (either "getting_key" or "getting_name")
+
         """
         if ss.primary_model in OPENAI_MODELS:
             key = ss.get("openai_api_key")
+            ss.token_limit = TOKEN_LIMITS[ss.primary_model]
+        elif ss.primary_model in GEMINI_MODELS:
+            key = ss.get("google_api_key")
             ss.token_limit = TOKEN_LIMITS[ss.primary_model]
         else:
             key = None
@@ -275,39 +235,31 @@ class BioChatterLight:
                 if ss.primary_model in OPENAI_MODELS:
                     ss.openai_api_key = key
 
+                elif ss.primary_model in GEMINI_MODELS:
+                    ss.google_api_key = key
+
                 return "getting_name"
 
-            else:
-                msg = (
-                    "The API key in your environment is not valid. Please enter a "
-                    "valid key."
-                )
-                self._setup_only("📎 Assistant", msg)
+            msg = "The API key in your environment is not valid. Please enter a valid key."
+            self._setup_only("📎 Assistant", msg)
 
-                return "getting_key"
+            return "getting_key"
 
         # If we get here, we either have no key, or the key is invalid.
         if ss.primary_model in OPENAI_MODELS:
             msg = f"{API_KEY_REQUIRED} "
-            if community_possible():
-                msg += f"{COMMUNITY_SELECT} "
+            if demo_available():
+                msg += f"{DEMO_SELECT} "
             msg += (
                 "You can get a key by signing up "
                 "[here](https://platform.openai.com/) and enabling "
                 "billing. We will not store your key, and only use it for "
                 "the requests made in this session. "
             )
-            if community_possible():
-                msg += (
-                    "If you use community credits, please be considerate of "
-                    "other users; if you use the platform extensively, "
-                    "please use your own key. "
-                )
             msg += (
-                "Using GPT-3.5-turbo, a full conversation (4000 tokens) "
-                f"costs about 0.01 USD. "
+                "Using Gemini-2.0-flash, total context size of 1,048,576 tokens (within thresholds the usage is free)"
             )
-            if community_possible():
+            if demo_available():
                 msg += f"{DEMO_MODE}"
             self._setup_only("📎 Assistant", msg)
             ss.show_community_select = True
@@ -326,6 +278,17 @@ class BioChatterLight:
             self._setup_only("📎 Assistant", msg)
             ss.show_setup = True
 
+        elif ss.primary_model in GEMINI_MODELS:
+            print(ss.primary_model)
+            msg = (
+                f"{API_KEY_REQUIRED} Please enter your [Google API "
+                "key](https://aistudio.google.com/prompts/new_chat). You "
+                "can get one by signing up "
+                "[here](https://aistudio.google.com/prompts/new_chat)."
+            )
+            self._setup_only("📎 Assistant", msg)
+            ss.show_community_select = True
+
         return "getting_key"
 
     def _try_api_key(self, key: str = None):
@@ -342,6 +305,8 @@ class BioChatterLight:
 
         if ss.primary_model in OPENAI_MODELS:
             ss.openai_api_key = key
+        elif ss.primary_model in GEMINI_MODELS:
+            ss.google_api_key = key
 
         return True
 
@@ -349,10 +314,7 @@ class BioChatterLight:
         logger.info("Getting API Key.")
         sucess = self._try_api_key(key)
         if not sucess:
-            msg = (
-                "The API key you entered is not valid. Please enter a valid "
-                "key."
-            )
+            msg = "The API key you entered is not valid. Please enter a valid key."
             self._write_and_setup("📎 Assistant", msg)
 
             return "getting_key"
@@ -455,9 +417,7 @@ class BioChatterLight:
 
         known_tools = list(ss.prompts["tool_prompts"].keys())
 
-        if not (
-            ss.get("tool_data") or ss.get("tool_list")
-        ) and not "demo" in ss.get("mode"):
+        if not (ss.get("tool_data") or ss.get("tool_list")) and "demo" not in ss.get("mode"):
             msg = (
                 "No files detected. Please upload your files in the sidebar, "
                 "or press 'No' to continue without providing any files."
@@ -487,10 +447,7 @@ class BioChatterLight:
             ss.read_tools = []
 
         if len(ss.read_tools) == len(ss.tool_list):
-            msg = (
-                "I have read all the files you provided. "
-                f"{PLEASE_ENTER_QUESTIONS}"
-            )
+            msg = f"I have read all the files you provided. {PLEASE_ENTER_QUESTIONS}"
             self._write_and_history("📎 Assistant", msg)
             return "chat"
 
@@ -554,10 +511,7 @@ class BioChatterLight:
 
         if response.lower() in ["n", "no", "no."]:
             logger.info("No additional data input provided.")
-            msg = (
-                "Okay, I will use the information from the tool without "
-                "further specification."
-            )
+            msg = "Okay, I will use the information from the tool without further specification."
             self._write_and_history("📎 Assistant", msg)
             return self._get_data_input()
 
@@ -590,9 +544,7 @@ class BioChatterLight:
             ss.input,
         )
 
-        data_input_response = (
-            "Thank you for the input. " f"{PLEASE_ENTER_QUESTIONS}"
-        )
+        data_input_response = f"Thank you for the input. {PLEASE_ENTER_QUESTIONS}"
         self._write_and_history("📎 Assistant", data_input_response)
 
         return "chat"
@@ -600,10 +552,7 @@ class BioChatterLight:
     def _start_chat(self):
         logger.info("Starting chat.")
 
-        msg = (
-            f"You have selected `{ss.conversation.context}` as your context. "
-            f"{PLEASE_ENTER_QUESTIONS}"
-        )
+        msg = f"You have selected `{ss.conversation.context}` as your context. {PLEASE_ENTER_QUESTIONS}"
 
         self._write_and_history(
             "📎 Assistant",

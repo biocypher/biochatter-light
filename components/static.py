@@ -2,12 +2,11 @@ import streamlit as st
 
 ss = st.session_state
 
-__version__ = "0.8.5"
+__version__ = "0.9.0"
 
 
 def app_header():
-    """
-    Renders the app header and a warning conditional on whether we are running
+    """Renders the app header and a warning conditional on whether we are running
     on streamlit cloud.
     """
     st.markdown(
@@ -27,9 +26,7 @@ def app_header():
 
 
 def app_info():
-    """
-    Display the app information.
-    """
+    """Display the app information."""
     st.markdown(
         """
         
@@ -90,9 +87,7 @@ def app_info():
 
 
 def spacer(n=2, line=False, next_n=0):
-    """
-    Insert a spacer between two elements.
-    """
+    """Insert a spacer between two elements."""
     for _ in range(n):
         st.write("")
     if line:
