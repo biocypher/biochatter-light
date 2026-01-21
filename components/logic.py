@@ -495,7 +495,11 @@ def _startup():
     ss.generate_query = True
 
     # CHECK ENVIRONMENT
-    if os.getenv("ON_STREAMLIT"):
+    # Check for explicit ONLINE setting first
+    online_env = os.getenv("ONLINE")
+    if online_env is not None:
+        ss.online = online_env.lower() in ("true", "1", "yes")
+    elif os.getenv("ON_STREAMLIT"):
         ss.on_streamlit = True
         ss.online = True
     elif os.getenv("ON_SELFHOSTED"):
