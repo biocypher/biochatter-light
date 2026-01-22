@@ -141,32 +141,36 @@ def schema_config_panel():
                 
                 with edit_tab1:
                     st.subheader("Add New Entity")
-                    col1, col2 = st.columns([3, 1])
-                    with col1:
-                        new_entity = st.text_input(
-                            "Entity class name:",
-                            help="Enter the ontology class name in lowercase. Use spaces instead of dashes or underscores."
-                        )
-                        if new_entity:
-                            normalized = normalize_class_name(new_entity)
-                            if normalized != new_entity:
-                                st.info(f"Suggested name: {normalized}")
-                            
-                            is_valid, message = validate_class_name(normalized)
-                            if not is_valid:
-                                st.warning(message)
-                        
-                        input_label = st.text_input(
-                            "Input label (from raw data):",
-                            help="Enter the label as it appears in your raw data"
-                        )
+                    st.info("Entities are things (nodes) in the knowledge graph. Relationships are created separately.")
                     
-                    with col2:
-                        entity_type = st.selectbox(
-                            "Type",
-                            options=['node', 'edge'],
-                            key='new_entity_type'
-                        )
+                    new_entity = st.text_input(
+                        "Entity class name:",
+                        help="Enter the ontology class name in lowercase. Use spaces instead of dashes or underscores."
+                    )
+                    if new_entity:
+                        normalized = normalize_class_name(new_entity)
+                        if normalized != new_entity:
+                            st.info(f"Suggested name: {normalized}")
+                        
+                        is_valid, message = validate_class_name(normalized)
+                        if not is_valid:
+                            st.warning(message)
+                    
+                    input_label = st.text_input(
+                        "Input label (from raw data):",
+                        help="Enter the label as it appears in your raw data"
+                    )
+                    
+                    # Inherit from dropdown
+                    entity_options = [k for k, v in config.items() 
+                                    if (v.get('represented_as', 'node') == 'node' or not v.get('represented_as')) 
+                                    and not v.get('source') and not v.get('target')]
+                    is_a = st.selectbox(
+                        "Inherit from (optional):",
+                        options=[''] + entity_options,
+                        format_func=lambda x: 'None (no inheritance)' if x == '' else x,
+                        help="Select a parent entity to inherit from (is_a relationship)"
+                    )
                     
                     if new_entity and st.button("Add Entity"):
                         normalized = normalize_class_name(new_entity)
@@ -174,14 +178,22 @@ def schema_config_panel():
                         
                         if is_valid:
                             if normalized not in config:
-                                new_config = dict(config)
-                                new_config[normalized] = {
-                                    'represented_as': entity_type,
-                                    'properties': {},
-                                    'input_label': input_label if input_label else normalized
-                                }
-                                update_schema(new_config)
-                                st.success(f"Added {entity_type}: {normalized}")
+                                if is_a == normalized:
+                                    st.error('An entity cannot inherit from itself')
+                                elif is_a and is_a not in config:
+                                    st.error(f'Parent entity "{is_a}" does not exist')
+                                else:
+                                    new_config = dict(config)
+                                    # Entities are always nodes
+                                    new_config[normalized] = {
+                                        'represented_as': 'node',
+                                        'properties': {},
+                                        'input_label': input_label if input_label else normalized
+                                    }
+                                    if is_a:
+                                        new_config[normalized]['is_a'] = is_a
+                                    update_schema(new_config)
+                                    st.success(f"Added entity: {normalized}")
                             else:
                                 st.error(f"Entity {normalized} already exists")
                         else:
@@ -189,12 +201,21 @@ def schema_config_panel():
                 
                 with edit_tab2:
                     st.subheader("Add New Relationship")
+                    st.info("Relationships connect entities. Choose between a direct edge or a reified relationship (relationship node).")
+                    
+                    rel_type = st.radio(
+                        "Relationship type:",
+                        options=['edge', 'reified'],
+                        format_func=lambda x: 'Direct Edge' if x == 'edge' else 'Reified Relationship (Node)',
+                        help="Direct edges connect entities directly. Reified relationships are nodes that can have properties."
+                    )
+                    
                     col1, col2 = st.columns(2)
                     with col1:
                         source = st.selectbox("Source entity:", options=list(config.keys()))
                         target = st.selectbox("Target entity:", options=list(config.keys()))
                     with col2:
-                        rel_type = st.text_input(
+                        rel_name = st.text_input(
                             "Relationship class name:",
                             help="Enter the ontology class name in lowercase. Use spaces instead of dashes or underscores."
                         )
@@ -203,20 +224,73 @@ def schema_config_panel():
                             help="Enter the label as it appears in your raw data (e.g., column name, relation type, etc.)"
                         )
                     
-                    if source and target and rel_type and st.button("Add Relationship"):
-                        normalized = normalize_class_name(rel_type)
+                    # Show edge label fields for reified relationships
+                    source_label = None
+                    target_label = None
+                    if rel_type == 'reified':
+                        col1, col2 = st.columns(2)
+                        with col1:
+                            source_label = st.text_input(
+                                "Source → Relationship label:",
+                                help="Label for edges from source entities to this relationship node (e.g., 'participates in')"
+                            )
+                        with col2:
+                            target_label = st.text_input(
+                                "Relationship → Target label:",
+                                help="Label for edges from this relationship node to target entities (e.g., 'involves')"
+                            )
+                    
+                    # Inherit from dropdown for relationships
+                    rel_options = [k for k, v in config.items() 
+                                 if v.get('represented_as') == 'edge' or 
+                                 (v.get('represented_as') == 'node' and (v.get('source') or v.get('target')))]
+                    rel_is_a = st.selectbox(
+                        "Inherit from (optional):",
+                        options=[''] + rel_options,
+                        format_func=lambda x: 'None (no inheritance)' if x == '' else x,
+                        help="Select a parent relationship type to inherit from (is_a relationship)"
+                    )
+                    
+                    if source and target and rel_name and st.button("Add Relationship"):
+                        normalized = normalize_class_name(rel_name)
                         is_valid, message = validate_class_name(normalized)
                         
                         if is_valid:
                             if normalized not in config:
-                                config[normalized] = {
-                                    'represented_as': 'edge',
-                                    'source': source,
-                                    'target': target,
-                                    'properties': {},
-                                    'input_label': input_label if input_label else normalized
-                                }
-                                st.success(f"Added relationship: {normalized}")
+                                if rel_is_a == normalized:
+                                    st.error('A relationship cannot inherit from itself')
+                                elif rel_is_a and rel_is_a not in config:
+                                    st.error(f'Parent relationship "{rel_is_a}" does not exist')
+                                else:
+                                    if rel_type == 'reified':
+                                        # Reified relationship: represented as node with source/target
+                                        new_rel = {
+                                            'represented_as': 'node',
+                                            'source': source,
+                                            'target': target,
+                                            'properties': {},
+                                            'input_label': input_label if input_label else normalized
+                                        }
+                                        if source_label:
+                                            new_rel['source_label'] = source_label
+                                        if target_label:
+                                            new_rel['target_label'] = target_label
+                                        if rel_is_a:
+                                            new_rel['is_a'] = rel_is_a
+                                        config[normalized] = new_rel
+                                    else:
+                                        # Direct edge
+                                        new_rel = {
+                                            'represented_as': 'edge',
+                                            'source': source,
+                                            'target': target,
+                                            'properties': {},
+                                            'input_label': input_label if input_label else normalized
+                                        }
+                                        if rel_is_a:
+                                            new_rel['is_a'] = rel_is_a
+                                        config[normalized] = new_rel
+                                    st.success(f"Added relationship: {normalized}")
                             else:
                                 st.error(
                                     f"Relationship {normalized} already exists. "
@@ -227,12 +301,13 @@ def schema_config_panel():
                 
                 with edit_tab3:
                     st.subheader("Modify Entity Properties")
-                    # Filter for nodes
-                    nodes = [k for k, v in config.items() 
-                            if v.get('represented_as', 'node') == 'node']
+                    # Filter for entities (nodes without source/target - not reified relationships)
+                    entities = [k for k, v in config.items() 
+                               if (v.get('represented_as', 'node') == 'node' or not v.get('represented_as')) 
+                               and not v.get('source') and not v.get('target')]
                     selected_node = st.selectbox(
                         "Select entity to modify:",
-                        options=nodes,
+                        options=entities,
                         key='modify_node_selector'
                     )
                     if selected_node:
@@ -240,15 +315,53 @@ def schema_config_panel():
                 
                 with edit_tab4:
                     st.subheader("Modify Relationships")
+                    # Include both edges and reified relationships (nodes with source/target)
                     edges = [k for k, v in config.items() 
-                            if v.get('represented_as') == 'edge']
+                            if v.get('represented_as') == 'edge' or 
+                            (v.get('represented_as') == 'node' and (v.get('source') or v.get('target')))]
                     selected_edge = st.selectbox(
                         "Select relationship to modify:",
                         options=edges if edges else ['No edges available'],
                         key='modify_edge_selector'
                     )
                     if selected_edge and selected_edge != 'No edges available':
-                        st.subheader("Edge Configuration")
+                        st.subheader("Relationship Configuration")
+                        
+                        entity_info = config[selected_edge]
+                        is_reified = entity_info.get('represented_as') == 'node' and (entity_info.get('source') or entity_info.get('target'))
+                        current_type = 'reified' if is_reified else 'edge'
+                        
+                        # Relationship type selector
+                        new_type = st.radio(
+                            "Relationship type (represented_as):",
+                            options=['edge', 'reified'],
+                            index=0 if current_type == 'edge' else 1,
+                            format_func=lambda x: 'Direct Edge' if x == 'edge' else 'Reified Relationship (Node)',
+                            help="Change how this relationship is represented in BioCypher",
+                            key=f'rel_type_{selected_edge}'
+                        )
+                        
+                        # Handle type change
+                        if new_type != current_type:
+                            if new_type == 'reified':
+                                # Convert from edge to reified
+                                config[selected_edge]['represented_as'] = 'node'
+                                # Add default edge labels if not present
+                                if 'source_label' not in config[selected_edge]:
+                                    config[selected_edge]['source_label'] = 'has'
+                                if 'target_label' not in config[selected_edge]:
+                                    config[selected_edge]['target_label'] = 'involves'
+                            else:
+                                # Convert from reified to edge
+                                config[selected_edge]['represented_as'] = 'edge'
+                                # Remove edge labels
+                                config[selected_edge].pop('source_label', None)
+                                config[selected_edge].pop('target_label', None)
+                            update_schema(config)
+                            st.rerun()
+                        
+                        # Update is_reified after potential change
+                        is_reified = config[selected_edge].get('represented_as') == 'node' and (config[selected_edge].get('source') or config[selected_edge].get('target'))
                         
                         # Initialize or get edge state from session state
                         edge_state_key = f"edge_state_{selected_edge}"
@@ -256,6 +369,8 @@ def schema_config_panel():
                             ss[edge_state_key] = {
                                 'source': config[selected_edge].get('source', []),
                                 'target': config[selected_edge].get('target', []),
+                                'source_label': config[selected_edge].get('source_label', ''),
+                                'target_label': config[selected_edge].get('target_label', ''),
                                 'changes_applied': True
                             }
                         
@@ -284,10 +399,65 @@ def schema_config_panel():
                                 key=f"{selected_edge}_target"
                             )
                         
+                        # Inherit from dropdown
+                        rel_options = [k for k, v in config.items() 
+                                     if k != selected_edge and
+                                     (v.get('represented_as') == 'edge' or 
+                                      (v.get('represented_as') == 'node' and (v.get('source') or v.get('target'))))]
+                        rel_is_a = config[selected_edge].get('is_a', '')
+                        new_rel_is_a = st.selectbox(
+                            "Inherit from (is_a):",
+                            options=[''] + rel_options,
+                            index=0 if not rel_is_a else (rel_options.index(rel_is_a) + 1 if rel_is_a in rel_options else 0),
+                            format_func=lambda x: 'None (no inheritance)' if x == '' else x,
+                            help="Select a parent relationship type to inherit from",
+                            key=f"rel_is_a_{selected_edge}"
+                        )
+                        if new_rel_is_a != rel_is_a:
+                            if new_rel_is_a == selected_edge:
+                                st.error('A relationship cannot inherit from itself')
+                            elif new_rel_is_a and new_rel_is_a not in config:
+                                st.error(f'Parent relationship "{new_rel_is_a}" does not exist')
+                            else:
+                                working_config = dict(config)
+                                if new_rel_is_a:
+                                    working_config[selected_edge]['is_a'] = new_rel_is_a
+                                else:
+                                    working_config[selected_edge].pop('is_a', None)
+                                update_schema(working_config)
+                                st.rerun()
+                        
+                        # For reified relationships, show edge label configuration
+                        if is_reified:
+                            st.markdown("---")
+                            st.markdown("**Edge Labels** (for reified relationships)")
+                            col1, col2 = st.columns(2)
+                            with col1:
+                                source_label = st.text_input(
+                                    "Source → Relationship label:",
+                                    value=ss[edge_state_key]['source_label'],
+                                    help="Label for edges from source entities to this relationship node (e.g., 'participates in')",
+                                    key=f"{selected_edge}_source_label"
+                                )
+                            with col2:
+                                target_label = st.text_input(
+                                    "Relationship → Target label:",
+                                    value=ss[edge_state_key]['target_label'],
+                                    help="Label for edges from this relationship node to target entities (e.g., 'involves')",
+                                    key=f"{selected_edge}_target_label"
+                                )
+                        else:
+                            source_label = ss[edge_state_key].get('source_label', '')
+                            target_label = ss[edge_state_key].get('target_label', '')
+                        
                         # Check if changes were made
                         changes_made = (
                             set(source) != set(ss[edge_state_key]['source']) or 
-                            set(target) != set(ss[edge_state_key]['target'])
+                            set(target) != set(ss[edge_state_key]['target']) or
+                            (is_reified and (
+                                source_label != ss[edge_state_key].get('source_label', '') or
+                                target_label != ss[edge_state_key].get('target_label', '')
+                            ))
                         )
                         
                         if changes_made:
@@ -303,9 +473,23 @@ def schema_config_panel():
                                     working_config[selected_edge]['source'] = source[0] if len(source) == 1 else source
                                     working_config[selected_edge]['target'] = target[0] if len(target) == 1 else target
                                     
+                                    # Update edge labels for reified relationships
+                                    if is_reified:
+                                        if source_label:
+                                            working_config[selected_edge]['source_label'] = source_label
+                                        else:
+                                            working_config[selected_edge].pop('source_label', None)
+                                        if target_label:
+                                            working_config[selected_edge]['target_label'] = target_label
+                                        else:
+                                            working_config[selected_edge].pop('target_label', None)
+                                    
                                     # Update edge state before updating schema
                                     ss[edge_state_key]['source'] = source
                                     ss[edge_state_key]['target'] = target
+                                    if is_reified:
+                                        ss[edge_state_key]['source_label'] = source_label
+                                        ss[edge_state_key]['target_label'] = target_label
                                     ss[edge_state_key]['changes_applied'] = True
                                     
                                     # Update schema which will trigger rerun
@@ -470,11 +654,13 @@ try:
         try:
             G = nx.DiGraph()
             
-            # First pass: Add all explicit nodes
+            # First pass: Add all entity nodes (nodes without source/target - not reified relationships)
             for entity_type, entity_info in config.items():
                 if isinstance(entity_info, dict):
                     representation = entity_info.get('represented_as', 'node')
-                    if representation == 'node':
+                    # Only add entities (nodes without source/target)
+                    # Reified relationships will be added later as relationship nodes
+                    if representation == 'node' and not entity_info.get('source') and not entity_info.get('target'):
                         properties = entity_info.get('properties', {})
                         input_label = entity_info.get('input_label', '')
                         is_a = entity_info.get('is_a', '')
@@ -525,18 +711,25 @@ try:
                             'is_a': is_a
                         })
                         
+                        # Get edge labels - support custom labels or use generic defaults
+                        # source_label: label for edges from source to relationship node
+                        # target_label: label for edges from relationship node to target
+                        # Defaults are generic and domain-agnostic to work across different schemas
+                        source_label = entity_info.get('source_label', 'has')
+                        target_label = entity_info.get('target_label', 'involves')
+                        
                         # Add edges from sources and to targets with meaningful names
                         for source in sources:
                             G.add_edge(source, entity_type, 
                                      type='edge',
-                                     label=f'PARTICIPATES_IN_{entity_type}',
-                                     name=f'PARTICIPATES_IN_{entity_type}',
+                                     label=source_label,
+                                     name=source_label,
                                      is_a=is_a)
                         for target in targets:
                             G.add_edge(entity_type, target, 
                                      type='edge',
-                                     label=f'INVOLVES_{target}',
-                                     name=f'INVOLVES_{target}',
+                                     label=target_label,
+                                     name=target_label,
                                      is_a=is_a)
                     else:
                         # This is a pure edge - create direct connections
@@ -806,8 +999,50 @@ try:
                 config[node_type] = {'properties': {}}
             
             properties = dict(config[node_type].get('properties', {}))
+            is_a = config[node_type].get('is_a', '')
             
             st.subheader(f"Properties for {node_type}")
+            
+            # Input label
+            input_label = st.text_input(
+                "Input label (from raw data):",
+                value=config[node_type].get('input_label', ''),
+                help="Enter the label as it appears in your raw data",
+                key=f"input_label_{node_type}"
+            )
+            if input_label != config[node_type].get('input_label', ''):
+                new_config = dict(config)
+                if input_label:
+                    new_config[node_type]['input_label'] = input_label
+                else:
+                    new_config[node_type].pop('input_label', None)
+                update_schema(new_config)
+            
+            # Inherit from dropdown
+            entity_options = [k for k, v in config.items() 
+                            if k != node_type and
+                            ((v.get('represented_as', 'node') == 'node' or not v.get('represented_as')) 
+                             and not v.get('source') and not v.get('target'))]
+            new_is_a = st.selectbox(
+                "Inherit from (is_a):",
+                options=[''] + entity_options,
+                index=0 if not is_a else (entity_options.index(is_a) + 1 if is_a in entity_options else 0),
+                format_func=lambda x: 'None (no inheritance)' if x == '' else x,
+                help="Select a parent entity to inherit from",
+                key=f"is_a_{node_type}"
+            )
+            if new_is_a != is_a:
+                if new_is_a == node_type:
+                    st.error('An entity cannot inherit from itself')
+                elif new_is_a and new_is_a not in config:
+                    st.error(f'Parent entity "{new_is_a}" does not exist')
+                else:
+                    new_config = dict(config)
+                    if new_is_a:
+                        new_config[node_type]['is_a'] = new_is_a
+                    else:
+                        new_config[node_type].pop('is_a', None)
+                    update_schema(new_config)
             
             new_prop = st.text_input(
                 "Add new property:",

@@ -67,7 +67,8 @@ def create_toy_schema() -> dict:
                     "description": "Current project status (e.g., planned, active, completed, on-hold)"
                 }
             },
-            "input_label": "project_id"  # Example of database ID
+            "input_label": "project_id",  # Example of database ID
+            "is_a": "activity"
         },
         "manages": {
             "represented_as": "edge",
@@ -140,6 +141,8 @@ def create_toy_schema() -> dict:
             "represented_as": "node",
             "source": ["person", "organization"],
             "target": "project",
+            "source_label": "participates in",  # Label for source -> collaboration edges
+            "target_label": "conducts",  # Label for collaboration -> target edges
             "properties": {
                 "role": {
                     "type": "string",
